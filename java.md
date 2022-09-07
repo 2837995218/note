@@ -23,7 +23,7 @@
 
 | 命令                      | 作用             |
 | ------------------------- | ---------------- |
-| git reomte -v             | 查看远程库       |
+| git remote -v             | 查看远程库       |
 | git remote add 别名 地址  | 添加远程库       |
 | git remote rm 别名        | 删除远程库       |
 | git push 别名/地址 分支名 | 添加分支到远程库 |
@@ -138,6 +138,7 @@
 
     ```html
     性别：
+    <!--两种方式-->
     <input type="radio" name="gender" id="man"><label for="man">男</label>
     <label><input type="radio" name="gender" id="women">女</label>
     ```
