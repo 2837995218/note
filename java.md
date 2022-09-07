@@ -4908,13 +4908,15 @@ logger.log(Level.INFO, "姓名：{0} 年龄：{1}", new Object[]{name, age});
   # 文件处理器属性的设置
   # 输出日志文件的路径
   # %h：用户文件夹，%u：文件索引值
-  java.util.loggingFileHandler.pattern = %h/java%u.log
+  java.util.logging.FileHandler.pattern = %h/java%u.log
   # 输出日志文件的限制（50000字节）
-  java.util.loggingFileHandler.limit = 50000
+  java.util.logging.FileHandler.limit = 50000
   # 输出日志文件的最大数量
-  java.util.loggingFileHandler.count = 1
+  java.util.logging.FileHandler.count = 1
   # 输出日志的格式
-  java.util.loggingFileHandler.formatter = java.util.logging.XMLFormatter
+  java.util.logging.FileHandler.formatter = java.util.logging.XMLFormatter
+  # 处理器的级别
+  java.util.logging.FileHandler.level = SEVERE
   
   # 控制台处理器属性的设置
   # 输出日志的级别
@@ -4941,7 +4943,7 @@ logger.log(Level.INFO, "姓名：{0} 年龄：{1}", new Object[]{name, age});
   - 相关配置
 
     ```properties
-    # 自定义处理器
+    # 自定义记录qi
     cn.Eli.handlers = java.util.logging.FileHandler, java.util.logging.ConsoleHandler
     cn.Eli.level = CONFIG
     cn.Eli.userParentHandlers = false
