@@ -4959,15 +4959,92 @@ logger.log(Level.INFO, "姓名：{0} 年龄：{1}", new Object[]{name, age});
 
 ## Log4j
 
+### 组件介绍
+
+#### Loggers
+
+- 具有继承机制
+- 日志级别
+  -  OFF > FATAL > ERROR > WARN > INFO > DEBUG（默认） > TRACE > ALL
+
+#### Appendars
+
+- 类别
+  - ConsoleAppender
+  - FileAppender
+  - DailyRollingAppender
+  - RollingFileAppender
+  - JDBCAppender
+
+#### Layouts
+
+- 类别
+  - HTMLLayout
+  - SimpleLayout
+  - PattenLayout
+- PattenLayout日志输出格式
+  - %m：输出代码中指定的日志信息
+  - %p：输出优先级，及 DEBUG、INFO等
+  - %n：换行符（Windows平台的换行符为“\n”，Unix平台为“\n”
+  - %r：输出自应用启动到输出该 log 信息耗费的毫秒值
+  - %c：输出打印语句所属的类的全名
+  - %t：输出产生该日志的线程全名
+  - %d：输出服务器当前时间，默认为ISO8601，也可以指定格式，如：%d{yyyy年MM月dd日 HH:mm:ss:SSS}
+  - %l：输出日志时间发生的位置，包括类名、线程、及在代码中的行数。如：Test.main(Test.java:10)
+  - %F：输出日志消息产生时所在的文件名称
+  - %L：输出代码中的行号
+  - %%：输出一个“%”字符 
+  - 可以在 % 与字符之间加入修饰符来控制最小宽度、最大宽度和文本的对其方式。如：
+    - %5c：输出category名称，最小宽度是5，category<5，默认的情况下右对齐
+    - %-5c：输出category名称，最小宽度是5，category<5，”-“号指定左对齐，会有空格
+    - %.5c：输出category名称，最大宽度是5，category>5，就会将左边多出的字符截掉，<5不会有空格
+    - %20.30c：输出category名称<20补空格，并且右对齐，>30字符，就会左边交多出的字符截掉
 
 
 
+### 快速入门
+
+```java
+// 加载初始化信息
+BasicConfigurator.configure();
+/*
+	源码
+	public static void configure(){
+		Logger root = Logger.getRootLogger();
+		root.addAppender(new ConsoleAppender(new PatternLayout("%r [%t] %p %c %x - %m%n")));
+	}
+*/
+Logger logger = Logger.getLogger(Log4jTest.class);
+logger.info("info信息")
+```
 
 
 
+### 配置文件
+
+```properties
+#log4j.rootLogger = 日志级别,appenderName1,appenderName2,appenderName3...
+log4j.rootLogger = trace,console
+
+#log4j.appender.appender名字
+log4j.appender.console = org.apache.log4j.ConsoleAppender
+log4j.appender.console.layout = org.apache.log4j.PatternLayout
+log4j.appender.console.layout.conversionPattern = [%-5p] %d{yyyy-MM-dd HH:mm:ss:SSS} %m
+```
 
 
 
+### 补充
+
+- LogLog：记录log4j日志输出的日志
+
+  - 控制日志开关的代码 if(debugEnabled && !quietMode){}
+
+  - !quietMode 已经处于 true
+
+  - LogLog.setInternalDebugging(true); 开启日志
+
+    
 
 
 
