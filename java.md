@@ -5023,13 +5023,56 @@ logger.info("info信息")
 ### 配置文件
 
 ```properties
+# 以下为根节点rootLogger的配置
+
 #log4j.rootLogger = 日志级别,appenderName1,appenderName2,appenderName3...
 log4j.rootLogger = trace,console
 
-#log4j.appender.appender名字
+
+#log4j.appender.自定义appender的名字
+# 输出到控制台中
 log4j.appender.console = org.apache.log4j.ConsoleAppender
 log4j.appender.console.layout = org.apache.log4j.PatternLayout
-log4j.appender.console.layout.conversionPattern = [%-5p] %d{yyyy-MM-dd HH:mm:ss:SSS} %m
+log4j.appender.console.layout.conversionPattern = [%-5p] %d{yyyy-MM-dd HH:mm:ss:SSS} %m%n
+
+# 输出到文件中
+log4j.appender.file = org.apache.log4j.FileAppender
+log4j.appender.file.layout = org.apache.log4j.PatternLayout
+log4j.appender.file.layout.conversionPattern = [%-5p] %d{yyyy-MM-dd HH:mm:ss:SSS} %m%n
+log4j.appender.file.file = C://Users//123//Desktop//log4j.log
+log4j.appender.file.encoding = utf-8
+# FileAppender中的其他属性
+	# boolean fileAppend：是否追加，默认true开启追加
+	# int bufferSize：缓冲字节数，默认8192
+
+# 按文件大小进行拆分
+log4j.appender.rollingFile = org.apache.log4j.RollingFileAppender
+log4j.appender.rollingFile.layout = org.apache.log4j.PatternLayout
+log4j.appender.rollingFile.layout.conversionPattern = [%-5p] %d{yyyy-MM-dd HH:mm:ss:SSS} %m%n
+log4j.appender.rollingFile.file = C://Users//123//Desktop//log4j.log
+log4j.appender.rollingFile.encoding = utf-8
+# 指定单个文件的最大字节
+log4j.appender.rollingFile.maxFileSize = 1MB
+# 指定文件的最大索引值
+log4j.appender.rollingFile.maxBackupIndex = 5
+
+# 按时间对文件进行拆分
+log4j.appender.dailyRollingFile = org.apache.log4j.DailyRollingFileAppender
+log4j.appender.dailyRollingFile.layout = org.apache.log4j.PatternLayout
+log4j.appender.dailyRollingFile.layout.conversionPattern = [%-5p] %d{yyyy-MM-dd HH:mm:ss:SSS} %m%n
+log4j.appender.dailyRollingFile.file = C://Users//123//Desktop//log4j.log
+log4j.appender.dailyRollingFile.encoding = utf-8
+# '.'yyyy-MM-dd：默认，按天划分；'.'yyyy-MM-dd HH:mm:ss：按秒划分
+log4j.appender.dailyRollingFile.datePattern = '.'yyyy-MM-dd
+
+# 持久化日志
+log4j.appender.logDB = org.apache.log4j.jdbc.JDBCAppender
+log4j.appender.logDB.layout = org.apache.log4j.PatternLayout
+log4j.appender.logDB.Driver = com.mysql.jdbc.Driver
+log4j.appender.logDB.URL = jdbc.mysql://localhost:3306/数据库
+log4j.appender.logDB.username = root
+log4j.appender.logDB.password = root
+log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category,message) values('project_log','%d{yyyy-MM-dd HH:mm:ss}','%p','%c','%F','%m')
 ```
 
 
@@ -5039,18 +5082,48 @@ log4j.appender.console.layout.conversionPattern = [%-5p] %d{yyyy-MM-dd HH:mm:ss:
 - LogLog：记录log4j日志输出的日志
 
   - 控制日志开关的代码 if(debugEnabled && !quietMode){}
-
   - !quietMode 已经处于 true
-
   - LogLog.setInternalDebugging(true); 开启日志
 
-    
+- 持久化日志的表
+
+  ```sql
+  # 持久化日志的表
+  CREATE TABLE tbl_log{
+  	id int(11) NOT NULL AUTO_INCREMENT,
+  	name varchar(255) DEFAULT NULL COMMENT '项目名称',
+  	createTIme varchar(255) DEFAULT NULL COMMENT '创建时间',
+  	level varchar(255) DEFAULT NULL COMMENT '日志级别',
+  	category varchar(255) DEFAULT NULL COMMENT '所在类的全路径',
+  	fileName varchar(255) DEFAULT NULL COMMENT '文件名称',
+  	message varchar(255) DEFAULT NULL COMMENT '日志消息',
+  	PRIMARY KEY(id)
+  }
+  ```
+
+- log4j的自定义logger
+
+  ```properties
+  # 格式：log4j.logger.目录
+  log4j.logger.cn.Eli = info,console
+  ```
+
+  - 自定义logger和根节点logger
+    - 配置中输出位置不同的，取两者的并集
+    - 配置中输出等级不同的，取自定义logger的等级
+    - 配置中输出位置相同的，删去自定义logger中的相同位置，以免多次打印
 
 
 
 
 
+## JCL
 
+### 依赖
+
+```xml
+
+```
 
 
 
