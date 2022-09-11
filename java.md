@@ -5004,19 +5004,33 @@ logger.log(Level.INFO, "姓名：{0} 年龄：{1}", new Object[]{name, age});
 
 ### 快速入门
 
-```java
-// 加载初始化信息
-BasicConfigurator.configure();
-/*
-	源码
-	public static void configure(){
-		Logger root = Logger.getRootLogger();
-		root.addAppender(new ConsoleAppender(new PatternLayout("%r [%t] %p %c %x - %m%n")));
-	}
-*/
-Logger logger = Logger.getLogger(Log4jTest.class);
-logger.info("info信息")
-```
+- 依赖导入
+
+  ```xml
+  <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.12</version>
+  </dependency>
+  ```
+
+- 记录日志
+
+  ```java
+  // 加载初始化信息
+  BasicConfigurator.configure();
+  /*
+  	源码
+  	public static void configure(){
+  		Logger root = Logger.getRootLogger();
+  		root.addAppender(new ConsoleAppender(new PatternLayout("%r [%t] %p %c %x - %m%n")));
+  	}
+  */
+  Logger logger = Logger.getLogger(Log4jTest.class);
+  logger.info("info信息")
+  ```
+
+  
 
 
 
@@ -5119,11 +5133,183 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
 
 ## JCL
 
-### 依赖
+### 快速入门
 
-```xml
+- 依赖导入
 
-```
+  ```xml
+  <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+  </dependency>
+  ```
+
+- 日志记录
+
+  ```java
+  // 未导入其他日志框架，默认使用的是jul
+  Log log = LogFactory.getLog(LogTest.class);
+  log.fatal("fatal信息");
+  ```
+
+
+
+
+
+## SLF4J
+
+### 快速入门
+
+- 依赖导入
+
+  ```xml
+  <!--slf4j 核心依赖-->
+  <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.36</version>
+  </dependency>
+  
+  <!--slf4j 自带的简单日志实现-->
+  <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.36</version>
+  </dependency>
+  ```
+
+- 使用自带的日志记录框架记录日志
+
+  ```java
+  Logger logger = LoggerFactory.getLogger(LogTest.class);
+  logger.error("error信息");
+  logger.warn("warn信息");
+  logger.info("info信息"); // 默认
+  logger.debug("debug信息");
+  logger.trace("trace信息");
+  ```
+
+- 使用占位符记录日志
+
+  ```java
+  Logger logger = LoggerFactory.getLogger(LogTest.class);
+  String name = "zhangsan";
+  int age = 18;
+  logger.info("学生信息-姓名：{}，年龄：{}",name,age);
+  ```
+
+
+
+### 绑定模式
+
+![slf4j-concrete-bindings](D:\picture\typora\java\slf4j-concrete-bindings.png)
+
+- 三种绑定模式
+
+  - 在没有绑定任何日志实现的基础上，日志是不能绑定实现任何功能的
+  - logback和simple（包括nop），都是门面时间线后面提供的日志实现，所以API完全遵循slf4j进行设计的，只需要导入想要是日志框架，即可使用。但是nop是不实现日志记录
+  - log4j和JUL是slf4j前面的日志框架，所以API不遵循slf4j进行设计，
+    - 对于需要使用该类日志实现技术的项目，可用适配器绑定该日志实现技术
+    - 对于已经使用该类日志实现技术的项目，可使用桥接技术，与日志门面进行衔接
+
+- 补充
+
+  - 先导入那个日志实现依赖就用那个依赖记录日志
+
+  - 若想用nop关闭所有日志记录功能，则需要首先导入nop的依赖
+
+    ```xml
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-nop</artifactId>
+        <version>1.7.36</version>
+    </dependency>
+    ```
+
+  - SLF4J: Class path contains multiple SLF4J bindings.：表示存在多个日志记录实现
+
+
+
+### 绑定
+
+- 绑定log4j
+
+  ```xml
+  <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.36</version>
+  </dependency>
+  <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.12</version>
+  </dependency>
+  
+  <!--导入 log4j 适配器的依赖-->
+  <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.7.36</version>
+  </dependency>
+  ```
+
+- 绑定JUL
+
+  ```xml
+  <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.36</version>
+  </dependency>
+  
+  <!--导入 jdk14（JUL） 的日志适配器-->
+  <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>1.7.36</version>
+  </dependency>
+  ```
+
+  
+
+### 桥接
+
+![slf4j-legacy](D:\picture\typora\java\slf4j-legacy.png)
+
+- 删除原先的日志实现技术的依赖
+
+- 导入相应的桥接器依赖
+
+  ```xml
+  <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>log4j-over-slf4j</artifactId>
+      <version>1.7.36</version>
+  </dependency>
+  ```
+
+- 使用的是 log4j 包下的日志组件资源，但真正实现的是 slf4j + logback
+
+- 导入依赖时
+
+  - 如果 桥接器 在 适配器  的上方，则报错
+  - 如果 桥接器 在 适配器 的下方，则不会施行桥接器
+
+
+
+
+
+## logback
+
+
+
+
+
+
+
+
 
 
 
