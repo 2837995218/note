@@ -4900,6 +4900,7 @@ logger.log(Level.INFO, "姓名：{0} 年龄：{1}", new Object[]{name, age});
 - 默认配置文件
 
   ```properties
+  # 文件命名为 logging.properties
   # 配置RootLogger使用的处理器
   handlers = java.util.logging.ConsoleHandler
   # RootLogger的日志记录级别
@@ -5037,6 +5038,7 @@ logger.log(Level.INFO, "姓名：{0} 年龄：{1}", new Object[]{name, age});
 ### 配置文件
 
 ```properties
+# 文件命名为 log4j.properties
 # 以下为根节点rootLogger的配置
 
 #log4j.rootLogger = 日志级别,appenderName1,appenderName2,appenderName3...
@@ -5183,6 +5185,7 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
 
   ```java
   Logger logger = LoggerFactory.getLogger(LogTest.class);
+  // 五个日志记录等级
   logger.error("error信息");
   logger.warn("warn信息");
   logger.info("info信息"); // 默认
@@ -5303,11 +5306,176 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
 
 ## logback
 
+### 快速入门
+
+- 依赖
+
+  ```xml
+  <!--slf4j 日志门面技术-->
+  <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.36</version>
+  </dependency>
+  <!--logback 基础模块（包含logback-core核心依赖）-->
+  <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.2.11</version>
+  </dependency>
+  ```
+
+- 记录日志
+
+  ```java
+  // 使用的是日志门面技术
+  //import org.slf4j.Logger;
+  //import org.slf4j.LoggerFactory;
+  
+  Logger logger = LoggerFactory.getLogger(LogbackTest.class);
+  logger.info("hello");
+  ```
+
+
+
+### 配置文件
+
+- 日志输出格式
+
+  - %-5level：级别，案例为设置5个字节，左对齐
+  - %d{yyyy-MM-dd HH:mm:ss:SSS}：日期
+  - %c：当前类的全限定名
+  - %M：当前执行日志的方法
+  - %L：行号
+  - %thread：线程名称
+  - %m或者%msg：信息
+  - %n：换行
+
+- 配置文件
+
+  ```xml
+  <?xml version="1.0" encoding="UTF-8" ?>
+  <configuration>
+      <property name="pattern" value="[%-5level] %d{yyyy-MM-dd HH:mm:ss:SSS} %msg --------- %c %M %thread%n"></property>
+      <property name="logDir" value="C://Users//123//Desktop"></property>
+  
+      <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+          <!--
+              对于日志输出目标的配置
+                  System.out：表示以黑色字体输出日志（默认）
+                  System.err：表示以红色字体输出日志
+          -->
+          <target>System.err</target>
+          <!--
+              配置日志输出格式（引入上面的property）
+          -->
+          <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+              <pattern>${pattern}</pattern>
+          </encoder>
+      </appender>
+  
+      <!-- 默认以追加形式记录日志 -->
+      <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
+          <!-- 引入文件位置 -->
+          <file>${logDir}/logback.log</file>
+  
+          <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+              <pattern>${pattern}</pattern>
+          </encoder>
+      </appender>
+  
+      <!-- 配置rootLogger -->
+      <root level="ALL">
+          <appender-ref ref="consoleAppender"/>
+          <appender-ref ref="fileAppender"/>
+      </root>
+  </configuration>
+  ```
+
+- 配置html格式的日志文件
+
+  ```xml
+  <property name="htmlPattern" value="%level %d{yyyy-MM-dd HH:mm:ss:SSS} %msg %c %M %thread"></property>
+  <property name="logDir" value="C://Users//123//Desktop"></property>
+  
+  <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
+      <file>${logDir}/logback.html</file>
+      <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+          <layout class="ch.qos.logback.classic.html.HTMLLayout">
+              <pattern>${htmlPattern}</pattern>
+          </layout>
+      </encoder>
+  </appender>
+  ```
+
+- 拆分文件
+
+  ```xml
+  <appender name="roll" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${logDir}/roll_logback.log</file>
+      <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">${pattern}</encoder>
+      <!-- 指定拆分规则 -->
+      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+          <!-- 按时间和压缩格式命名文件 压缩格式gz -->
+          <fileNamePattern>${logDir}/roll.%d{yyyy-MM-dd}.log%i.gz</fileNamePattern>
+          <!-- 按文件大小进行拆分 -->
+          <maxFileSize>1MB</maxFileSize>
+      </rollingPolicy>
+  </appender>
+  ```
+
+- 使用过滤器
+
+  ```xml
+  <appender name="consoleFilterAppender" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+          <pattern>${pattern}</pattern>
+      </encoder>
+      <!-- 配置过滤器，匹配等级 -->
+      <filter class="ch.qos.logback.classic.filter.LevelFilter">
+          <level>ERROR</level>
+          <!-- 高于level中设置的级别，则打印日志 -->
+          <onMatch>ACCEPT</onMatch>
+          <!-- 低于level中设置的级别，则屏蔽日志 -->
+          <onMismatch>DENY</onMismatch>
+      </filter>
+  </appender>
+  ```
+
+- 自定义logger
+
+  ```xml
+  <!-- additivity="false"表示不继承rootLogger -->
+  <logger name="cn.Eli" level="info" additivity="false">
+  	<appender-ref ref="consoleAppender"/>
+  </logger>
+  ```
+
+
+
+### 异步日志
+
+- 同步日志：打印日志时，会暂停程序的执行（单线程）
+
+- 异步日志：多线程
+
+  ```xml
+  <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender"></appender>
+  
+  <appender name="asyncAppender" class="ch.qos.logback.classic.AsyncAppender">
+      <appender-ref ref="consoleAppender"/>
+  </appender>
+  
+  <root level="ALL">
+      <appender-ref ref="asyncAppender"/>
+  </root>
+  ```
 
 
 
 
 
+## log4j2
 
 
 
