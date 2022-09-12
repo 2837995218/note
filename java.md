@@ -5477,7 +5477,140 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
 
 ## log4j2
 
+### 快速入门
 
+- 依赖
+
+  ```xml
+  <!-- slf4j 日志门面 -->
+  <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.36</version>
+  </dependency>
+  <!-- 适配器 -->
+  <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>2.17.2</version>
+  </dependency>
+  <!-- log4j2 日志门面 -->
+  <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.17.2</version>
+  </dependency>
+  <!-- log4j2 日志实现 -->
+  <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.17.2</version>
+  </dependency>
+  ```
+
+- 日志记录
+
+  ```java
+  // log4j2 日志记录
+  //import org.apache.logging.log4j.LogManager;
+  //import org.apache.logging.log4j.Logger;
+  
+  // 六种记录等级
+  Logger logger = LogManager.getLogger(Log4j2Test.class);
+  logger.fatal("fatal");
+  logger.error("error"); // 默认
+  logger.warn("warn");
+  logger.info("info");
+  logger.debug("debug");
+  logger.trace("trace");
+  ```
+
+  ```java
+  // slf4j+log4j2 日志记录
+  //import org.slf4j.Logger;
+  //import org.slf4j.LoggerFactory;
+  
+  // 执行原理：slf4j门面调用的是log4j2的门面，再由log4j2门面调用log4j2的日志实现
+  Logger logger = LoggerFactory.getLogger(Log4j2Test.class);
+  logger.error("error");
+  logger.warn("warn");
+  logger.info("info");
+  logger.debug("debug");
+  logger.trace("trace");
+  ```
+
+- 配置文件
+
+  ```xml
+  <!-- 配置文件名 log4j2.xml -->
+  
+  <?xml version="1.0" encoding="UTF-8" ?>
+  <!-- 此处的error是配置记录日记记录器的日志级别（LogLog） -->
+  <Configuration status="error">
+      <Appenders>
+          <Console name="consoleAppender" target="SYSTEM_ERR"></Console>
+      </Appenders>
+  
+      <Loggers>
+          <Root level="trace">
+              <AppenderRef ref="consoleAppender"/>
+          </Root>
+      </Loggers>
+  </Configuration>
+  ```
+
+
+
+### 其他配置
+
+- 输出到文件中
+
+  ```xml
+  <?xml version="1.0" encoding="UTF-8" ?>
+  <Configuration>
+      <properties>
+          <property name="logDir" value="C://Users//123//Desktop"></property>
+          <property name="pattern" value="[%-5level] %d{yyyy-MM-dd HH:mm:ss:SSS} %msg -> %c %M %thread%n"></property>
+      </properties>
+  
+      <Appenders>
+          <File name="fileAppender" fileName="${logDir}/log4j2.log">
+              <PatternLayout pattern="${pattern}"/>
+          </File>
+      </Appenders>
+  
+      <Loggers>
+          <Root level="trace">
+              <AppenderRef ref="fileAppender"/>
+          </Root>
+      </Loggers>
+  </Configuration>
+  ```
+
+- 拆分日志文件
+
+  ```xml
+  <!-- 日志文件的名字，filePattern表示日志文件拆分后的命名规则，可分文件夹-->
+  <!-- 文件的命名不支持特殊符号 -->
+  <RollingFile name="rollingFileAppender" fileName="${logDir}/rollog.log"
+               filePattern="${logDir}/%d{yyyy-MM-dd}/rollog-%d{HH}hours-%i.log">
+      <PatternLayout pattern="${pattern}"/>
+  
+      <Policies>
+          <!-- 在系统启动时，触发拆分规则，产生一个日志文件 -->
+          <OnStartupTriggeringPolicy/>
+          <!-- 按文件的大小进行拆分-->
+          <SizeBasedTriggeringPolicy size="1MB"/>
+          <!-- 按时间节点进行拆分 拆分规则是filePattern-->
+          <TimeBasedTriggeringPolicy/>
+      </Policies>
+  
+      <!-- 在同一目录下，文件的个数限制，如果超出，则根据时间进行覆盖 -->
+      <DefaultRolloverStrategy max="30"></DefaultRolloverStrategy>
+  </RollingFile>
+  ```
+
+  
 
 
 
