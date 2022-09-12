@@ -5610,11 +5610,66 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
   </RollingFile>
   ```
 
-  
 
 
 
+### 异步日志
 
+- AsyncAppender
+
+  - 异步日志依赖
+
+    ```xml
+    <dependency>
+        <groupId>com.lmax</groupId>
+        <artifactId>disruptor</artifactId>
+        <version>3.3.7</version>
+    </dependency>
+    ```
+
+  - 引入异步日志
+
+    ```xml
+    <Appenders>
+        <Console name="consoleAppender" target="SYSTEM_ERR"></Console>
+        
+        <Async name="myAsync">
+            <AppenderRef ref="consoleAppender"/>
+        </Async>
+    </Appenders>
+    
+    <Loggers>
+        <Root level="trace">
+            <AppenderRef ref="myAsync"/>
+        </Root>
+    </Loggers>
+    ```
+
+- AsyncLogger
+
+  - 全局异步
+
+    - 创建 log4j2.component.properties 文件
+    - 配置：Log4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector
+
+  - 混合异步
+
+    ```xml
+    <Loggers>
+        <Root level="trace">
+            <AppenderRef ref="myAsync"/>
+        </Root>
+        
+        <!--
+    	includeLocation="false"：去除日志中行号信息，行号信息非常影响效率
+    	addactivity="false"：不继承rootLogger
+    	-->
+        <AsyncLogger name="cn.Eli" level="trace" includeLocation="false" additivity=
+    "false">
+        	<AppenderRef ref="consoleAppender"/>
+        </AsyncLogger>
+    </Loggers>
+    ```
 
 
 
