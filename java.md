@@ -5395,7 +5395,7 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
 - 配置html格式的日志文件
 
   ```xml
-  <property name="htmlPattern" value="%level %d{yyyy-MM-dd HH:mm:ss:SSS} %msg %c %M %thread"></property>
+  <property name="htmlPattern" value="%level%d{yyyy-MM-dd HH:mm:ss:SSS}%msg%c%M%thread"></property>
   <property name="logDir" value="C://Users//123//Desktop"></property>
   
   <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
