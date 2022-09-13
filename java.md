@@ -6080,26 +6080,44 @@ spring:
     - 记录日常运营的重要信息（峰值流量、平均响应时长……）
     - 记录应用报错信息（错误堆栈）
     - 记录运维过程数据（扩容、宕机、报警……）
-  
+
 - 日志文件：
 
-  - 启用日志文件
+  - 配置springboot日志
 
-    ```yml
-    file:
-     name: server.log
-    ```
-
-  - 配置日志文件
-
-    ```yml
-    logback:
-     rollingpoliocy:
-      max-file-size: 10MB
-      file-name-patten: ${LOG_FILE(文件名)}.%d{yyyy-MM-dd}(日期).%i(文件索引).log(后缀名)
-    ```
-
+    ```properties
+    # springboot默认使用的是logback日志
     
+    logging.level.cn.Eli = trace
+    logging.pattern.console = %d{yyyy-MM-dd HH:mm:ss} [%-5level] %m%n
+    logging.file.path = C:/Users/123/Desktop
+    ```
+
+  - 配置logback日志文件
+
+- 使用log4j2日志
+
+  ```xml
+  <dependency>
+      <groutId>org.springframework.boot</groutId>
+      <artifactId>spring-boot-stater-web</artifactId>
+      <!-- 排除掉原始依赖（包括logback） -->
+      <exclusions>
+          <exclusion>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-stater-logging</artifactId>
+          </exclusion>
+      </exclusions>
+  </dependency>
+  
+  <!-- 添加log4j2的依赖 -->
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-stater-logging</artifactId>
+  </dependency>
+  ```
+
+  
 
   
 
