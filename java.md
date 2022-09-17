@@ -2164,6 +2164,30 @@ new Vue({
 
 
 
+# 设计模式
+
+
+
+## 设计原则
+
+- 单一职责原则
+  - 应该有且仅有一个原因引起类的变更
+- 接口隔离原则
+  - 客户端不应该依赖它不需要的接口，或者说类间的依赖关系应该建立在最小的接口上
+- 依赖倒置原则
+  - 抽象不应该依赖细节，细节应该依赖抽象
+  - 依赖倒置的中心思想是面向接口编程
+- 里氏替换原则
+  - 子类必须完全实现父类的方法
+  - 子类可以有自己的个性
+  - 覆盖或实现父类的方法时，输入参数可以被放大
+  - 覆盖或实现父类的方法时，输出结果可以被缩小
+- 开闭原则
+  - 一个软件实体如类、模块和函数应该对扩展开放，对修改关闭。也就是说一个软件实体应该通过扩展来实现变化，而不是通过修改已有的代码来实现变化
+- 迪米特原则
+  - 一个对象应该对其他对象有最少的了解
+- 合成复用原则
+  - 尽量使用组合、聚合的方式，而不是高耦合的继承方式
 
 
 
@@ -2171,20 +2195,357 @@ new Vue({
 
 
 
+## 设计模式
+
+
+
+### 创建型模式
+
+#### 单例模式
+
+##### 构建单例
+
+- 静态常量、静态代码块（饿汉式）
+
+  ```java
+  class Singleton01{
+      // 类的内部创建
+      private final static Singleton01 instance = new SingleTon01();
+      /*private final static Singleton01 instance;
+      static {instance = new Singleton01();}*/
+      
+      // 构造器私有化
+      private Singleton01(){}
+      
+      // 向外暴露一个静态的公共方法。getInstance
+      public static Singleton01 getInstance(){
+          return instance;
+      }
+  }
+  ```
+
+  - 说明
+    - 写法简单，在类装载的时候就完成实例化，避免了线程的同步问题
+    - 在类装载是就完成实例化，没有达到Lazy Loading的效果，如果从始至终未使用过这个实例，则会造成内存的浪费
+
+- 懒加载（懒汉式）
+
+  ```java
+  class Singleton02(){
+      private Singleton02(){}
+      
+      private static Singleton instance;
+      
+      public static synchronized Singleton getInstance(){
+          if(instance == null){
+              instance = new Singleton();
+          }
+          return instance;
+      }
+  }
+  ```
+
+  - 说明
+    - 此方法上：不加同步处理，线程不安全；加同步处理，效率低
+
+- 双重检查
+
+  ```java
+  class Singleton03(){
+      private Singleton03(){}
+      
+      private static volatile Singleton instance;
+      
+      public static Singleton getInstance(){
+          if(instance == null){
+              synchronized (Singleton03.class){
+                  if(instance == null){
+                      instance = new Singleton03();
+                  }
+              }
+          }
+          return instance;
+      }
+  }
+  ```
+
+  - 说明
+    - 线程安全，效率加快
+
+- 静态内部类
+
+  ```java
+  class Singleton04(){
+      private Singleton04(){}
+      
+      private static class SingleInstance{
+          private static final Singleton04 INSTANCE = new Singleton4();
+      }
+      
+      private static Singleton getInstance(){
+          return SingletonInstance.INSTANCE;
+      }
+  }
+  ```
+
+  - 说明
+    - 外部类装载时，静态内部类并不会立即装载
+    - 类装载时，线程是安全的
+    - 调用getInstance方法时，才会让静态内部类装载
+    - 类的静态属性，只会在第一次加载类的时候初始化
+
+- 枚举
+
+  ```java
+  public class SingletonTest {
+      public static void main(String[] args){
+          Singleton instance1 = Singleton.INSTANCE;
+          Singleton instance2 = Singleton.INSTANCE;
+          // instance1 == instance2
+      }
+  }
+  
+  enum Singleton {
+      INSTANCE;
+  }
+  ```
+
+  - 说明
+    - jdk1.5添加的枚举可以实现单例模式
+    - 不仅能避免线程同步问题，而且还能防止反序列化重新创建新的对象
+
+##### 破坏单例
+
+- 序列化反序列化
+
+  - SingletonTest实现可序列化接口Serializable
+
+  - 测试反序列化后，对象是否一致
+
+    ```java
+    public class App {
+        public static void main(String[] args) throws Exception {
+            // writeObjectToFile();
+            SingletonTest instance1 = readObjectFromFile();
+            SingletonTest instance2 = readObjectFromFile();
+            System.out.println(instance1 == instance2); // false
+        }
+    
+        public static SingletonTest readObjectFromFile() throws Exception {
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream("C:\\Users\\123\\Desktop\\singletonTest.obj"));
+            SingletonTest instance = (SingletonTest) ois.readObject();
+            ois.close();
+            return instance;
+        }
+    
+        public static void writeObjectToFile() throws Exception {
+            SingletonTest instance = SingletonTest.getInstance();
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("C:\\Users\\123\\Desktop\\singletonTest.obj"));
+            oos.writeObject(instance);
+            oos.close();
+        }
+    }
+    ```
+
+  - 解决方法
+
+    ```java
+    class Singleton04(){
+        private Singleton04(){}
+    
+        private static class SingleInstance{
+            private static final Singleton04 INSTANCE = new Singleton4();
+        }
+    
+        private static Singleton getInstance(){
+            return SingletonInstance.INSTANCE;
+        }
+    
+        // 添加readResolve()方法，当进行反序列化时，会自动调用该方法，将该方法的返回值直接返回
+        public Object readResolve(){
+            return SingleInstance.INSTANCE;
+        }
+    }
+    ```
+
+- 反射
+
+  - 破坏单例
+
+    ```java
+    public class App2 {
+        public static void main(String[] args) throws Exception {
+            // 1.获取SingletonTest的字节码对象
+            Class<SingletonTest> clazz = SingletonTest.class;
+            // 2.获取无参构造方法
+            Constructor<SingletonTest> cons = clazz.getDeclaredConstructor();
+            // 3.取消访问检查
+            cons.setAccessible(true);
+            // 4.创建Singleton对象
+            SingletonTest singletonTest1 = cons.newInstance();
+            SingletonTest singletonTest2 = cons.newInstance();
+            System.out.println(singletonTest1 == singletonTest2); // false
+        }
+    }
+    ```
+
+  - 改善方法
+
+    ```java
+    class Singleton04(){
+        // 这个方法也能通过反射改flag值来破坏
+        private static boolean flag = false;
+        private SingletonTest(){
+            // 需要解决线程安全
+            synchronized (SingletonTest.class){
+                if (flag) throw new RuntimeException("不能创建多个对象");
+                flag = true;
+            }
+        }
+    
+        private static class SingleInstance{
+            private static final Singleton04 INSTANCE = new Singleton4();
+        }
+    
+        private static Singleton getInstance(){
+            return SingletonInstance.INSTANCE;
+        }
+    }
+    ```
+
+    
+
+
+#### 工厂方法模式
+
+- 简单静态工厂模式
+
+  ```java
+  public class SimpleCoffeeFactory {
+      public static Coffee createCoffee(String type){
+          switch (type){
+              case "美式":
+                  return new AmericanCoffee();
+              case "拿铁":
+                  return new LatteCoffee();
+              default:
+                  throw new RuntimeException("没有这种咖啡");
+          }
+      }
+  }
+  ```
+
+  ```java
+  public class CoffeeStore {
+      public Coffee orderCoffee(String type){
+          Coffee coffee = SimpleCoffeeFactory.createCoffee(type);
+          coffee.addMilk();
+          coffee.addSugar();
+          return coffee;
+      }
+  }
+  ```
+
+  - 依旧违背开闭原则
+
+- 工厂方法模式
+
+  - 定义抽象工厂类
+
+    ```java
+    public abstract class CoffeeFactory {
+        public abstract Coffee createCoffee();
+    }
+    ```
+
+  - 细化工厂
+
+    ```java
+    public class AmericanCoffeeFactory extends CoffeeFactory{
+        @Override
+        public Coffee createCoffee() {
+            return new AmericanCoffee();
+        }
+    }
+    ```
+
+  - 使用工厂
+
+    ```java
+    public class CoffeeStore {
+        private CoffeeFactory factory;
+    
+        public void setFactory(CoffeeFactory factory){
+            this.factory = factory;
+        }
+    
+        public Coffee orderCoffee(){
+            Coffee coffee = factory.createCoffee();
+            coffee.addMilk();
+            coffee.addSugar();
+            return coffee;
+        }
+    }
+    ```
+
+  - 遵循开闭原则
+
+
+
+
+#### 抽象工厂模式
+
+#### 原型模式
+
+#### 建造者模式
 
 
 
 
 
+### 结构型模式
+
+#### 适配器模式
+
+#### 桥接模式
+
+#### 装饰模式
+
+#### 组合模式
+
+#### 外观模式
+
+#### 享元模式
+
+#### 代理模式
 
 
 
 
 
+### 行为型模式
 
+#### 模板方式模式
 
+#### 命令模式
 
+#### 访问者模式
 
+#### 迭代器模式
+
+#### 观察者模式
+
+#### 中介者模式
+
+#### 备忘录模式
+
+#### 解释器模式
+
+#### 状态模式
+
+#### 策略模式
+
+#### 责任链模式
 
 
 
