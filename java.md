@@ -2314,6 +2314,8 @@ new Vue({
     - jdk1.5添加的枚举可以实现单例模式
     - 不仅能避免线程同步问题，而且还能防止反序列化重新创建新的对象
 
+
+
 ##### 破坏单例
 
 - 序列化反序列化
@@ -2413,12 +2415,14 @@ new Vue({
     }
     ```
 
-    
 
 
-#### 工厂方法模式
 
-- 简单静态工厂模式
+
+
+#### 简单静态工厂模式
+
+- 简单静态工厂模式（不是23种设计模式之一）
 
   ```java
   public class SimpleCoffeeFactory {
@@ -2448,52 +2452,123 @@ new Vue({
 
   - 依旧违背开闭原则
 
-- 工厂方法模式
+- 可通过【工厂模式+配置文件】形式解耦合
 
-  - 定义抽象工厂类
-
-    ```java
-    public abstract class CoffeeFactory {
-        public abstract Coffee createCoffee();
-    }
-    ```
-
-  - 细化工厂
+  - CoffeeFactory
 
     ```java
-    public class AmericanCoffeeFactory extends CoffeeFactory{
-        @Override
-        public Coffee createCoffee() {
-            return new AmericanCoffee();
-        }
-    }
-    ```
-
-  - 使用工厂
-
-    ```java
-    public class CoffeeStore {
-        private CoffeeFactory factory;
+    public class CoffeeFactory {
+        // 存储配置文件的解析数据
+        private static HashMap<String, Coffee> map = new HashMap<>();
     
-        public void setFactory(CoffeeFactory factory){
-            this.factory = factory;
+        // 读取并解析配置文件
+        static {
+            Properties properties = new Properties();
+            InputStream is = CoffeeFactory.class.getClassLoader().getResourceAsStream("bean.properties");
+            try {
+                properties.load(is);
+                Set<Object> keys = properties.keySet();
+                for (Object key : keys) {
+                    String className = properties.getProperty((String) key);
+                    Class clazz = Class.forName(className);
+                    Coffee coffee = (Coffee) clazz.newInstance();
+                    map.put((String) key, coffee);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     
-        public Coffee orderCoffee(){
-            Coffee coffee = factory.createCoffee();
-            coffee.addMilk();
-            coffee.addSugar();
-            return coffee;
+        // 根据名称获取对象
+        public static Coffee createCoffee(String name){
+            return map.get(name);
         }
     }
     ```
 
-  - 遵循开闭原则
+  - bean.properties
+
+    ```properties
+    american = cn.Eli.coffee.AmericanCoffee
+    latte = cn.Eli.coffee.LatteCoffee
+    ```
+
+
+
+
+
+
+#### 工厂方法模式
+
+- 定义抽象工厂类
+
+  ```java
+  public abstract class CoffeeFactory {
+      public abstract Coffee createCoffee();
+  }
+  ```
+
+- 细化工厂
+
+  ```java
+  public class AmericanCoffeeFactory extends CoffeeFactory{
+      @Override
+      public Coffee createCoffee() {
+          return new AmericanCoffee();
+      }
+  }
+  ```
+
+- 使用工厂
+
+  ```java
+  public class CoffeeStore {
+      private CoffeeFactory factory;
+  
+      public void setFactory(CoffeeFactory factory){
+          this.factory = factory;
+      }
+  
+      public Coffee orderCoffee(){
+          Coffee coffee = factory.createCoffee();
+          coffee.addMilk();
+          coffee.addSugar();
+          return coffee;
+      }
+  }
+  ```
+
+- 遵循开闭原则
+
 
 
 
 
 #### 抽象工厂模式
+
+- uml图
+
+  ![抽象工厂模式](D:\picture\typora\java\uml\抽象工厂模式.png)
+
+- 具体工厂类
+
+  ```java
+  public class AmericanDessertFactory implements DessertFactory{
+      @Override
+      public Coffee createCoffee() {
+          return new AmericanCoffee();
+      }
+  
+      @Override
+      public Dessert createDessert() {
+          return new MatchMouse();
+      }
+  }
+  ```
+
+
+
+
 
 #### 原型模式
 
