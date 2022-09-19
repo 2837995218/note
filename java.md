@@ -699,7 +699,7 @@ Element[] querySelectorAll('选择器');
   - H5新增的获取自定义属性的方法
     - div.dataset：获取所有data-开头的属性（如div.dataset.index）
     - 如果自定义属性中有多个-连接的单词，在获取时，采取驼峰命名法
-      - 属性：\<div class='data-last-name'>；获取：div.dataset['listName']
+      - 属性：\<div class='data-last-name'>；获取：div.dataset['lastName']
 
 
 
@@ -1219,11 +1219,11 @@ btn.onclick = function(){
   let person = {
       name:"张三",
       gender:"男",
-      age: number // 如果这样写，只会在person被定义时age属性被赋值一次，之后number变化，person不变
+      //age: number // 如果这样写，只会在person被定义时age属性被赋值一次，之后number变化，person不变
   }
   
   Object.defineProperty(person, 'age', {
-      value: number, // 也是一次赋值
+      value: number, // 这里也是一次赋值
       enumerable: true, // 控制属性是否可以被枚举，默认值为false
       writable: true, // 控制属性是否可以被修改，默认值为flase
       configurable: true, // 控制属性是否可以被删除，默认值为flase
@@ -1233,8 +1233,8 @@ btn.onclick = function(){
           return number
       },
       // 当修改person中的age属性时，set函数（setter）会被调用，形参为修改的具体值
-      set(value){
-      	number = value;
+      set(val){
+      	number = val;
   	}
   })
   ```
@@ -1346,7 +1346,7 @@ btn.onclick = function(){
     - 删除 => delete
     - 退出 => esc
     - 空格 => space
-    - 换行 => tab（Tab键在按下的时候会切走焦点，所以只能用keydown捕获）
+    - 换行 => tab（Tab键在点击的时候会切走焦点，所以只能用keydown捕获）
     - 上、下、左、右 => up、down、left、right
   - @keyup.ctrl.y：按下ctrl+y键才执行
 
@@ -4250,25 +4250,15 @@ protected Filter[] getServletFilters(){
   - session.getAttribute(string name, Object value)
   - session.removeAttribute(String name)
 
-  session什么时候被销毁
+- session什么时候被销毁
 
-  ​	服务器关闭
-
-  session对象调用invalidate()
-
-  session默认失效时间为30分钟
+  - 服务器关闭
+  - session对象调用invalidate()
+  - session默认失效时间为30分钟
 
   
 
   
-
-
-
-
-
-
-
-
 
 
 
