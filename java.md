@@ -2572,7 +2572,153 @@ new Vue({
 
 #### 原型模式
 
+- 概述
+
+  - 定义：用一个已经创建的实例对象作为原型，通过复制该原型对象来创建一个和原型对象相同的新对象
+
+  - 结构
+
+    - 抽象原型类：规定了具体原型对象必须实现的 clone() 方法
+    - 具体原型类：实现抽象原型类的 clone() 方法
+    - 访问类：使用具体原型类中的 clone() 方法类复制新的对象
+
+  - uml图
+
+    ![原型模式](D:\picture\typora\java\uml\原型模式.png)
+
+- 代码实现
+
+  - 浅克隆：对于引用类型的属性，复制出来的对象中的属性仍指向原对象中属性的地址
+
+    ```java
+    public class Award implements Cloneable{
+        private Student student;
+        
+        public Award(Student student){this.student = student;}
+    
+        @Override
+        public Award clone() throws CloneNotSupportedException {
+            return (Award) super.clone();
+        }
+    }
+    ```
+
+  - 深克隆：属性中引用的其他对象也会被克隆，不再指向原有地址
+
+    - 可通过将对象序列化到硬盘上，再反序列化获得原对象的深克隆对象
+
+
+
+
+
 #### 建造者模式
+
+- 概述
+
+  - 结构
+
+    - 抽象建造者类(Builder)：这个接口规定要实现复杂对象的那些部分的创建，并不涉及具体的对象部件的创建
+    - 具体建造者类(ConcreteBuilder)：实现Builder接口，完成复杂产品的哥哥部件的具体创建方法。在构造过程完成后，提供产品的实例
+    - 产品类(Product)：要创建的复杂对象（要求：创建的产品要有较多共同点）
+    - 指挥者类(Director)：调用具体建造者来创建复杂对象的各个部分，在指导者中不涉及具体产品的信息，只负责保证对象各部分完整创建或按某种顺序创建
+
+  - uml图
+
+    ![建造者模式](D:\picture\typora\java\uml\建造者模式.png)
+
+- 代码实现
+
+  - 抽象建造者
+
+    ```java
+    public abstract class Builder {
+        protected Bike bike = new Bike();
+    
+        public abstract void buildFrame();
+        public abstract void buildSeat();
+        public abstract Bike createBike();
+    }
+    ```
+
+  - 具体建造者
+
+    ```java
+    public class MobileBuilder extends Builder{
+        @Override
+        public void buildFrame() {bike.setFrame("铝合金车架");}
+        
+        @Override
+        public void buildSeat() {bike.setSeat("真皮车座");}
+        
+        @Override
+        public Bike createBike() {return bike;}
+    }
+    ```
+
+  - 指挥者
+
+    ```java
+    public class Director {
+        private Builder builder;
+    
+        public Director(Builder builder){this.builder = builder;}
+    
+        // 控制各部分是否组装，如何组装
+        public Bike construct(){
+            builder.buildFrame();
+            builder.buildSeat();
+            return builder.createBike();
+        }
+    }
+    ```
+
+- 拓展
+
+  ```java
+  public class Laptop {
+      private String cpu;
+      private String screen;
+      private String memory;
+      private String mainBoard;
+  
+      private Laptop(Builder builder){
+          this.cpu = builder.cpu;
+          this.screen = builder.screen;
+          this.memory = builder.memory;
+          this.mainBoard = builder.mainBoard;
+      }
+  
+      public static final class Builder{
+          private String cpu;
+          private String screen;
+          private String memory;
+          private String mainBoard;
+  
+          public Builder cpu(String cpu){
+              this.cpu = cpu;
+              return this;
+          }
+          public Builder screen(String screen){
+              this.screen = screen;
+              return this;
+          }
+          public Builder memory(String memory){
+              this.memory = memory;
+              return this;
+          }
+          public Builder mainBoard(String mainBoard){
+              this.mainBoard = mainBoard;
+              return this;
+          }
+  
+          public Laptop build(){
+              return new  Laptop(this);
+          }
+      }
+  }
+  ```
+
+  
 
 
 
