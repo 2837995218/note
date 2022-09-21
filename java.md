@@ -3076,7 +3076,7 @@ public interface UserMapper {
 
 - 数据库的字段名称 和 实体类的属性名称 不一样时，不能自动封装。
 
-  - 查询时取别名：对不一样的列名取别名，让别名于实体类属性名一致
+  - 查询时取别名：对不一样的列名取别名，让别名与实体类属性名一致
 
   ```xml
   <select id="selectAll" resultTyep="User">
