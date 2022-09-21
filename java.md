@@ -1018,6 +1018,144 @@ function flash(obj, target, callback){
 
 
 
+# 移动端
+
+
+
+## css拓展
+
+### 字体图标
+
+- 字体图标下载 https://www.iconfont.cn/
+
+- 使用
+
+  ```html
+  <html>
+  <head>
+      <title>字体图标</title>
+      <!-- 引入字体图标样式 -->
+      <link rel="stylesheet" href="./font_icon/iconfont.css">
+  </head>
+  <body>
+      <!-- 使用字体图标 -->
+      <span class="iconfont icon-RectangleCopy"></span>
+  </body>
+  </html>
+  ```
+
+- iconfont.css
+
+  ```css
+  /* 定义字体 */
+  @font-face {
+      font-family: "iconfont"; /* Project id 3663092 */
+      src: url('iconfont.woff2?t=1663751590840') format('woff2'),
+          url('iconfont.woff?t=1663751590840') format('woff'),
+          url('iconfont.ttf?t=1663751590840') format('truetype');
+  }
+  /* iconfont样式 */
+  .iconfont {
+      /* 使用iconfont字体 */
+      font-family: "iconfont" !important;
+      font-size: 16px;
+      font-style: normal;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* 用伪元素加载字体 */
+  .icon-RectangleCopy:before {
+      content: "\e6a1";
+  }
+  ```
+
+- 可上传图标（svg矢量图）
+
+
+
+### 平面转换
+
+- 语法
+
+  - transform: translate(水平移动距离【, 垂直移动距离】)
+  - transform: translateY(垂直移动距离)
+  - transform: rotate(角度)（单位deg）
+  - 取值
+    - 具体值
+    - 百分比（参考自身盒子的大小）
+
+- 使用
+
+  ```html
+  <html>
+      <head>
+          <title>平面移动</title>
+          <style>
+              .father {
+                  width: 500px;
+                  height: 300px;
+                  border: 1px solid gray;
+              }
+              .son {
+                  width: 100px;
+                  height: 50px;
+                  background-color: aqua;
+                  /* 定义位置移动的时间 */
+                  transition: all 1s;
+              }
+              .father:hover .son {
+                  /* 定义位移距离 */
+                  transform: translate(200px, 100px);
+              }
+  
+              .rotate {
+                  width: 100px;
+                  height: 50px;
+                  background-color: yellow;
+                  transition: all 1s;
+              }
+              .rotate:hover {
+                  transform: rotate(180deg);
+              }
+          </style>
+      </head>
+      <body>
+          <div class="father">
+              <div class="son"></div>
+          </div>
+  
+          <div class="rotate"></div>
+      </body>
+  </html>
+  ```
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Axios
 
 
