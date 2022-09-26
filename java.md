@@ -594,31 +594,6 @@
 
 
 
-## 补充
-
-### css属性
-
-- display：属性规定元素应该生成的框的类型
-  - flex：子元素（项目）弹性布局
-- jusify-content：定义了子元素（项目）在主轴上的对齐方式
-  - flex-start：默认值。项目位于容器的开头
-  - flex-end：项目位于容器的结尾
-  - center：项目位于容器的中央
-  - space-between：项目在行与列之间留有间隔
-  - space-around：项目在行之前、行之间、行之后留有间隔
-- align-items：定义flex子项在flex容器的当前行的侧轴（纵轴）方向上的对齐方式
-  - stretch：默认值。元素被拉伸以适应容器
-  - center：元素位于容器中心
-  - flex-start：元素位于容器开头
-  - flex-end：元素位于容器结尾
-  - baseline：元素位于容器的基线上
-
-
-
-
-
-
-
 
 
 # JavaScript
@@ -1079,11 +1054,12 @@ function flash(obj, target, callback){
 - 语法
 
   - transform: translate(水平移动距离【, 垂直移动距离】)
+    - 取值：具体值、百分比（参考自身盒子大小）
   - transform: translateY(垂直移动距离)
   - transform: rotate(角度)（单位deg）
-  - 取值
-    - 具体值
-    - 百分比（参考自身盒子的大小）
+    - 设置转动原点：transform-origin: 原点水平位置 原点垂直位置;
+      - 取值：left、top、right、bottom、center
+  - transform: scale(缩放倍数)（中心缩放）
 
 - 使用
 
@@ -1101,22 +1077,18 @@ function flash(obj, target, callback){
                   width: 100px;
                   height: 50px;
                   background-color: aqua;
-                  /* 定义位置移动的时间 */
+                  /* 定义变化的时间 */
                   transition: all 1s;
               }
               .father:hover .son {
                   /* 定义位移距离 */
                   transform: translate(200px, 100px);
-              }
-  
-              .rotate {
-                  width: 100px;
-                  height: 50px;
-                  background-color: yellow;
-                  transition: all 1s;
-              }
-              .rotate:hover {
-                  transform: rotate(180deg);
+                  /* 定义旋转 */
+                  transform: rotate(360deg);
+                  /* 定义多重移动（旋转会改变坐标轴向，位移会受影响） */
+                  transform: translate(200px, 100px) rotate(360deg);
+                  /* 缩放 */
+                  transform: scale(3);
               }
           </style>
       </head>
@@ -1124,13 +1096,238 @@ function flash(obj, target, callback){
           <div class="father">
               <div class="son"></div>
           </div>
+      </body>
+  </html>
+  ```
   
-          <div class="rotate"></div>
+  
+
+### 渐变
+
+- 透明度：opacity: 0;
+
+- 渐变：background-image: linear-gradient(方向, 颜色1, 颜色2, ...)
+
+  - 线性渐变 - 从上到下（默认）
+
+    ```css
+    background-image: linear-gradient(red, yellow);
+    ```
+
+  - 线性渐变 - 从左到右
+
+    ```css
+    background-image: linear-gradient(to right, red , yellow);
+    ```
+
+  - 线性渐变 - 对角线
+
+    ```css
+    background-image: linear-gradient(to bottom right, red, yellow);
+    ```
+
+  - 使用角度
+
+    ```css
+    background-image: linear-gradient(-90deg, red, yellow);
+    ```
+
+  - 重复线性渐变
+
+    ```css
+    background-image: repeating-linear-gradient(red, yellow 10%, green 20%);
+    ```
+
+
+
+### 空间转换
+
+- 使用 perspective 属性实现 透视 效果
+
+  - 添加到使用z轴变换的盒子的父级上
+  - 一般取值：800px~1200px
+
+- 语法
+
+  - transform: translate3d(x, y, z)
+  - transform: rotateX(角度)：围绕X轴转动
+  - transform: scale3d(x, y, z)：缩放
+
+- 立方体盒子
+
+  ```html
+  <!DOCTYPE html>
+  <html>
+      <head>
+          <title>立体导航栏</title>
+          <style>
+              .nav {
+                  position: relative;
+                  float: left;
+                  width: 100px;
+                  height: 50px;
+                  line-height: 50px;
+                  text-align: center;
+                  /* 使子盒子处于真正的3d空间中*/
+                  transform-style: preserve-3d;
+                  transition: all .5s;
+              }
+              .nav .cube1 {
+                  position: absolute;
+                  width: 100px;
+                  height: 50px;
+                  background-color: yellow;
+              }
+              .nav .cube2 {
+                  position: absolute;
+                  width: 100px;
+                  height: 50px;
+                  background-color: aqua;
+                  transform: translate3d(0, -25px, -25px) rotateX(90deg);
+              }
+              .nav:hover {
+                  transform: translateY(25px) rotateX(-90deg);
+              }
+          </style>
+      </head>
+      <body>
+          <div class="navigation">
+          <div class="nav">
+              <div class="cube1">登录</div>
+              <div class="cube2">login</div>
+          </div>
+          <div class="nav">
+              <div class="cube1">注册</div>
+              <div class="cube2">register</div>
+          </div>
+      </div>
       </body>
   </html>
   ```
 
+
+
+
+### 动画
+
+- 语法
+
+  - 定义动画
+
+    ```css
+    @keyframes 动画名称 {
+        from {}
+        to {}
+    }
+    ```
+
+    ```css
+    @keyframes 动画名称 {
+        0% {}
+        10% {}
+        15% {}
+        100% {}
+    }
+    ```
+
+  - 使用动画
+
+    ```css
+    animation: 动画名称 动画花费时长, 第二个动画 时长, ......;
+    
+    /* 不区分顺序（第一个时间表示时长，第二个表示延时时间） */
+    animation: 动画名称 动画花费时长 速度曲线 延时时间 重复次数 动画方向 执行完毕时状态;
+    /*
+    	steps(n)：分三次执行
+    	infinite：无限循环
+    	alternate：返回
+    	forwards：动画停留在最终状态 backwards：动画停留在最初状态
+    */
+    ```
+
+  - 动画属性（配合js）
+    - animation-name：动画名称
+    - animation-duration：动画时长
+    - animation-delay：延迟时间
+    - animation-fill-mode：动画执行完毕时的状态
+    - animation-timing-function：速度曲线
+    - animation-iteration-count：重复次数
+    - animation-direction：动画执行方向
+    - animation-play-state：动画状态（取值paused为暂停）
+
+
+
+
+
+## 移动端网页
+
+### Flex布局
+
+- 弹性容器
+  - display: flex：设置弹性容器，其直接子盒子为弹性盒子
+  - justify-content：调节元素在主轴的对齐方式
+    - flex-start：默认值，起点开始依次排序
+    - flex-ent：终点开始依次排序
+    - center：沿主轴居中排序
+    - space-around：弹性盒子沿主轴均匀排序，空白间距均分在弹性盒子两侧
+    - space-between：弹性盒子沿主轴均匀排序，空白间距均分在弹性盒子之间
+    - space-evenly：弹性盒子沿主轴均匀排序，弹性盒子与容器之间间距相等
+  - align-items：调节弹性盒子在侧轴的对齐方式
+    - stretch：默认值，在弹性盒子没设置高度时，沿侧轴拉伸弹性盒子至与弹性容器相同
+    - center：沿侧轴居中排列
+    - flex-start：默认值，起点开始依次排列
+    - flex-end：终点开始依次排列
+  - flex-direction：改变主轴方向
+    - row：默认值：行，水平
+    - column：列，垂直
+    - row-reverse：行，从右向左
+    - column-reverse：列，从下向上
+  - flex-wrap：换行
+    - nowrap：默认值，不换行
+    - wrap：换行
+  - align-content：flex布局下，行与行间有默认间距
+    - 取值与justify-content属性相似，无space-evenly
+- 弹性盒子
+  - align-self：调节某个弹性盒子在侧轴的对齐方式
+    - 取值与flex-direction属性相同
+  - flex：占用弹性盒子剩余尺寸的分数
+
+
+
+### rem
+
+- rem单位
+
+  - 相对单位
+  - 1rem = 1HTML字号大小
+
+- 移动适配
+
+  - 媒体查询
+
+    ```css
+    @media (width:375px（媒体特性）){
+        html {
+            font-size: 30px;
+        }
+    }
+    ```
+
+  - 引入flexiable.js
+
   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
