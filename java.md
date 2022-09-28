@@ -1294,28 +1294,60 @@ function flash(obj, target, callback){
 
 
 
-### rem
+### 单位
 
-- rem单位
+- rem
 
-  - 相对单位
-  - 1rem = 1HTML字号大小
+  - rem单位
 
-- 移动适配
-
-  - 媒体查询
-
-    ```css
-    @media (width:375px（媒体特性）){
-        html {
-            font-size: 30px;
-        }
-    }
-    ```
-
-  - 引入flexiable.js
-
+    - 相对单位
+    - 1rem = 1HTML字号大小
   
+  
+    - 移动适配
+  
+      - 媒体查询
+  
+        ```css
+        @media (width:375px（媒体特性）){
+            html {
+                font-size: 30px;
+            }
+        }
+        ```
+  
+      - 引入flexiable.js
+  
+
+
+- vh/vm
+
+  - vh/vm单位
+    - 1vh = 1/100视口高度
+    - 1vw = 1/100视口宽度
+  
+
+
+
+### less
+
+```less
+.father {
+    width: 10+5px;
+    // 除法需要加括号
+    height: (300/37.5rem);
+    
+    .son {
+        // 此处写子类样式表
+        width: 5px;
+    }
+    
+    // $：表示本选择器
+    $:hover {
+        background: red;
+    }
+}
+```
 
 
 
@@ -6125,7 +6157,7 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
 
 - 补充
 
-  - 先导入那个日志实现依赖就用那个依赖记录日志
+  - 先导入哪个日志实现依赖就用哪个依赖记录日志
 
   - 若想用nop关闭所有日志记录功能，则需要首先导入nop的依赖
 
