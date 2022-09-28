@@ -1332,10 +1332,23 @@ function flash(obj, target, callback){
 ### less
 
 ```less
+// out: ../css/  // 到处到指定位置
+// out: false    // 禁止导出
+
+// 导入其他样式文件
+@import './test.less';
+
+// 定义变量
+@color: pink;
+
 .father {
     width: 10+5px;
     // 除法需要加括号
-    height: (300/37.5rem);
+    height: (300/37.5rem); 
+    
+    
+    // 使用变量
+    background: @color;
     
     .son {
         // 此处写子类样式表
@@ -1350,6 +1363,43 @@ function flash(obj, target, callback){
 ```
 
 
+
+### 媒体查询
+
+- 语法
+
+  ```css
+  @media【关键词 媒体类型 and】(媒体选择器) {
+      选择器 {
+          样式
+      }
+  }
+  ```
+
+- 组成
+
+  - 媒体选择器
+    - 视口的宽和高：width、height
+    - 视口最大宽或高：max-width、max-height
+    - 视口最小宽或高：min-width、min-height
+    - 屏幕方向：orientation=portrait（竖屏）、landscape（横屏）
+  - 关键词
+    - and
+    - only
+    - not
+  - 媒体类型
+    - screen：带屏幕的设备
+    - print：打印预览模式
+    - speech：屏幕阅读模式
+    - all：默认值
+
+- link引入
+
+  ```html
+  <link rel="stylesheet" media="逻辑符 媒体类型 and （媒体特性）" href="">
+  ```
+
+  
 
 
 
