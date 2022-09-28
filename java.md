@@ -1396,7 +1396,7 @@ function flash(obj, target, callback){
 - link引入
 
   ```html
-  <link rel="stylesheet" media="逻辑符 媒体类型 and （媒体特性）" href="">
+  <link rel="stylesheet" media="逻辑符 媒体类型 and （媒体特性）" href="xx.h">
   ```
 
   
