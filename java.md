@@ -1399,33 +1399,165 @@ function flash(obj, target, callback){
   <link rel="stylesheet" media="逻辑符 媒体类型 and （媒体特性）" href="xx.h">
   ```
 
+
+
+
+### BootStrap
+
+- 栅格化是指将整个网页的宽度分成若干等分
+
+- BootStrap默认将网页分成12等分
+
+  |          | 超小屏幕 | 小屏幕   | 中等屏幕 | 大屏幕    |
+  | -------- | -------- | -------- | -------- | --------- |
+  | 响应段点 | < 768px  | >= 768px | >= 992px | >= 1200px |
+  | 别名     | xs       | sm       | md       | lg        |
+  | 容器宽度 | 100%     | 750px    | 970px    | 1170px    |
+  | 前缀名   | col-xs-* | col-sm-* | col-md-* | col-lg-*  |
+  | 列数     | 12       | 12       | 12       | 12        |
+  | 列间宽   | 30px     | 30px     | 30px     | 30px      |
+
+- 快速入门
+
+  ```html
+  <!-- 引入bootstrap样式表 -->
+  <link rel="stylesheet" href="./bootstrap-3.4.1-dist/css/bootstrap.min.css">
   
+  <!-- container是bootstrap中专门提供的版心类名，自带15px的padding -->
+  <!-- row类自带-15px的外边距，与container结合使用可抵消container的15px的padding -->
+  <div class="container">
+      <div class="col-lg-3 col-md-2 col-sm-1 row">第一个模块</div>
+      <div class="col-lg-3 col-md-2 col-sm-1 row">第二个模块</div>
+      <div class="col-lg-3 col-md-2 col-sm-1 row">第三个模块</div>
+      <div class="col-lg-3 col-md-2 col-sm-1 row">第四个模块</div>
+  </div>
+  
+  <!-- container-fluid样式中宽度是100%，但存在15px的padding -->
+  <div class="container-fluid"></div>
+  ```
 
+- 其他
 
+  - [全局 CSS 样式](https://v3.bootcss.com/css)
 
+    - 表格（table标签上）
+      - table：表格基础类名
+      - table-striped：增加隔行变色效果
+      - table-bordered：为表格增加边框
+      - table-hover：增加鼠标悬停效果
+    - 按钮（a、button、input标签上）
+      - btn：按钮基础类名
+      - btn-default：默认样式
+      - btn-primary：首选项
+      - btn-success：成功
 
+  - [组件](https://v3.bootcss.com/components/)
 
+    - 使用步骤
 
+      - 导入css样式
+      - 复制结构，修改内容
 
+    - 分页组件
 
+      ```html
+      <nav aria-label="Page navigation">
+          <ul class="pagination">
+              <li>
+                  <a href="#" aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                  </a>
+              </li>
+              <li><a href="#">1</a></li>
+              <li><a href="#">2</a></li>
+              <li><a href="#">3</a></li>
+              <li><a href="#">4</a></li>
+              <li><a href="#">5</a></li>
+              <li>
+                  <a href="#" aria-label="Next">
+                      <span aria-hidden="true">&raquo;</span>
+                  </a>
+              </li>
+          </ul>
+      </nav>
+      ```
 
+    - 字体图标
 
+  - [JavaScript 插件](https://v3.bootcss.com/javascript/)
 
+    - 使用步骤
 
+      - 引入文件
 
+        ```html
+        <!-- 引入样式表 -->
+        <link rel="stylesheet" href="./bootstrap-3.4.1-dist/css/bootstrap.min.css">
+        
+        <!-- 引入脚本 -->
+        <script src="./js/jquery.js"></script>
+        <script scr="./bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+        ```
 
+      - 复制结构，调整内容
 
+    - 下拉菜单
 
+      ```html
+      <div class="dropdown">
+          <button id="dLabel" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Dropdown trigger
+              <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dLabel">
+              ...
+          </ul>
+      </div>
+      ```
 
+    - 轮播图
 
+      ```html
+      <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+          <!-- Indicators -->
+          <ol class="carousel-indicators">
+              <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+              <li data-target="#carousel-example-generic" data-slide-to="1"></li>
+              <li data-target="#carousel-example-generic" data-slide-to="2"></li>
+          </ol>
+      
+          <!-- Wrapper for slides -->
+          <div class="carousel-inner" role="listbox">
+              <div class="item active">
+                  <img src="..." alt="...">
+                  <div class="carousel-caption">
+                      ...
+                  </div>
+              </div>
+              <div class="item">
+                  <img src="..." alt="...">
+                  <div class="carousel-caption">
+                      ...
+                  </div>
+              </div>
+              
+              ...
+              
+          </div>
+      
+          <!-- Controls -->
+          <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+              <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+              <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+              <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+              <span class="sr-only">Next</span>
+          </a>
+      </div>
+      ```
 
-
-
-
-
-
-
-
+  - [定制并下载](https://v3.bootcss.com/customize/)
 
 
 
