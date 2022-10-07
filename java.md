@@ -1567,21 +1567,27 @@ function flash(obj, target, callback){
 
 
 
-# Axios
+# Ajax
 
 
 
-## ajax
+## 基础
 
 ### Http
 
 - HTTP规定了浏览器和万维网服务器之间互相通信的规则。
 - 请求报文
-  - 行：GET	/s?ie=utf-8	HTTP/1.1
+  - 行：GET	/test	HTTP/1.1
   - 头：（键值对形式）
     - Host: xxx.com
     - Cookie: name=admin
-    - User-Agent: chrome...
+    - Content-type: （描述发送到服务器的数据类型）
+      - application/x-www-form-urlencoded（默认）
+      - multipart/form-data（表单有文件、图片）
+      - application/json
+    - Accept:（用来描述客户端能接受什么类型的返回值）
+    - Accept-Language:（客户端期望接收的人类语言）
+    - User-Agent:（说明当前是什么类型的浏览器）
   - 空行
   - 体：username=admin&password=admin（如果是get请求，请求体为空）
 - 响应报文
@@ -1589,8 +1595,11 @@ function flash(obj, target, callback){
   - 头：（键值对形式）
     - Content-Type: text/html;charset=utf-8
     - Content-length: 2048
+    - Access-Control-Allow-Headers: *：接收所有类型请求头
+    - Access-Control-Allow-Origin: *：Ajax允许跨域
   - 空行
   - 体
+    - html页面
 
 
 
@@ -1670,7 +1679,262 @@ btn.onclick = function(){
 
 
 
+## 拓展
 
+### 数据解析
+
+- 常用方法
+
+  - encodeURI()：URL编码
+
+  - decodeURI()：URL解码
+
+  - JSON.stringify(Object obj)：对象转json字符串
+
+  - JSON.parse(String json)：json字符串转对象
+
+- json
+
+  - 数据结构：{key: value, key: value, ...}
+
+  - key：双引号包裹的字符串
+
+  - value：数据类型可以是数字、字符串（双引号）、布尔值、null、数组、对象6种类型
+
+  - 最外层必须是对象或数组格式
+
+  - 例如：
+
+    ```json
+    {
+        "name": "zhangsan",
+        "age": 20,
+        "address": null,
+        "hobby": ["吃饭", "睡觉"],
+        "friend": [
+            {
+                "name": "lisi"
+            },
+            {
+                "name": "wangwu"
+            }
+        ]
+    }
+    ```
+
+    
+
+### FormData
+
+- 基本使用
+
+  ```js
+  // 1. 新建 FormDate 对象
+  let fd = new FormData();
+  
+  // 2. 为 FormDate 添加表单项
+  fd.append("username","zhangsan");
+  fd.append("password","12345");
+  
+  // 3. 发送ajax请求
+  const xhr = new XMLHtttpRequest();
+  xhr.open("POST","http://www.test.com");
+  xhr.send(fd)
+  ```
+
+- 从网页表单中获取数据
+
+  ```js
+  // 1. 获取form表单
+  let form = document.querySelector("#form");
+  
+  // 2. 监听提交事件
+  form.addEventListener("submit", function(e){
+      // 3. 阻止默认事件
+      e.preventDefault();
+      // 4. 绑定
+      let fd = new FormData(form);
+      
+      // 5. 发送ajax
+  })
+  ```
+
+- 上传文件
+
+  ```html
+  <input id="file" type="file"/>
+  <input id="btn" type="button"/>
+  ```
+
+  ```js
+  let btn = document.querySelector("#btn")
+  btn.addEventListener("click", function(){
+      // 1. 检验是否选择了文件
+      let files = document.querySelector("#file").files
+      if(files.length <= 0){
+          return alert("请选择要上传的文件")
+      }
+      
+      // 2. 向FormData中追加文件
+      let fd = new FormData()
+      fd.append("file", files[0])
+      
+      // 细节：用formdata提交文件时不需要设置请求头
+  })
+  ```
+
+
+
+### 传输进度
+
+- 上传
+
+  ```js
+  const xhr = new XMLHttpRequest()
+  xhr.upload.onprogress = function(e){
+      // e.lengthComputable 是一个布尔值，表示当前上传的资源是否具有可计算的长度
+      if(e.lengthComputable){
+          // e.loaded 已传输的字节
+          // e.total 需要传输的总字节
+          let percentComplete = Math.ceil((e.loaded / e.total) * 100)
+      }
+  }
+  // e.isTrusted为true时代表事件为用户触发的可信事件
+  ```
+
+- 下载：xhr.onprogress
+
+
+
+### Axios
+
+- axios发送get/post请求
+
+  ```js
+  axios.get(url, {params: {/*参数对象*/}}).then(callback)
+  axios.post(url, {/*数据对象*/}).then(callback)
+  ```
+
+  ```js
+  // 请求的 URL 地址
+  let url = "http://www.test.com"
+  // 请求的参数对象
+  let paramsObj = {name:'zs', age:20}
+  // 调用 axios.get() 发送 GET 请求
+  axios.get(url, {params: paramsObj}).then(function(res){
+      // res.data 是服务器返回的数据
+      let result = res.data
+      // res中还包含请求的状态等信息
+      console.log(res)
+  })
+  ```
+
+- 直接发送axios请求
+
+  ```js
+  // axios(请求对象).then(callback)
+  axios({
+      method: "请求类型",
+      url: "URL地址",
+      data: {/*Post数据*/},
+      params: {/*Get参数*/}
+  }).then(callback)
+  ```
+
+
+
+
+### 防抖与节流
+
+- 防抖优化ajax请求
+
+  ```js
+  let input = doucment.getElementById('input');
+  let timer = null
+  // 定义防抖函数
+  function debounceSearch(keywords){
+      timer = setTimeout(function(){
+          getSuggestList(keywords)
+      },500)
+  }
+  // 在指定毫秒数内触发keyup事件时，清除上一个定时器，开启下一个定时器
+  input.addEventListener("keyup", function() {
+      clearTimeout(timer)
+      // 重新获得keywords
+      let kw = input.val().trim();
+      debounceSearch(kw)
+  })
+  ```
+
+- 节流优化鼠标跟随效果
+
+  ```js
+  let angle = document.getElementById("angel");
+  let timer = null // 1. 预定义一个 timer 节流阀
+  document.addEventListener("mousemove", function(e){
+      if(timer){return} // 3. 判断节流阀是否为空，如果不为空，则证明距离上次执行间隔不足指定毫秒数
+      timer = setTimeout(function() {
+          angle.style.left = e.pagex+'px'
+          angle.style.top = e.pageY+'px'
+          timer = null // 2. 当设置了鼠标跟随效果后，清空 timer 节流阀，方便下次开启延时器
+      },16)
+  })
+  ```
+
+  
+
+
+
+## 跨域
+
+### 同源策略
+
+- 同源：协议、域名、端口相同，反之，则是跨域
+- 同源策略：限制两个不同源的网页进行资源交互
+- 处理时机：客户端可发送ajax到跨域的服务器，服务器也可以接收并返回数据，数据会在返回时被浏览器的同源策略拦截
+
+
+
+### JSONP
+
+- 原理：由于浏览器的限制，网页中无法通过Ajax请求非同源的接口数据，但是\<script>标签的src属性不受浏览器的同源策略影响，可以同过src属性，请求非同源的js脚本。因此，JSONP的实现原理，就是同个\<script>标签的src属性，请求跨域的数据接口，并通过函数调用的形式，接收跨域接口响应回来的数据
+
+- 步骤
+
+  - 定义一个success的回调函数
+
+    ```html
+    <script>
+    	function success(data) {
+            console.log("获取到了data数据")
+            console.log(data)
+        }
+    </script>
+    ```
+
+  - 通过\<script>标签，请求接口数据
+
+    ```html
+    <script src="http://www.test.com/jsonp?callback=success">
+    </script>
+    ```
+
+  - 非同源的网页先获得后端服务器的数据
+
+  - 再根据src中的callback参数，准备一个名为success的回调函数，参数为服务器的数据
+
+    ```html
+    <script>
+        let data = res.data;
+        success(data);
+    </script>
+    ```
+
+- 兼容各个版本浏览器，但只支持get请求。也并不是ajax
+
+
+
+### CORS
 
 
 
@@ -5471,6 +5735,48 @@ afterCompletion...
 
 
 
+## 常用插件
+
+```xml
+<!-- 设置jdk版本 -->
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.10.1</version>
+    <configuration>
+        <source>17</source>
+        <target>11</target>
+    </configuration>
+</plugin>
+
+<!-- springboot项目的常用插件，在项目打包时，把需要的各种依赖包都打到jar包中 -->
+<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+    <configuration>
+        <excludes>
+            <exclude>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+            </exclude>
+        </excludes>
+    </configuration>
+</plugin>
+
+<!-- 将tomcat服务器嵌入项目中 -->
+<plugin>
+    <groupId>org.apache.tomcat.maven</groupId>
+    <artifactId>tomcat7-maven-plugin</artifactId>
+    <version>2.1</version>
+    <configuration>
+        <port>80</port>
+        <path>/</path>
+    </configuration>
+</plugin>
+```
+
+
+
 
 
 
@@ -5898,15 +6204,15 @@ public class CodeGenerator {
         GlobalConfig globalConfig = new GlobalConfig();
         globalConfig.setOutputDir(System.getProperty("user.dir")/*项目根位置*/+这里"/模块名/src/main/java");    //设置代码生成位置
         globalConfig.setOpen(false);    //设置生成完毕后是否打开生成代码所在的目录
-        globalConfig.setAuthor("狼火");    //设置作者
+        globalConfig.setAuthor("Eli");    //设置作者
         globalConfig.setFileOverride(true);     //设置是否覆盖原始生成的文件
         globalConfig.setMapperName("%sDao");    //设置数据层接口名，%s为占位符，指代模块名称
-        globalConfig.setIdType(IdType.ASSIGN_ID);   //设置Id生成策略
+        globalConfig.setIdType(IdType.ASSIGN_ID这里);   //设置Id生成策略
         autoGenerator.setGlobalConfig(globalConfig);
 
         //设置包名相关配置
         PackageConfig packageInfo = new PackageConfig();
-        packageInfo.setParent("com.aaa");   //设置生成的包名，与代码所在位置不冲突，二者叠加组成完整路径
+        packageInfo.setParent("com.aaa"这里);   //设置生成的包名，与代码所在位置不冲突，二者叠加组成完整路径
         packageInfo.setEntity("domain");    //设置实体类包名
         packageInfo.setMapper("dao");   //设置数据层包名
         autoGenerator.setPackageInfo(packageInfo);
@@ -8227,6 +8533,16 @@ public class MainActivity extends AppCompatActivity {
 
 #### 快速入门
 
+- 注册 RestTemplate
+
+  ```java
+  // RestTemplete可以发送http请求
+  @Bean
+  public RestTemplate restTemplate(){
+      return new RestTemplate;
+  }
+  ```
+
 - 微服务的服务器远程调用其他服务器的接口
 
   ```java
@@ -8242,7 +8558,7 @@ public class MainActivity extends AppCompatActivity {
       public Order queryOrderById(Long orderId){
           Order order = orderMapper.selectById(orderId);
           String url = "http://localhost:8081/user/"+order.getUserId();
-          // 发送http请求，实现远程调用
+          // 发送http的GET请求，实现远程调用
           User user = restTemplate.getForObject(url, User.class);
           
           order.setUser(user);
@@ -8270,20 +8586,407 @@ public class MainActivity extends AppCompatActivity {
 
 - 搭建Eureka服务
 
-  - 导包
+  - 父工程设置依赖管理
+
+    ```xml
+    <dependencyManagement>
+        <dependencies>
+            <!-- eureka的管理依赖 -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Hoxton.SR10</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    ```
+  
+  - 子Eureka服务引依赖
+  
+    ```xml
+    <dependency>
+    	<groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+    </dependency>
+    ```
+  
+  - 编写启动类，添加@EnableEurekaServer注解
+  
+  - 添加application.yml文件，编写注册配置
+  
+    ```yml
+    server:
+      port: 10086
+    # 微服务的名称
+    spring:
+     application:
+      name: eurekaserver
+    # 服务地址
+    eureka:
+     client:
+      service-url:
+       defaultZone: http://127.0.0.1:10086/eureka/
+    ```
+  
+
+
+- 服务注册
+
+  - 依赖
 
     ```xml
     <dependency>
     	<groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-netflix-erue</artifactId>
+        <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
     </dependency>
+    ```
+
+  - 配置地址
+
+    ```yml
+    spring:
+     application:
+      name: userservice
+    eureka:
+     client:
+      service-url:
+       defaultZone: http://127.0.0.1:10086/eureka/
+    ```
+
+- 服务发现
+
+  - 修改OrderService的代码，修改访问的url路径，用服务器代替ip、端口
+
+    ```java
+    String url = "http://userservice/user/"+order.getUserId();
+    ```
+
+  - 在order-service项目的启动类OrderApplication中的RestTemplate中添加负载均衡注解
+
+    ```java
+    @Bean
+    @LoadBalanced
+    public RestTemplate restTemplate(){
+        return new RestTemplate();
+    }
+    ```
+
+
+
+#### Ribbon
+
+- 负载均衡原理
+
+  ![Ribbon](D:\picture\typora\java\Ribbon.png)
+
+  - 服务器发送 http://customerService/customer/1
+  - Ribbon负载均衡拦截此次请求
+  - Ribbon负载均衡向eureka-server拉去customerService服务列表
+  - 获得服务列表后，进行负载均衡，并取得服务器
+
+- 负载均衡策略
+
+  - 原理：负载均衡的规则是一个叫做IRule的接口来定义的，每个子接口都是一种规则
+
+    ![IRule](D:\picture\typora\java\IRule.png)
+
+  - 负载均衡策略
+
+    - RandomRule：随机选择一个可用的服务器
+    - RoundRobinRule：简单轮询服务列表来选择服务器。它是Ribbon默认的负载均衡规则
+    - WeightedResponseTimeRule：为每一个服务器赋予一个权重值。服务器响应时间越长，这个服务器的权重就越小。这个规则会随机选择服务器，权重值会影响服务器的选择
+    - ZoneAvoidanceRule：在指定区域中以可用的服务器为基础进行服务器的选择，而后再对Zone内的多个服务做轮询。
+
+  - 选择策略
+
+    - 方式一：注册一个IRule接口的bean，返回对应的实现类
+
+      ```java
+      @Bean
+      public IRule randomRule(){
+          return new RandomRule();
+      }
+      ```
+
+    - 方式二：在order-service（服务消费者）的application.yml文件中，添加新的配置
+
+      ```yml
+      userservice:
+       ribbon:
+        NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RandomRule
+      ```
+
+- 加载策略
+
+  - Ribbon默认是采用懒加载，即第一次访问时才去创建LoadBalanceClient，第一次请求时间很长
+
+  - 而饥饿加载则会在项目启动时创建，降低第一次访问的耗时
+
+    ```yml
+    ribbon:
+     eager-load: # 饥饿加载
+      enabled: true # 开启
+      clients: customerService # 指定对customerService这个服务器饥饿加载
     ```
 
     
 
-- 服务注册
+#### Nacos
 
-- 服务发现
+- 使用步骤
+
+  - 启动nacos的注册中心
+
+    ```cmd
+    startup.cmd -m standalone
+    ```
+
+  - 在父工程中添加spring-cloud-alibaba的管理依赖
+
+    ```xml
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        <version>2.2.5.RELEASE</version>
+        <type>pom</type>
+        <scope>import</scope>
+    </dependency>
+    ```
+
+  - 添加nacos的客户端依赖
+
+    ```xml
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </dependency>
+    ```
+
+  - 配置application.yml中的nacos地址
+
+    ```yml
+    spring:
+     cloud:
+      nacos:
+       server-addr: localhost:8848
+    ```
+
+  - 注：eureka对注册的服务的名称大小写不敏感，nacos对大小写敏感
+
+- 服务分级存储模型
+
+  - 一级是服务，例如customerService
+
+  - 二级是集群，例如合肥或上海
+
+    ```yml
+    spring:
+     cloud:
+      nacos:
+       server-addr: localhost:8848
+       discovery:
+        cluster-name: HF # 集群名称
+    ```
+
+  - 三级是实例
+
+- 根据集群负载均衡（在本地集群中采用随机策略）
+
+  - 服务的提供者和消费者都设置集群
+
+  - 在服务消费者的application.yml中配置
+
+    ```yml
+    userService:
+     ribbon:
+      NFLoadBalancerRuleClassName: com.alibaba.cloud.nacos.ribbon.NacosRule
+    ```
+
+- 环境隔离
+
+  - 创建命名空间
+
+  - 添加服务到该命名空间
+
+    ```yml
+    spring:
+     cloud:
+      nacos:
+       server-addr: localhost:8848
+       discovery:
+        cluster-name: HF # 集群名称
+        namespace: 123 # 此处填写id名
+    ```
+
+- 配置非临时实例
+
+  - 临时实例每个一段时间会向nacos发送一次心跳，心跳停止时，nacos会直接移出该服务
+
+  - 非临时实例是由nacos主动询问，服务停止时，会标记健康状态为false，不会移出该服务
+
+  - application.yml
+
+    ```yml
+    spring:
+     cloud:
+      nacos:
+       server-addr: localhost:8848
+       discovery:
+        cluster-name: HF # 集群名称
+        namespace: 123 # 此处填写id名
+        ephemeral: false # 是否是临时实例
+    ```
+
+
+- 与Eureka的区别
+  - 共同点
+    - 都支持服务注册和服务拉取
+    - 都支持服务提供者心跳方式做健康检测
+  - 区别
+    - Nacos支持服务端主动检测提供者状态：临时实例采用心跳模式，非临时实例采用主动检测模式
+    - 临时实例心跳不正常会被剔除，非临时实例则不会被剔除
+    - Nacos支持服务列表变更的消息推送模式，服务列表更新更及时
+    - Nacos集群默认采用AP方式，当集群中存在非临时实例时，采用CP模式；Eureka采用AP方式
+
+
+
+
+
+### 微服务框架
+
+#### Nacos
+
+- 统一配置管理
+
+  - 新建配置
+
+    - Data Id：【服务器名】-【profile】.【后缀名】
+    - Group：分组
+    - 配置格式：目前支持yaml和properties
+
+  - 读取nacos配置文件
+
+    - 项目启动后会先读取nacos中的配置文件，再读取application.yml中的配置，因此需要在bootstrap.yml中配置nacos的地址信息，才能拿到nacos的配置文件信息
+
+    - 引入Nacos的配置管理客户端依赖
+
+      ```xml
+      <dependency>
+          <groupId>com.alibaba.cloud</groupId>
+          <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+      </dependency>
+      ```
+
+    - 在customerService中的resource目录添加一个bootstrap.yml文件，这个文件是引导文件，优先级高于application.yml
+
+      ```yml
+      # 微服务启动时，会读取[spring.application.name]-[spring.profiles.active].yaml，作为文件名，向Nacos查找文件
+      spring:
+       application:
+        name: customerService # 服务名称
+       profiles:
+        active: dev # 开发环境
+       cloud:
+        nacos:
+         server-addr: localhost:8848 # Nacos地址
+         config:
+          file-extension: yaml # 文件后缀名
+      ```
+
+- 配置热更新
+
+  - 方式一：在用@Value读取nacos配置文件的类上加上@RefreshScope
+
+  - 方式二：使用ConfigurationProperties自动刷新
+
+    ```java
+    @Component
+    @Data
+    @ConfigurationProperties(prefix="pattern")
+    public class PatternProperties{
+        private String dateformat;
+    }
+    ```
+
+- 多环境的配置共享
+
+  - 原理：微服务启动时，会读取[spring.application.name]-[spring.profiles.active].yaml，作为文件名
+
+  - 步骤：
+
+    - 新建配置，命名为[spring.application.name]如customeService.yaml
+
+    - 读取nacos文件
+
+      ```yml
+      spring:
+       application:
+        name: customerService # 服务名称
+       cloud:
+        nacos:
+         server-addr: localhost:8848 # Nacos地址
+         config:
+          file-extension: yaml # 文件后缀名
+      ```
+
+  - 配置文件优先级：customer-dev.yaml > customer.yaml > 本地配置
+
+- Nacos集群
+
+
+
+#### Feign
+
+- 基本使用
+
+  - 引入依赖
+
+    ```xml
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-openfeign</artifactId>
+        <version>3.1.4</version>
+    </dependency>
+    ```
+
+  - 启动类加@EnableFeighClients
+
+  - 定义和使用Feign客户端
+
+    ```java
+    @FeignClient("customerService(服务器名)")
+    public interface CustomerClient {
+        @GetMapping("/customer/{id}")
+        Customer findById(@PathVariable("id") Long id);
+    }
+    ```
+
+    ```java
+    Customer customer = CustomerClient.findById({id});
+    ```
+
+- 配置
+
+  | 类型                | 作用             | 说明                                             |
+  | ------------------- | ---------------- | ------------------------------------------------ |
+  | feign.Logger.Level  | 修改日志级别     | 四种级别：NONE、BASIC、HEADERS、FULL             |
+  | feign.codec.Decoder | 响应结果的解析器 | 解析http远程调用结果，如解析json字符串为java对象 |
+  | feign.coder.Encoder | 请求参数编码     | 将请求参数编码，便于通过http发送请求             |
+  | feign.Contract      | 支出的注解格式   | 默认是SpringMVC的注解                            |
+  | feign.Retryer       | 失败重试机制     | 请求失败的重试机制，默认无，但会使用Ribbon的重试 |
+
+  
+
+
+
+
+
+
+
+
 
 
 
