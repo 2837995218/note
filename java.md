@@ -7163,6 +7163,7 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
     @ConfigurationProperties(prefix = "OnePerson")
     @Date
     public class OnePerson{
+        // prefix与属性名的拼接，即为yaml文件中的
         private boolean basketball;
         private boolean music;
         private String[] likes;
