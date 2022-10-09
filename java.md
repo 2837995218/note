@@ -7181,8 +7181,9 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
   location:
    baseDir: C:\windows
    
-  # \t是转义字符，使用引号包裹转义可生效
   tempDir: ${location.baseDir}\temp
+  # \t是转义字符，使用引号包裹转义可生效
+  tempDir: "${location.baseDir}\temp" # 此处的 \t hui
   ```
   
   - 自定义对象封装的警告解决方案
@@ -8979,11 +8980,91 @@ public class MainActivity extends AppCompatActivity {
   | feign.Contract      | 支出的注解格式   | 默认是SpringMVC的注解                            |
   | feign.Retryer       | 失败重试机制     | 请求失败的重试机制，默认无，但会使用Ribbon的重试 |
 
+  - 日志配置
   
+    - 配置文件，feign.client.config.xxx.loggerLevel: FULL
+  
+      - xxx是default，表示全局配置
+      - xxx是某个服务，表示某个服务上
+  
+    - java代码（配置bean）
+  
+      ```java
+      public class FeignClientConfiguration{
+          @Bean
+          public Logger.Level FeignLogLevel(){
+              return Logger.Level.BASIC;
+          }
+      }
+      ```
+  
+      - 全局：@EnableFeignClients(defaultConfiguration = FeignClientConfiguration.class)
+      - 局部：@FeignClient(value="customerService",configuration = FeignClientConfiguration.class)
+
+- 性能优化
+
+  - 原理：feign默认使用URLConnection发起请求，URLConnection不支持连接池。可改用支持链接池的HttpClient或OKHttp
+
+  - 步骤
+
+    - 引入HttpClient依赖
+
+      ```xml
+      <dependency>
+      	<groupId>io.github.openfeign</groupId>
+          <artifactId>feign-httpclient</artifactId>
+      </dependency>
+      ```
+
+    - 配置连接池
+
+      ```yaml
+      feign:
+       client:
+        config:
+         default:
+          loggerLevel: BASIC # 关闭日志或使用BASIC级别可优化性能
+       httpclient:
+        enabled: true # 开启feign对HttpClient的支持
+        max-connections: 200 # 最大连接数
+        max-connection-per-route: 50 # 每个路径的最大连接数
+      ```
+
+- 最佳实践
+
+  - 方法一
+
+    - 原理：FeignClient("customerService")接口与CustomerController接口中的方法重复，可将其抽出成一个接口，并由上述两个接口继承这个接口
+    - 问题：耦合；CustomerController接口需要覆盖重写接口中的方法
+
+  - 方法二
+
+    - 将Feign抽出成一个模块，供所需要的模块使用
+
+    - 步骤
+
+      - 首先创建一个module，命名为feign-api，然后引入feign所需的依赖
+      - 将order-service中编写的CustomerClient、Customer、DefaultFeignConfiguration都复制到feign-api中
+      - 在order-service中引入feign-api的依赖
+      - 修改order-service中各类的import导入部分
+
+    - 问题：当FeignClient不在SpringBootApplication的扫描范围内时，这些FeignClient无法使用。有两种解决方法
+
+      - 指定FeignClient所在包
+
+        ```java
+        @EnableFeignClients(BasePackages="cn.Eli.feign.clients")
+        ```
+
+      - 指定FeignClient字节码
+
+        ```java
+        @EnableFeignClients(clients={CustomerClient.class})
+        ```
 
 
 
-
+#### Gateway
 
 
 
