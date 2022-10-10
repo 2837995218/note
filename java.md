@@ -8750,7 +8750,7 @@ public class MainActivity extends AppCompatActivity {
     ```xml
     <dependency>
         <groupId>com.alibaba.cloud</groupId>
-        <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        <artifactId>spring-cloud-alibaba-dependencies</artifactId>
         <version>2.2.5.RELEASE</version>
         <type>pom</type>
         <scope>import</scope>
@@ -8967,7 +8967,7 @@ public class MainActivity extends AppCompatActivity {
     ```
 
     ```java
-    Customer customer = CustomerClient.findById({id});
+    Customer customer = customerClient.findById({id});
     ```
 
 - 配置
@@ -9065,6 +9065,63 @@ public class MainActivity extends AppCompatActivity {
 
 
 #### Gateway
+
+- 基础使用
+
+  - 引入依赖
+
+    ```xml
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-gateway</artifactId>
+    </dependency>
+    
+    <!-- gateway也是一项微服务，需要nacos服务发现依赖 -->
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+    </dependency>
+    ```
+
+  - 启动类
+
+  - 配置
+
+    ```yaml
+    server:
+      port: 10010
+    spring:
+      application:
+        name: gateway
+      cloud:
+        nacos:
+          server-addr: localhost:8848
+        gateway:
+          routes:
+            - id: customer-service # 路由id，自定义，唯一
+              # uri: http://127.0.0.1:8081 # 路由的目标地址 http就是固定地址
+              uri: lb://customerService # lb是loadBalance，后面跟服务名
+              predicates: # 路由断言，是否符合下面规则
+                - Path=/customer/** # 按路径匹配
+            - id: order-service
+              uri: lb://orderService
+              predicates:
+                - Path=/order/**
+    ```
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
