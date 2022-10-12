@@ -9083,10 +9083,12 @@ public class MainActivity extends AppCompatActivity {
     </dependency>
     ```
 
+    注：spring-boot-starter-web依赖与gateway中的spring-boot-starter-webflux依赖冲突
+
   - 启动类
 
   - 配置
-
+  
     ```yaml
     server:
       port: 10010
@@ -9108,8 +9110,8 @@ public class MainActivity extends AppCompatActivity {
               predicates:
                 - Path=/order/**
     ```
-
-    
+  
+- 断言工厂
 
 
 
