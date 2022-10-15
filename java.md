@@ -6778,7 +6778,7 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
   - %m或者%msg：信息
   - %n：换行
 
-- 配置文件
+- 配置文件logback.
 
   ```xml
   <?xml version="1.0" encoding="UTF-8" ?>
@@ -9119,21 +9119,216 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ### Docker
+
+#### 安装
+
+- 卸载docker
+
+  ```shell
+  yum remove docker \
+                    docker-client \
+                    docker-client-latest \
+                    docker-common \
+                    docker-latest \
+                    docker-latest-logrotate \
+                    docker-logrotate \
+                    docker-selinux \
+                    docker-engine-selinux \
+                    docker-engine \
+                    docker-ce
+  ```
+
+- 安装
+
+  - 安装yum工具
+
+    ```shell
+    yum install -y yum-utils \
+               device-mapper-persistent-data \
+               lvm2 --skip-broken
+    ```
+
+  - 更新本地镜像源
+
+    ```shell
+    yum-config-manager \
+        --add-repo \
+        https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+        
+    sed -i 's/download.docker.com/mirrors.aliyun.com\/docker-ce/g' /etc/yum.repos.d/docker-ce.repo
+    
+    yum makecache fast
+    ```
+
+  - 安装docker-ce（社区版）
+
+    ```shell
+    yum install -y docker-ce
+    ```
+
+- 启动docker
+
+  - 关闭防火墙
+
+    ```shell
+    # 关闭
+    systemctl stop firewalld
+    # 禁止开机启动防火墙
+    systemctl disable firewalld
+    ```
+
+  - 启动docker
+
+    ```shell
+    systemctl start docker  # 启动docker服务
+    
+    systemctl stop docker  # 停止docker服务
+    
+    systemctl restart docker  # 重启docker服务
+    ```
+
+- 镜像加速
+
+  - 参考阿里云的镜像加速文档：https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
+
+    ```shell
+    sudo mkdir -p /etc/docker
+    sudo tee /etc/docker/daemon.json <<-'EOF'
+    {
+      "registry-mirrors": ["https://18madm2u.mirror.aliyuncs.com"]
+    }
+    EOF
+    sudo systemctl daemon-reload
+    sudo systemctl restart docker
+    ```
+
+    
+
+#### 使用
+
+- 镜像操作
+
+  - 镜像拉取：docker pull
+  - 查看镜像：docker images
+  - 删除镜像：docker rmi
+  - 构建镜像：docker build
+  - 保存镜像：docker save
+  - 加载镜像：docker load
+
+- 容器状态
+
+  - 运行镜像：docker run
+    - -d：后台运行
+    - -p：端口映射
+    - -e：添加配置信息
+    - --name：容器名
+    - docker run --name mysql_5.7 -e MYSQL_ROOT_PASSWORD=root -d mysql:5.7
+  - 暂停容器：docker pause
+  - 恢复容器：docker unpause
+  - 停止容器：docker stop
+  - 开启容器：docker start
+
+- 容器操作
+
+  - 进入容器：docker exec
+    - docker exec -it mysql_5.7 bash
+  - 查看容器运行日志：docker logs
+  - 默认查看所有运行容器及状态：docker ps
+  - 删除容器：docker rm
+
+- 数据卷 docker volume [COMMAND]
+
+  - create：创建一个volume
+  - inspect：显示一个或多个volume的信息
+  - ls：列出所有的volume
+  - prune：删除未使用的volume
+
+- 挂载
+
+  - 数据卷挂载
+
+    ```shell
+    docker run --name myNginx \
+    	-v html:/root/html \ # 把html数据卷挂载到容器内的/root/html这个目录中
+    	-p 8080:80 \ # 把宿主机的8080端口映射到容器内的80端口上
+        nginx 
+    ```
+
+  - 目录挂载
+
+    - -v [宿主机目录]:[容器内目录]
+    - -v [宿主机文件]:[容器内文件]
+
+    ```shell
+    docker run --name mysql_5.7 \
+    	-e MYSQL_ROOT_PASSWORD=root \
+    	-p 3306:3306 \
+    	-v /var/docker-volume/mysql/conf/hmy.cnf:/etc/mysql/conf.d/hmy.cnf \
+    	-v /var/docker-volume/mysql/data:/var/lib/mysql \
+    	-d mysql:5.7
+    ```
+
+    
+
+#### 自定义镜像
+
+- 指令
+
+  - FROM：指定基础镜像
+  - ENV：设置环境变量，可在后面指令使用
+  - COPY：拷贝本地文件到镜像的指定目录
+  - RUN：执行Linux的shell命令，一般是安装过程的命令
+  - EXPOSE：指定容器运行时监听的端口，供镜像使用者查看
+  - ENTRYPOINT：镜像中应用的启动命令，容器运行时调用
+
+- 基于Ubuntu构建Dockerfile文件
+
+  ```dockerfile
+  # 指定基础镜像
+  FROM ubuntu:16.04
+  
+  # 配置环境变量，JDK的安装目录
+  ENV JAVA_DIR=/usr/local
+  
+  # 拷贝jdk和java的项目包
+  COPY ./jdk.tar $JAVA_DIR/
+  COPY ./java-demo.jar /tmp/app.jar
+  
+  # 安装JDK
+  RUN cd $JAVA_DIR && tar -xf ./jdk.tar && mv ./jdk ./java
+  
+  # 配置环境变量
+  ENV JAVA_HOME=$JAVA_DIR/java8
+  ENV PATH=$PATH:$JAVA_HOME/bin
+  
+  # 暴露端口
+  EXPOSE 8080
+  
+  # 入口，java项目的启动命令
+  ENTRYPOINT java -jar /tmp/app.jar
+  ```
+
+- 基于java:8-alpine镜像
+
+  ```dockerfile
+  FROM java:8-alpine
+  COPY ./docker-demo.jar /tmp/app.jar
+  EXPOSE 8080
+  ENTRYPOINT java -jar /tmp/app.jar
+  ```
+
+- 构建镜像
+
+  ```shell
+  docker build -t javaweb:1.0 .
+  # -t t是tag（javaweb:1.0是一个tag）
+  # . 表示dockerfile所在的目录
+  ```
+
+
+
+
 
 ### 异步通信
 
