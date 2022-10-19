@@ -8771,6 +8771,8 @@ public class MainActivity extends AppCompatActivity {
 
     ```yml
     spring:
+     application:
+      name: customerService
      cloud:
       nacos:
        server-addr: localhost:8848
@@ -8952,6 +8954,8 @@ public class MainActivity extends AppCompatActivity {
         <artifactId>spring-cloud-starter-openfeign</artifactId>
         <version>3.1.4</version>
     </dependency>
+    
+    
     ```
 
   - 启动类加@EnableFeighClients
@@ -9292,18 +9296,18 @@ public class MainActivity extends AppCompatActivity {
   ENV JAVA_DIR=/usr/local
   
   # 拷贝jdk和java的项目包
-  COPY ./jdk.tar $JAVA_DIR/
-  COPY ./java-demo.jar /tmp/app.jar
+  COPY ./jdk-17.0.4.1_linux-x64_bin.tar.gz $JAVA_DIR/
+  COPY ./java-demo-1.0-SNAPSHOT.jar /tmp/app.jar
   
   # 安装JDK
-  RUN cd $JAVA_DIR && tar -xf ./jdk.tar && mv ./jdk ./java
+  RUN cd $JAVA_DIR && tar -xf ./jdk-17.0.4.1_linux-x64_bin.tar.gz && mv ./jdk-17.0.4.1 ./java17
   
   # 配置环境变量
-  ENV JAVA_HOME=$JAVA_DIR/java8
+  ENV JAVA_HOME=$JAVA_DIR/java17
   ENV PATH=$PATH:$JAVA_HOME/bin
   
   # 暴露端口
-  EXPOSE 8080
+  EXPOSE 80
   
   # 入口，java项目的启动命令
   ENTRYPOINT java -jar /tmp/app.jar
@@ -9330,7 +9334,168 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-### 异步通信
+### RabbitMQ
+
+#### 安装
+
+- 拉去镜像
+
+  ```shell
+  docker pull rabbitmq
+  ```
+
+- 启动
+
+  ```shell
+  docker run \
+   -e RABBITMQ_DEFAULT_USER=eli \
+   -e RABBITMQ_DEFAULT_PASS=root \
+   --name mq \
+   --hostname mql \
+   -p 15672:15672 \
+   -p 5672:5672 \
+   -d rabbitmq
+  ```
+
+- 进入容器，开启web管理
+
+  ```shell
+  docker exec -it mq bash
+  ```
+
+  ```shell
+  rabbitmq-plugins enable rabbitmq_management
+  ```
+
+
+
+
+#### 快速入门
+
+- 导入依赖
+
+  ```xml
+  <!--AMQP依赖，包含RabbitMQ-->
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-amqp</artifactId>
+  </dependency>
+  ```
+
+- 发布者
+
+  ```java
+  @Test
+  public void testSendMessage() throws IOException, TimeoutException {
+      // 1.建立连接
+      ConnectionFactory factory = new ConnectionFactory();
+      // 1.1.设置连接参数，分别是：主机名、端口号、vhost、用户名、密码
+      factory.setHost("192.168.36.131");
+      factory.setPort(5672);
+      factory.setVirtualHost("/");
+      factory.setUsername("eli");
+      factory.setPassword("root");
+      // 1.2.建立连接
+      Connection connection = factory.newConnection();
+  
+      // 2.创建通道Channel
+      Channel channel = connection.createChannel();
+  
+      // 3.创建队列
+      String queueName = "simple.queue";
+      channel.queueDeclare(queueName, false, false, false, null);
+  
+      // 4.发送消息
+      String message = "hello, rabbitmq!";
+      channel.basicPublish("", queueName, null, message.getBytes());
+      System.out.println("发送消息成功：【" + message + "】");
+  
+      // 5.关闭通道和连接
+      channel.close();
+      connection.close();
+  }
+  ```
+
+- 接收者
+
+  ```java
+  public class ConsumerTest {
+      public static void main(String[] args) throws IOException, TimeoutException {
+          // 1.建立连接
+          ConnectionFactory factory = new ConnectionFactory();
+          // 1.1.设置连接参数，分别是：主机名、端口号、vhost、用户名、密码
+          factory.setHost("192.168.36.131");
+          factory.setPort(5672);
+          factory.setVirtualHost("/");
+          factory.setUsername("eli");
+          factory.setPassword("root");
+          // 1.2.建立连接
+          Connection connection = factory.newConnection();
+  
+          // 2.创建通道Channel
+          Channel channel = connection.createChannel();
+  
+          // 3.创建队列
+          String queueName = "simple.queue";
+          channel.queueDeclare(queueName, false, false, false, null);
+  
+          // 4.订阅消息
+          channel.basicConsume(queueName, true, new DefaultConsumer(channel){
+              @Override
+              public void handleDelivery(String consumerTag, Envelope envelope,
+                                         AMQP.BasicProperties properties, byte[] body) throws IOException {
+                  // 5.处理消息
+                  String message = new String(body);
+                  System.out.println("接收到消息：【" + message + "】");
+              }
+          });
+          System.out.println("等待接收消息。。。。");
+      }
+  }
+  ```
+
+  
+
+#### SpringAMQP
+
+- 准备
+
+  - 依赖
+
+    ```xml
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+    ```
+
+  - 配置文件
+
+    ```yml
+    spring:
+      rabbitmq:
+        host: 192.168.36.131
+        port: 5672
+        virtual-host: /
+        username: eli
+        password: root
+    ```
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### 分布式搜索
 
