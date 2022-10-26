@@ -27,7 +27,7 @@
 | git remote add 别名 地址  | 添加远程库       |
 | git remote rm 别名        | 删除远程库       |
 | git push 别名/地址 分支名 | 添加分支到远程库 |
-| git pull 别名/地址 分支名 | 从远程库拉取     |
+| git pull 别名/地址 分支名 | 4  从远程库拉取  |
 | git clone 地址            | 克隆代码         |
 
 
@@ -8525,15 +8525,23 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
+
+
+
+
+
 # SpringCloud
+
+![springcloud](D:\picture\typora\java\springcloud.png)
 
 
 
 ## 实用篇
 
-### 微服务治理
+### 注册中心
 
-#### 快速入门
+#### 引入
 
 - 注册 RestTemplate
 
@@ -8593,7 +8601,6 @@ public class MainActivity extends AppCompatActivity {
     ```xml
     <dependencyManagement>
         <dependencies>
-            <!-- eureka的管理依赖 -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -8604,7 +8611,7 @@ public class MainActivity extends AppCompatActivity {
         </dependencies>
     </dependencyManagement>
     ```
-  
+    
   - 子Eureka服务引依赖
   
     ```xml
@@ -8675,67 +8682,44 @@ public class MainActivity extends AppCompatActivity {
     }
     ```
 
+- 自我保护机制
 
+  - 自我保护模式中，eureka会保存服务注册表中的信息，不再注销任何服务实例（当服务不再向eureka发送心跳时，eureka注册中心默认会保留信息90秒）
 
-#### Ribbon
-
-- 负载均衡原理
-
-  ![Ribbon](D:\picture\typora\java\Ribbon.png)
-
-  - 服务器发送 http://customerService/customer/1
-  - Ribbon负载均衡拦截此次请求
-  - Ribbon负载均衡向eureka-server拉去customerService服务列表
-  - 获得服务列表后，进行负载均衡，并取得服务器
-
-- 负载均衡策略
-
-  - 原理：负载均衡的规则是一个叫做IRule的接口来定义的，每个子接口都是一种规则
-
-    ![IRule](D:\picture\typora\java\IRule.png)
-
-  - 负载均衡策略
-
-    - RandomRule：随机选择一个可用的服务器
-    - RoundRobinRule：简单轮询服务列表来选择服务器。它是Ribbon默认的负载均衡规则
-    - WeightedResponseTimeRule：为每一个服务器赋予一个权重值。服务器响应时间越长，这个服务器的权重就越小。这个规则会随机选择服务器，权重值会影响服务器的选择
-    - ZoneAvoidanceRule：在指定区域中以可用的服务器为基础进行服务器的选择，而后再对Zone内的多个服务做轮询。
-
-  - 选择策略
-
-    - 方式一：注册一个IRule接口的bean，返回对应的实现类
-
-      ```java
-      @Bean
-      public IRule randomRule(){
-          return new RandomRule();
-      }
-      ```
-
-    - 方式二：在order-service（服务消费者）的application.yml文件中，添加新的配置
-
-      ```yml
-      userservice:
-       ribbon:
-        NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RandomRule
-      ```
-
-- 加载策略
-
-  - Ribbon默认是采用懒加载，即第一次访问时才去创建LoadBalanceClient，第一次请求时间很长
-
-  - 而饥饿加载则会在项目启动时创建，降低第一次访问的耗时
+  - 禁止自我保护、设置保留时间
 
     ```yml
-    ribbon:
-     eager-load: # 饥饿加载
-      enabled: true # 开启
-      clients: customerService # 指定对customerService这个服务器饥饿加载
+    eureka:
+     server:
+      enable-self-preservation: false
+      eviction-interval-timer-in-ms: 2000
     ```
 
-    
+  - 心跳
+
+    ```yaml
+    eureka:
+     instance:
+      instance-id: customer
+      # 访问路径时可以显示ip
+      prefer-ip-address: true
+      # Eureka客户端向服务端发送心跳的时间间隔，单位为秒（默认30秒）
+      lease-renewal-interval-in-seconds: 1
+      # Eureka服务端在收到最后一次心跳后等待时间上线，单位为秒（默认90秒），超时将提出
+      lease-expiration-duration-in-seconds: 2
+    ```
+
+
+
+#### zookeeper
+
+#### Consul
+
+
 
 #### Nacos
+
+##### 服务治理
 
 - 使用步骤
 
@@ -8857,11 +8841,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
-
-### 微服务框架
-
-#### Nacos
+##### 配置中心
 
 - 统一配置管理
 
@@ -8941,6 +8921,68 @@ public class MainActivity extends AppCompatActivity {
 - Nacos集群
 
 
+
+
+
+### 负载均衡
+
+#### Ribbon
+
+- 负载均衡原理
+
+  ![Ribbon](D:\picture\typora\java\Ribbon.png)
+
+  - 服务器发送 http://customerService/customer/1
+  - Ribbon负载均衡拦截此次请求
+  - Ribbon负载均衡向eureka-server拉去customerService服务列表
+  - 获得服务列表后，进行负载均衡，并取得服务器
+
+- 负载均衡策略
+
+  - 原理：负载均衡的规则是一个叫做IRule的接口来定义的，每个子接口都是一种规则
+
+    ![IRule](D:\picture\typora\java\IRule.png)
+
+  - 负载均衡策略
+
+    - RandomRule：随机选择一个可用的服务器
+    - RoundRobinRule：简单轮询服务列表来选择服务器。它是Ribbon默认的负载均衡规则
+    - WeightedResponseTimeRule：为每一个服务器赋予一个权重值。服务器响应时间越长，这个服务器的权重就越小。这个规则会随机选择服务器，权重值会影响服务器的选择
+    - ZoneAvoidanceRule：在指定区域中以可用的服务器为基础进行服务器的选择，而后再对Zone内的多个服务做轮询。
+
+  - 选择策略
+
+    - 方式一：注册一个IRule接口的bean，返回对应的实现类
+
+      ```java
+      @Bean
+      public IRule randomRule(){
+          return new RandomRule();
+      }
+      ```
+
+    - 方式二：在order-service（服务消费者）的application.yml文件中，添加新的配置
+
+      ```yml
+      userservice:
+       ribbon:
+        NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RandomRule
+      ```
+
+- 加载策略
+
+  - Ribbon默认是采用懒加载，即第一次访问时才去创建LoadBalanceClient，第一次请求时间很长
+
+  - 而饥饿加载则会在项目启动时创建，降低第一次访问的耗时
+
+    ```yml
+    ribbon:
+     eager-load: # 饥饿加载
+      enabled: true # 开启
+      clients: customerService # 指定对customerService这个服务器饥饿加载
+    ```
+
+    
 
 #### Feign
 
@@ -9068,6 +9110,8 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+#### 网关
+
 #### Gateway
 
 - 基础使用
@@ -9075,34 +9119,42 @@ public class MainActivity extends AppCompatActivity {
   - 引入依赖
 
     ```xml
+    <!-- springboot版本用2.3.9.RELEASE -->
+    <!-- jdk用8 -->
+    
     <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-gateway</artifactId>
     </dependency>
-    
     <!-- gateway也是一项微服务，需要nacos服务发现依赖 -->
     <dependency>
         <groupId>com.alibaba.cloud</groupId>
         <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
     </dependency>
     ```
-
+  
     注：spring-boot-starter-web依赖与gateway中的spring-boot-starter-webflux依赖冲突
-
+  
   - 启动类
-
+  
   - 配置
   
     ```yaml
     server:
-      port: 10010
+      port: 80
     spring:
       application:
         name: gateway
       cloud:
         nacos:
-          server-addr: localhost:8848
+          server-addr: 192.168.36.131:8848
         gateway:
+          #discovery:
+            #locator:
+            # 开启注册中心动态创建路由的功能，利用微服务名进行路由
+            #enabled: true
+            # eureka 自动大写服务名时，可开启
+            #lowerCaseServiceId: true
           routes:
             - id: customer-service # 路由id，自定义，唯一
               # uri: http://127.0.0.1:8081 # 路由的目标地址 http就是固定地址
@@ -9113,6 +9165,8 @@ public class MainActivity extends AppCompatActivity {
               uri: lb://orderService
               predicates:
                 - Path=/order/**
+              filters:
+                - StripPrefix=1
     ```
   
 - 断言工厂
@@ -9385,6 +9439,7 @@ public class MainActivity extends AppCompatActivity {
 - 发布者
 
   ```java
+  // 引入com.rabbitmq.client的类
   @Test
   public void testSendMessage() throws IOException, TimeoutException {
       // 1.建立连接
@@ -9419,6 +9474,7 @@ public class MainActivity extends AppCompatActivity {
 - 接收者
 
   ```java
+  // 引入com.rabbitmq.client的类
   public class ConsumerTest {
       public static void main(String[] args) throws IOException, TimeoutException {
           // 1.建立连接
@@ -9453,7 +9509,7 @@ public class MainActivity extends AppCompatActivity {
       }
   }
   ```
-
+  
   
 
 #### SpringAMQP
@@ -9469,7 +9525,7 @@ public class MainActivity extends AppCompatActivity {
     </dependency>
     ```
 
-  - 配置文件
+  - 基础配置文件
 
     ```yml
     spring:
@@ -9481,25 +9537,281 @@ public class MainActivity extends AppCompatActivity {
         password: root
     ```
 
-- 
+  - 发布测试类
+
+    ```java
+    @SpringBootTest
+    public class Publisher {
+        @Autowired
+        private RabbitTemplate rabbitTemplate;
+        // 测试
+    }
+    ```
+
+- 类型一
+
+  ![one](D:\picture\typora\java\rabbitmq\one.png)
+
+  - 发送
+
+    ```java
+    @Test
+    public void test01(){
+        String queueName = "simple.queue";
+        String message = "hello, spring amqp!";
+        rabbitTemplate.convertAndSend(queueName, message);
+    }
+    ```
+
+  - 接收
+
+    ```java
+    @Component
+    public class SpringRabbitListener {
+        @RabbitListener(queues = "simple.queue")
+        public void Listen01(String msg)throws InterruptedException {
+            System.out.println("接收到消息：【" + msg + "】");
+        }
+    }
+    ```
+
+    
+
+- 类型二
+
+  ![two](D:\picture\typora\java\rabbitmq\two.png)
+
+  - 发送
+
+  - 接收
+
+    - 多个consumer：多个@RabbitListener
+
+    - 配置文件
+
+      ```yaml
+      spring:
+        rabbitmq:
+          host: 192.168.36.131
+          port: 5672
+          virtual-host: /
+          username: eli
+          password: root
+          listener:
+            simple:
+              prefetch: 1 # 预处理机制，每次只获取一条消息
+      ```
+
+      
+
+- 类型三
+
+  ![three](D:\picture\typora\java\rabbitmq\three.png)
+
+  - 发送到交换机
+
+    ```java
+    @Test
+    public void test02(){
+        String exchangeName = "eli.fanout";
+        String message = "hello, everyone!";
+        rabbitTemplate.convertAndSend(exchangeName, "", message);
+    }
+    ```
+
+  - 交换机：fanout（广播）
+
+    ```java
+    // 基于配置类声明交换机
+    @Configuration
+    public class FanoutConfig {
+        // 声明FanoutExchange交换机
+        @Bean
+        public FanoutExchange fanoutExchange(){
+            return new FanoutExchange("eli.fanout");
+        }
+    
+        // 声明第一个队列
+        @Bean
+        public Queue fanoutQueue1(){
+            return new Queue("fanout.queue1");
+        }
+        
+        // 绑定队列一和交换机
+        @Bean
+        public Binding bindingQueue1(Queue fanoutQueue1, FanoutExchange fanoutExchange){
+            return BindingBuilder.bind(fanoutQueue1).to(fanoutExchange);
+        }
+        
+        // 声明并绑定其他队列
+    }
+    ```
+
+  - 接收
+
+
+
+- 类型四
+
+  ![four](D:\picture\typora\java\rabbitmq\four.png)
+
+  - 发送
+
+    ```java
+    @Test
+    public void test03(){
+        String exchangeName = "eli.direct";
+        String key = "blue";
+        String message = "hello, "+key;
+        rabbitTemplate.convertAndSend(exchangeName, key, message);
+    }
+    ```
+
+  - 交换机：direct（路由）
+
+  - 接收
+
+    ```java
+    // 基于注解声明交换机
+    @RabbitListener(bindings = @QueueBinding(
+        value = @Queue(name = "direct.queue1"), // 定义队列
+        exchange = @Exchange(name = "eli.direct", type = ExchangeTypes.DIRECT), // 定义交换机
+        key = {"red","blue"} //绑定关键词
+    ))
+    public void Listen04(String msg)throws InterruptedException {
+        System.out.println("4接收到消息：【" + msg + "】");
+    }
+    ```
+
+
+
+- 类型五
+
+  ![five](D:\picture\typora\java\rabbitmq\five.png)
+
+  - 发送
+
+    ```java
+    @Test
+    public void test04(){
+        String exchangeName = "eli.topic";
+        String key = "china.news.dir";
+        rabbitTemplate.convertAndSend(exchangeName, key, key);
+    }
+    ```
+
+  - 交换机：topic（话题）
+
+  - 接收
+
+    ```java
+    // 基于注解声明交换机
+    @RabbitListener(bindings = @QueueBinding(
+        value = @Queue(name = "topic.queue1"), // 定义队列
+        exchange = @Exchange(name = "eli.topic", type = ExchangeTypes.TOPIC), // 定义交换机
+        key = {"china.#"} //绑定关键词
+    ))
+    public void Listen04(String msg)throws InterruptedException {
+        System.out.println("4接收到消息：【" + msg + "】");
+    }
+    ```
+
+    
+
+- 交换机exchange负责消息路由，不负责存储，路由失败则消息消失
+
+- 如果传输对象消息，默认序列化后再传输，该方法传出数据较大，可改用json
+
+  - 在发送、接收服务引入依赖
+
+    ```xml
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+    </dependency>
+    ```
+
+  - 在发送、接收服务声明MessageConverter
+
+    ```java
+    //import org.springframework.amqp.support.converter.MessageConverter;
+    
+    @Bean
+    public MessageConverter messageConverter(){
+        return new Jackson2JsonMessageConverter();
+    }
+    ```
+
+  - 接收
+
+    ```java
+    @Component
+    public class SpringRabbitListener {
+        @RabbitListener(queues = "simple.queue")
+        // 形参传递对应的对象类型
+        public void Listen01(Obj obj)throws InterruptedException {
+        }
+    }
+    ```
 
 
 
 
 
 
+### Elasticsearch
 
+#### 安装
 
+- 因为还需要部署kibana容器，因此需要让es和kibana容器互联。这里先创建个网络：
 
+  ```shell
+  docker network create es-net
+  ```
 
+- 拉去镜像
 
+  ```shell
+  docker pull elasticsearch:7.17.6
+  ```
 
+- es没有权限操作挂载目录，无法绑定节点，开放挂载目录权限
 
+  ```shell
+  # rwx -> 4+2+1 = 7
+  # rw -> 4+2 = 6
+  # rx -> 4+1 = 5
+  sudo chmod 777 /var/docker-volume/es/**
+  ```
 
+- 运行容器
 
-### 分布式搜索
+  ```shell
+  docker run -d \
+    --name es \
+    -e "ES_JAVA_OPTS=-Xms512m -Xmx1024m" \
+    -e "discovery.type=single-node" \
+    -v /var/docker-volume/es/es-data:/usr/share/elasticsearch/data \
+    -v /var/docker-volume/es/es-plugins:/usr/share/elasticsearch/plugins \
+    --privileged \
+    --network es-net \
+    -p 9200:9200 \
+    -p 9300:9300 \
+    elasticsearch:7.17.6
+  ```
 
+- 安装kibana
 
+  ```shell
+  docker run -d \
+    --name kibana \
+    -e ELASTICSEARCH_HOST=http://es:9200 \
+    --network es-net \
+    -p 5601:5601 \
+    kibana:7.17.6
+  ```
+
+  
 
 
 
