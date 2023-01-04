@@ -27,7 +27,7 @@
 | git remote add 别名 地址  | 添加远程库       |
 | git remote rm 别名        | 删除远程库       |
 | git push 别名/地址 分支名 | 添加分支到远程库 |
-| git pull 别名/地址 分支名 | 4  从远程库拉取  |
+| git pull 别名/地址 分支名 | 从远程库拉取     |
 | git clone 地址            | 克隆代码         |
 
 
@@ -481,13 +481,13 @@
     /* 解决方法一：*/
     position: absolute;
     left: 50%;
-    right: 50%;
+    top: 50%;
     margin-left: -盒子宽的一半px;
     margin-top: -盒子高的一半px;
     /* 解决方法二：*/
     position: absolute;
     left: 50%;
-    right: 50%;
+    top: 50%;
     transform: translate(-50%,-50%);/*位移，宽高为盒子的一半*/
     ```
 
@@ -1650,6 +1650,11 @@ btn.onclick = function(){
     xhr.ontimeout = function(){alert("请求超时")} // 时间到后会自动取消请求
     xhr.onerror = function(){alert("网络异常")}
 
+    //open(method, url, async, username, password)
+    // async 参数指示请求使用应该异步地执行。
+    // 	如果这个参数是 false，请求是同步的，后续对 send() 的调用将阻塞，直到响应完全接收。
+    // 	如果这个参数是 true 或省略，请求是异步的
+    // username 和 password 参数是可选的，为 url 所需的授权提供认证资格。
     xhr.open('GET',"http://localhost/test?username=admin",false)
 
     // 添加请求头，Content-Type是用来设置请求体类型的
@@ -2091,8 +2096,8 @@ btn.onclick = function(){
         data:{
             classArr:['class1','class2','class3'],
             classObj:{
-                class1:false,
-                class2:true
+                'class1': false,
+                'class2': true
             },
             styleObj:{
                 fontSize: '40px'
@@ -2836,6 +2841,560 @@ new Vue({
 
 
 
+# Java SE
+
+
+
+## 线程池
+
+### 快速入门
+
+```java
+public ThreadPoolExecuto(int corePollSize, // 核心线程数
+                        int maximumPoolSize, // 最大线程数
+                        long keepAliveTime, // 最大空闲时间
+                        TimeUnit unit, // 时间单位
+                        BlockingQueue<Runnable> workQueue, // 任务队列
+                        ThreadFactory threadFactory, // 线程工厂
+                        RejectedExecutionHandler handler) // 饱和处理机制
+```
+
+- 在总线程数量没有达到核心线程数之前，若任务队列有线程，会持续创建线程，直至达到核心线程数
+- 任务队列满后，若总线程数量未达到最大线程数，则开辟新线程处理任务
+
+
+
+### ExecutorService
+
+- 成员方法
+  - void shutdown()：启动一次顺序关闭，执行以前提交的任务，但不再接收新任务
+  - List\<Runnable> shutdownNow()：停止所有正在执行的任务，暂停处理等待的任务，并返回等待执行的任务队列 
+  - \<T> Future\<T> submit(Callable\<T> task)：执行带返回值的任务，返回一个表示该任务的Future对象
+  - Future\<?> submit(Runable task)：执行Runable任务，并返回一个表示该任务的Future
+  - \<T> Future\<T> submit(Runnable task, T result)：执行Runnable任务，并返回一个表示该任务的Future对象
+- 获得对象
+  - 介绍
+    - ExecutorService是一个接口
+    - 可通过Executors类中的静态方法，获得ExecutorService的对象
+  - Executors
+    - static ExecutorService newCachedThreadPool()：不定线程数
+    - static ExecutorService newCachedThreadPool(ThreadFactory factory)
+    - static ExecutorService newFixedThreadPool()：指定线程数
+    - static ExecutorService newFixedThreadPool(ThreadFactory factory)
+    - static ExecutorService newSingleThreadExecutor()：单一线程
+    - static ExecutorService newSingleThreadExecutor(ThreadFactory factory)
+
+
+
+
+
+## jdk新特性
+
+### jdk8
+
+#### lambda
+
+- 快速入门
+
+  - 原始
+
+    - ```java
+      Comparator<Customer> comparator1 = new Comparator<Customer>() {
+          @Override
+          public int compare(Customer o1, Customer o2) {
+              return o1.getAge() - o2.getAge();
+          }
+      };
+      ```
+
+  - lambda
+
+    - ```java
+      Comparator<Customer> comparator2 = (o1, o2) -> o1.getAge()-o2.getAge();
+      ```
+
+- 语法
+
+  - 格式
+    - ->：lambda 操作符 或 箭头操作符
+    - ->左边：lambda形参列表（接口中的抽象方法的形参列表）
+    - ->右边：lambda体（重写的抽象方法的方法体）
+  - 6种情况
+    - 无参，无返回值
+    - lambda需要一个参数，但是没有返回值
+    - 数据类型可以省略，因为可由编译器推断得出，称为”类型推断“
+    - lambda若只需要一个参数时，参数的小括号可以省略
+    - lambda需要两个或以上的参数，多条执行语句，并且可以有返回值
+    - 当lambda只有一条语句时，return与大括号若有，都可以省略
+
+
+
+#### 函数式接口
+
+- 定义：只有一个方法的接口
+
+- java内置四大核心函数式接口
+
+  - | 函数式接口      | 参数类型 | 返回类型 | 方法              |
+    | :-------------- | :------- | -------- | ----------------- |
+    | Consumer\<T>    | T        | void     | void accept(T t)  |
+    | Supplier\<T>    | 无       | T        | T get()           |
+    | Function\<T, R> | T        | R        | R apply(T t)      |
+    | Predicate \<T>  | T        | boolean  | boolean test(T t) |
+
+  - ```java
+    @Test
+    public void test() {
+        List<String> list = Arrays.asList("北京", "南京", "天津", "东京");
+        List<String> resultList = filterString(list, s -> s.contains("京"));
+        System.out.println(resultList);
+    }
+    
+    public List<String> filterString(List<String> list, Predicate<String> predicate) {
+        ArrayList<String> filterList = new ArrayList<>();
+        for (String s : list) {
+            if (predicate.test(s)) {
+                filterList.add(s);
+            }
+        }
+        return filterList;
+    }
+    ```
+
+- 其他接口
+
+  - | 函数式接口                                                   | 参数类型              | 返回类型              | 方法                   |
+    | ------------------------------------------------------------ | --------------------- | --------------------- | ---------------------- |
+    | UnaryOperator\<T>                                            | T                     | T                     | T apply(T t)           |
+    | BiFunction\<T, U, R>                                         | T, U                  | R                     | R apply(T t, U u)      |
+    | BinaryOperator\<T>                                           | T, T                  | T                     | T apply(T t1, T t2)    |
+    | BiConsumer\<T, U>                                            | T, U                  | void                  | void accept(T t, U u)  |
+    | BiPredicate\<T, U>                                           | T, U                  | boolean               | boolean test(T t, U u) |
+    | ToIntFunction\<T><br>ToLongFunction\<T><br>ToDoubleFunction\<T> | T                     | int<br>long<br>double |                        |
+    | IntFunction\<R><br>LongFunction\<R><br>DoubleFunction\<R>    | int<br>long<br>double | R                     |                        |
+    
+
+
+
+#### 方法引用
+
+- 方法引用
+
+  - 本质就是lambda表达式，而lambda表达式作为函数式接口的实例。所以方法引用也是函数式接口的实例
+
+  - 使用格式： 类（或对象）**::** 方法名
+  - 使用要求
+    - 要求函数式接口中的方法的形参列表和返回值类型与方法引用的方法的形参列表和返回值类型相同
+
+  - 具体情况
+
+    - 对象 **::** 非静态方法
+
+    - 类 **::** 静态方法
+
+    - 类 **::** 非静态方法
+
+      - ```java
+        BiPredicate<String, String> biPredicate1 = new BiPredicate<String, String>() {
+            @Override
+            public boolean test(String s, String s2) {
+                return s.equals(s2);
+            }
+        };
+        BiPredicate<String, String> biPredicate2 = (s1, s2) -> s1.equals(s2);
+        BiPredicate<String, String> biPredicate3 = String::equals;
+        System.out.println(biPredicate3.test("abc", "abc"));
+        ```
+
+      - 若String类中含有 static boolean equals(String str1, String str2) 和 boolean equals(String str) 这两个方法，则上面使用 String::equals 时报错
+
+        - 实际上，当形参列表第一个参数有方法引用的方法的同名方法时，会找非静态方法而不会找静态方法，若没有该名字得非静态方法 或 两种方法都有，则报错
+
+- 构造器引用
+
+  - 使用要求
+
+    - 要求函数式接口中的方法的形参列表与构造器引用的形参列表相同，返回值为构造器创建的对象
+
+  - ```java
+    // 调用有参构造器，函数式接口方法：User apply(Integer integer)
+    Function<Integer, User> function = User :: new;
+    // 调用无参构造器，函数式接口方法：User get()
+    Supplier<User> supplier = User :: new;
+    ```
+
+- 数组引用
+
+  - ```java
+    Function<Integer, String[]> function1 = length -> new String[length];
+    Function<Integer, String[]> function2 = String[] :: new;
+    ```
+
+
+
+#### Stream
+
+- stream是操作渠道，用于操作数据源（集合、数组等》所生成的元素序列
+
+- 注意
+
+  - Stream 自己不会存储元素
+  - Stream 不会改变源对象。相反，会返回一个持有结果的新Stream
+  - Stream 操作是延时执行的。这意味着它会等到需要结果的时候才执行
+
+- Stream 操作的三个步骤
+
+  - 创建 Stream
+
+    - 通过集合获取
+
+      - ```java
+        List<String> list = Arrays.asList("北京", "南京", "天津", "东京");
+        Stream<String> stream = list.stream();
+        Stream<String> parallelStream = list.parallelStream();
+        ```
+
+    - 通过数组获取
+
+      - ```java
+        String[] arr = {"北京", "南京", "天津", "东京"};
+        Stream<String> stream = Arrays.stream(arr);
+        ```
+
+    - 通过Stream的of方法
+
+      - ```java
+        Stream<String> areas = Stream.of("北京", "南京", "天津", "东京");
+        ```
+
+    - 创建无限流
+
+      - ```java
+        // Stream.iterate(T seed, UnaryOperator<T> f)
+        Stream.iterate("23", t -> t + "3");
+        // Stream.generate(Supplier<? extends T>)
+        Stream.generate(() -> "Hello,world")
+        ```
+
+  - 中间操作
+
+    - 筛选与切片
+
+      - 过滤：filter(Predicate p)
+      - 截断：limit(int maxSize)
+      - 跳过：skip(long n)
+      - 筛选：distinct()（通过hashCode()和equals()方法去重）
+
+    - 映射
+
+      - map(Function f)
+
+        - 接收一个转化规则函数作为参数，将Stream中的元素按规则转成其他形式
+
+        - ```java
+          Customer customer = new Customer(1, "张三", 28, true);
+          List<Customer> list = Arrays.asList(customer);
+          list.stream().map(Customer::getName).filter((str) -> str.length()<3).forEach(System.out::println);
+          ```
+
+      - flatMap(Function f)
+
+        - 接收一个转化规则作为参数，将Stream中的元素按规则转成Stream，最终形成Stream套Stream
+
+    - 排序
+
+      - 自然排序：sorted()
+        - 按 Stream中元素实现Comparable\<T>接口后重写的compareTo方法 进行排序
+      - 规则排序：sorted(Comparator com)
+
+  - 终止操作
+
+    - 匹配与查找
+
+      - allMatch(Predicate p)：检查所有元素是否匹配
+      - anyMatch(Predicate p)：检查是否有元素匹配
+      - noneMatch(Predicate p)：检查是否没有匹配的元素
+      - findFirst()：返回第一个元素
+      - findAny()：返回当前流中的任意元素
+
+      - count()：返回流中元素总数
+      - max(Comparator c)：返回流中的最大值
+      - min(Comparator c)：返回流中的最小值
+      - forEach(Consumer c)：内部迭代
+
+    - 规约
+
+      - reduce(T identity, BinaryOpeator b)：可以将流中的元素反复结合起来，得到一个值
+      - reduce(BinaryOperator b)
+
+    - 收集
+
+      - collect(Collector c)
+        - Collectors的toList，toMap和toCollection方法可以获得一个Collector对象
+
+
+
+#### Option
+
+- Option of(T t)：返回一个包含t值的容器，t不允许为null
+- Option empty()：返回一个空容器
+- Option ofNullable(T t)：返回一个包含t值的容器，t允许为null
+- T get()：如果调用对象包含值，则返回该值，否则抛异常
+- T orElse(T other)：如果有值，则返回该值，否则返回指定的other对象
+
+
+
+
+
+### jdk9
+
+#### 模块化系统
+
+- 创建 module-info.java 文件
+
+  - 暴露
+
+    - ```java
+      module customerServer{
+          exports cn.Eli.domain;
+      }
+      ```
+
+  - 引进
+
+    - ```java
+      module orderServer{
+          requires openFeign;
+      }
+      ```
+
+
+
+#### 接口
+
+- java 8中规定接口中的方法除了抽象方法之外，还可以定义静态方法和默认方法。
+- java 9中，方法的访问权限修饰符也可以声明为private
+
+```java
+public interface MyInterface {
+    // 如下三个方法 java8 可用，权限修饰符省略，都是public
+    void methodAbstract();
+    
+    // 接口中的静态方法只能由接口自己调用，实现类不能调用 MyInterface.methodStatic()
+    static void methodStatic() {
+        System.out.println("静态方法");
+    }
+    
+    default void methodDefault() {
+        System.out.println("默认方法");
+    }
+    
+    // java9 特性：允许接口中定义私有方法，私有方法不能在接口外部使用
+    private void methodDefault() {
+        System.out.println("私有方法");
+    }
+}
+```
+
+
+
+#### 钻石
+
+```java
+// jdk7 中特性：类型推断，后面的 String等 可以省略
+ArrayList<String> strings = new ArrayList<>();
+
+// jdk9 中特性：后面的 Object等 可以省略
+Comparator<Object> comparator = new Comparator<>() {
+    @Override
+    public int compare(Object o1, Object o2) {
+        return 0;
+    }
+};
+```
+
+
+
+#### try
+
+- java8 前，资源释放在 finally{} 中
+
+- java8 可在try后的小括号中声明需要释放的资源
+
+  - ```java
+    // 要求执行后必须关闭的所有资源必须在try子句中初始化
+    try (InputStreamReader isr = new InputStreamReader(System.in)) {
+        // IO 操作
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }
+    ```
+
+- java9 资源的初始化可以放在外面
+
+  - ```java
+    InputStreamReader isr = new InputStreamReader(System.in);
+    // 此时的资源属性是常量，声明为final，不可修改
+    try(isr) {
+        // IO 操作
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }
+    ```
+
+    
+
+#### 其他特性
+
+- 目录结构变更
+
+- JShell：java 的REPL（交互式编程环境）
+- String底层由原先的 char[] 变更为 byte[]
+- 不可修改集合
+  - 调用 Collections 的 unmodifiableCollection(Collection c)、unmodifiableList(List l)、unmodifiableSet(Set s) 返回的集合是不可修改集合
+  - List/Set/Map 新增of方法，返回的集合是不可修改集合
+  - 补充：Arrays.asList(Object ... ) 返回的集合也是不可修改集合
+- InputStream 中的 transferTo(OutputStream os) 方法可以把输入流中的所有数据直接自动复制的输出流中
+- Stream增强
+  - takeWhile(Predicate p)：中间操作，从头开始一直读取数据直到predicate断定为false
+  - dropWhile(Predicate p)：中间操作，从prediate断定为false开始一直往后读取数据
+  - ofNullable(T t)：创建操作，能且只能存储一个值，该值可以为null
+    - of(T ... values)：创建操作，jdk8提供，存储多个值。但若存且只存入一个null，则报错
+  - iterate(T seed, Predicate\<T> p, UnaryOperator\<T> f)：创建操作，jdk9重载方法
+- Optional增强
+  - Stream\<T> stream()：获得stream
+  - ifPresentOrElse(Consumer action, Runnable emptyAction)：value不为空，执行前一个参数功能，否则执行后一个参数功能
+  - Optional\<T> or(Supplier\<? extends Optional\<? extends T>> supplier)：value非空，返回对应的Optional；value为空，返回形参函数中返回的Optional
+- 升级的Nashorn（为java提供轻量级的javascript运行，jdk11又移除）
+
+
+
+
+
+### jdk10
+
+#### 类型推断
+
+- 声明变量时，根据所赋的值，推断出变量的类型
+
+```java
+var num = 10;
+var list = new ArrayList<String>();
+for(var i : list) {
+    System.out.println(i.getClass());
+}
+```
+
+
+
+#### 集合
+
+- copyOf 方法：返回一个只读的集合
+
+```java
+// copyOf(Xxx coll) 如果传入的本身是一个只读的集合，则会返回该集合，否则则会创建一个只读的集合
+var list1 = List.of("Java", "Pythod", "C");
+var copy1 = List.copyOf(list1);
+System.out.println(list1 == copy1); // true
+
+var list2 = new ArrayList<String>();
+var copy2 = List.copyOf(list2);
+System.out.println(list2 == copy2); // false
+```
+
+
+
+
+
+### jdk11
+
+#### String
+
+- isBlank()：判断字符串是否为空白
+- strip()：去除首尾的空白（相比于trim()方法，可去除全角符号）
+- stripTrailing()：去除尾部的空白
+- stripLeading()：去除首部的空白
+- repeat(int times)：复制字符串
+- "A\nB\nC".lines().count()：行数统计
+
+
+
+#### ZGC
+
+
+
+#### 其他特性
+
+- 局部变量类型推断的升级
+- 支持编译解释一次完成：java HelloWorld.java
+- HttpClient（jdk9提出）升级
+- 废弃 Nashorn 引擎
+
+
+
+
+
+
+
+## 锁
+
+### 自旋锁
+
+- 代码实现
+
+  - ```java
+    public void add() {
+        /* 悲观锁、互斥锁、同步锁
+        synchronized (this) {
+            num++;
+         }*/
+        
+        //atomicInteger.addAndGet(1);
+        while (true) {
+            int oldValue = atomicInteger.get();
+            int newValue = oldValue + 1;
+            if (atomicInteger.compareAndSet(oldValue, newValue)) {
+                break;
+            }
+        }
+    }
+    ```
+
+- 注意事项
+
+  - compareAndSet 方法的原子性问题：由汇编语言实现缓存行锁/总线锁实现原子性
+  - ABA问题
+    - 概述：线程1准备将 A 改为 C，线程2在此期间将 A 改为 B 后又改为 A，线程1可以修改成功
+    - 避免方式：使用 版本Version 机制。
+      - AtomicStampedReference 的api实现了Version机制
+
+
+
+
+
+### synchronized
+
+- 锁升级
+  - ![锁升级](D:\picture\typora\java\锁升级.png)
+
+- 对象的组成结构
+  - 对象头
+  - 实例数据
+  - 对齐填充位
+  - ![对象组成](D:\picture\typora\java\对象组成.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 结构与算法
 
 
@@ -2920,6 +3479,38 @@ new Vue({
 
 - 霍夫曼树
 
+- 二叉排序树
+
+- 平衡二叉树
+
+- B树、B+树、B*树
+
+
+
+### 图
+
+- 常用概念
+  - 顶点
+  - 边
+  - 路径
+  - 无向图
+  - 有向图
+  - 带权图
+- 表达方式
+  - 二维数组表示（邻接矩阵）
+  - 链表表示（邻接表）
+- 遍历
+  - 深度优先遍历
+    - 压栈与弹栈
+
+  - 广度优先遍历
+    - 入队与出队
+
+
+
+
+
+
 
 
 
@@ -2942,17 +3533,17 @@ new Vue({
 - 基数排序
 - 堆排序
 
-| 排序法 | 平均时间        | 最差情况        | 稳定度 | 额外空间 | 备注                   |
-| ------ | --------------- | --------------- | ------ | -------- | ---------------------- |
-| 冒泡   | O(n²)           | O(n²)           | 稳定   | O(1)     | n较小时好              |
-| 交换   | O(n²)           | O(n²)           | 不稳定 | O(1)     | n较小时好              |
-| 选择   | O(n²)           | O(n²)           | 不稳定 | O(1)     | n较小时好              |
-| 插入   | O(n²)           | O(n²)           | 稳定   | O(1)     | 大部分已排序时较好     |
-| 基数   | O(log*r* **B**) | O(log*r* **B**) | 稳定   | O(n)     | B（0~9）、r（个十百）  |
-| Shell  | O(logn)         | O(n)~O(n²)      | 不稳定 | O(1)     | 指数大小取决于所选分区 |
-| 快速   | O(logn)         | O(n²)           | 不稳定 | O(nlog)  | n较大时好              |
-| 归并   | O(logn)         | O(nlogn)        | 稳定   | O(1)     | n较大时好              |
-| 堆     | O(logn)         | O(nlogn)        | 不稳定 | O(1)     | n较大时好              |
+| 排序法 | 平均时间    | 最差情况      | 稳定度 | 额外空间 | 备注                    |
+| ------ | ----------- | ------------- | ------ | -------- | ----------------------- |
+| 冒泡   | O(n²)       | O(n²)         | 稳定   | O(1)     | n较小时好               |
+| 交换   | O(n²)       | O(n²)         | 不稳定 | O(1)     | n较小时好               |
+| 选择   | O(n²)       | O(n²)         | 不稳定 | O(1)     | n较小时好               |
+| 插入   | O(n²)       | O(n²)         | 稳定   | O(1)     | 大部分已排序时较好      |
+| 基数   | O(log~R~ B) | O(log~R~ B)   | 稳定   | O(n)     | B（0~9）<br>R（个十百） |
+| Shell  | O(logn)     | O(n^s^) 1<s<2 | 不稳定 | O(1)     | 指数大小取决于所选分区  |
+| 快速   | O(logn)     | O(n²)         | 不稳定 | O(nlogn) | n较大时好               |
+| 归并   | O(logn)     | O(nlogn)      | 稳定   | O(1)     | n较大时好               |
+| 堆     | O(logn)     | O(nlogn)      | 不稳定 | O(1)     | n较大时好               |
 
 - 解释
   - 稳定：原数组中相同的元素，经过排序后可能不再维持原排序
@@ -2968,6 +3559,57 @@ new Vue({
   - mid=low+(key-arr[low])/(arr[high]-arr[low])*(high-low)
 - 斐波那契查找
   - mid=low+F(k-1)-1
+
+
+
+
+
+### 十大算法
+
+#### 分治算法
+
+- 分治算法在每一层递归上都有三个步骤
+
+  - 分解：将原问题分解为若干个规模较小，相互独立，与原问题形式相同的子问题
+  - 解决：若子问题规模较小而容易被解决则直接解决，否则递归地解决各个子问题
+  - 合并：将各个子问题的解合并为原问题的解
+
+- 汉诺塔问题
+
+  - ```java
+    public static void hanoiTower(int num, char a, char b, char c) {
+        if (num = 1) {
+            System.out.println("第1个盘从 " +a+ "->" +c);
+        } else {
+            // 如果有 n>2 的情况，我们总是可以看作为两个盘：最下面的盘和上面所有的盘作为一个整体
+            // 先把最上面的所有盘从a->b，期间用到c
+            hanoiTower(num - 1, a, c, b);
+            System.out.println("第"+ num +"个盘从 " +a+ "->" +c);
+            // 把b塔中所有的盘从b->c，期间用到a
+            hanoiTower(num - 1, b, a, c);
+        }
+    }
+    ```
+
+
+
+#### 动态规划算法
+
+
+
+#### KMP算法
+
+- 暴力匹配算法
+
+
+
+#### 贪心算法
+
+
+
+
+
+
 
 
 
@@ -2996,7 +3638,7 @@ new Vue({
   - 覆盖或实现父类的方法时，输入参数可以被放大
   - 覆盖或实现父类的方法时，输出结果可以被缩小
 - 开闭原则
-  - 一个软件实体如类、模块和函数应该对扩展开放，对修改关闭。也就是说一个软件实体应该通过扩展来实现变化，而不是通过修改已有的代码来实现变化
+  - 一个软件实体如：类、模块和函数应该对扩展开放，对修改关闭。也就是说一个软件实体应该通过扩展来实现变化，而不是通过修改已有的代码来实现变化
 - 迪米特原则
   - 一个对象应该对其他对象有最少的了解
 - 合成复用原则
@@ -3049,9 +3691,9 @@ new Vue({
       
       private static Singleton instance;
       
-      public static synchronized Singleton getInstance(){
+      public static synchronized Singleton02 getInstance(){
           if(instance == null){
-              instance = new Singleton();
+              instance = new Singleton02();
           }
           return instance;
       }
@@ -3525,12 +4167,21 @@ new Vue({
           }
   
           public Laptop build(){
-              return new  Laptop(this);
+              return new Laptop(this);
           }
       }
   }
   ```
 
+  ```java
+  Laptop laptop = new Laptop.Builder()
+      .cpu("intel")
+      .screen("三星屏幕")
+      .memory("金士顿内存条")
+      .mainboard("华硕主板")
+      .build();
+  ```
+  
   
 
 
@@ -3539,19 +4190,280 @@ new Vue({
 
 ### 结构型模式
 
+#### 代理模式
+
+- 静态代理模式
+
+  - ```java
+    public interface sellTickets {
+        void sell();
+    }
+    ```
+
+  - ```java
+    public class TrainStation implements sellTickets {
+        public void sell(){
+            System.out.println("火车站卖票");
+        }
+    }
+    ```
+
+  - ```java
+    public class ProxyPrint implements sellTickets {
+        // 聚合火车站对象
+        private TrainStation trainStation = new TrainStation();
+        
+        public void sell(){
+            System.out.println("代售点收取一些手续费");
+            trainStation.sell();
+        }
+    }
+    ```
+
+- jdk代理
+
+  - ```java
+    public class ProxyFactory {
+        private Object target;
+        
+        public ProxyFactory(Object target) {
+            this.target = target;
+        }
+        
+        public Object getProxyInstance() {
+            Object pi = Proxy.newProxyInstance(
+                // 第一个参数：目标对象的类加载器
+            	target.getclass().getClassLoader(),
+                // 第二个参数：目标对象实现的所有接口
+                target.getclass().getInterfaces(),
+                new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args){
+                        Object result = method.invoke(target, args);
+                        return result;
+                    }
+                }
+            );
+            return pi;
+        }
+    }
+    ```
+
+  - 根据目标对象实现的接口得到目标对象中重写的方法，因此，目标对象中的方法没有对应的接口则不能代理
+  
+- Cglib代理
+
+  - 引入Cglib相关依赖包
+
+  - ```java
+    public class ProxyFactory implements MethodInterceptor {
+        private Object target;
+        
+        public ProxyFactory(Object target) {
+            this.target = target;
+        }
+        
+        // 返回target的代理对象
+        public Object getProxyInstance() {
+            // 1.创建一个工具类
+            Enhancer enhancer = new Enhancer();
+            // 2.设置父类
+            enhancer.setSuperClass(target.getClass());
+            // 3.设置回调函数
+            enhancer.setCallback(this);
+            // 4.创建子类对象，即代理对象
+            return enhancer.create();
+        }
+        
+        @Override
+        public Object intercept(Object arg0, Method method, Object[] args, MethodProxy arg3) throws Throwable {
+            Object result = method.invoke(target, args);
+            return result;
+        }
+    }
+    ```
+
+    
+
+
+
 #### 适配器模式
+
+- 简单适配器（适配器类违背合成复用原则）
+
+  - 类图
+    - ![适配器模式](D:\picture\typora\java\uml\适配器模式.png)
+
+  - SDAdapterTF类
+
+    - ```java
+      public class SDAdapterTF extends TFCardImpl implements SDCard{
+          @Override
+          public String readSD() {
+              return readTF();
+          }
+      
+          @Override
+          public void writeSD() {
+              writeTF();
+          }
+      }
+      ```
+
+- 对象适配器模式
+
+  - ```java
+    public class SDAdapterTF implements SDCard{
+        private TFCard tfCard;
+    
+        public SDAdapterTF(TFCard tfCard) {
+            this.tfCard = tfCard;
+        }
+    
+        @Override
+        public String readSD() {
+            return tfCard.readTF();
+        }
+    
+        @Override
+        public void writeSD() {
+            tfCard.writeTF();
+        }
+    }
+    ```
+
+- 接口适配器模式
+
+  - 当不希望实现接口中的所有方法时，可以创建一个抽象类Adapter，实现所有方法，而此时我们只需要继承该抽象类即可
+
+
+
+
 
 #### 桥接模式
 
+- uml图
+  - ![桥接模式](D:\picture\typora\java\uml\桥接模式.png)
+
+
+
+
+
 #### 装饰模式
+
+- uml图
+  - ![装饰者模式](D:\picture\typora\java\uml\装饰者模式.png)
+
+- 代码
+
+  - ```java
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public abstract class FastFood {
+        private float price;
+        private String desc;
+    
+        public abstract float cost();
+    }
+    ```
+
+  - ```java
+    public class FiredRice extends FastFood{
+        public FiredRice() {
+            super(10, "炒饭");
+        }
+    
+        @Override
+        public float cost() {
+            return getPrice();
+        }
+    }
+    ```
+
+  - ```java
+    public abstract class Garnish extends FastFood{
+        private FastFood fastFood;
+    
+        public FastFood getFastFood() {
+            return fastFood;
+        }
+    
+        public void setFastFood(FastFood fastFood) {
+            this.fastFood = fastFood;
+        }
+    
+        public Garnish(FastFood fastFood, float price, String desc) {
+            super(price, desc);
+            this.fastFood = fastFood;
+        }
+    }
+    ```
+
+  - ```java
+    public class Egg extends Garnish {
+    
+        public Egg(FastFood fastFood) {
+            super(fastFood, 2, "鸡蛋");
+        }
+    
+        @Override
+        public float cost() {
+            return getFastFood().cost() + getPrice();
+        }
+    
+        @Override
+        public String getDesc() {
+            return super.getDesc() + getFastFood().getDesc();
+        }
+    }
+    ```
+
+  - ```java
+    @Test
+    public void test() {
+        FastFood fastFood = new FiredRice();
+        Egg egg = new Egg(fastFood);
+        System.out.println(egg.getDesc()+"   price："+egg.cost());
+        Egg doubleEgg = new Egg(egg);
+        System.out.println(doubleEgg.getDesc()+"   price："+doubleEgg.cost());
+    }
+    ```
+
+    
+
+
 
 #### 组合模式
 
+- 透明组合模式
+  - ![组合模式](D:\picture\typora\java\uml\组合模式.png)
+
+- 安全组合模式
+
+  - ![组合模式-安全性](D:\picture\typora\java\uml\组合模式-安全性.png)
+
+  - 将方法从remove、add等方法从父类中移走，在Menu类中添加
+    - 优点：MenuItem无法调用其本身不应该调用的方法，因此不会出现异常
+    - 缺点：本质上区分了Menu类对象和MenuItem类对象，不能完全针对抽象编程，必须区别对待叶子构件和容器构件
+
+
+
+
+
 #### 外观模式
+
+- uml图
+  - ![外观模式](D:\picture\typora\java\uml\外观模式.png)
+
+
+
+
 
 #### 享元模式
 
-#### 代理模式
+- uml图
+  - ![享元模式](D:\picture\typora\java\uml\享元模式.png)
 
 
 
@@ -3561,31 +4473,958 @@ new Vue({
 
 #### 模板方式模式
 
+- 主要组件
+  - 抽象类
+    - 模板方法：定义了具体方法的调用流程等算法
+    - 基本方法
+      - 抽象方法：父类定义抽象方法
+      - 具体方法：子类重写父类的抽象方法
+      - 钩子方法
+  - 具体子类
+- 特点：父类中的抽象方法由子类实现，子类执行结果会影响父类的结果，形成反向控制的结构
+
+
+
+
+
 #### 命令模式
+
+- uml图
+  - ![命令模式](D:\picture\typora\java\uml\命令模式.png)
+
+- 特点
+  - 请求调用者和请求接受者解耦
+  - 支持命令的撤销与恢复
+
+
+
+
 
 #### 访问者模式
 
+- uml图
+  - ![访问者模式](D:\picture\typora\java\uml\访问者模式.png)
+
+- 双分派
+
+  - ```java
+    public class Dog implements Animal {
+        public void acceptPerson(Person person) {
+            person.feed(this);
+        }
+    }
+    ```
+
+    
+
+
+
+
+
 #### 迭代器模式
+
+- uml图
+  - ![迭代器模式](D:\picture\typora\java\uml\迭代器模式.png)
+
+- jdk中使用迭代器
+  - 聚合类实现 java.lang.Iterable 接口，并实现 iterator() 方法返回一个java.util.Iterator 的实现类
+
+
+
+
 
 #### 观察者模式
 
+- uml图
+  - ![观察者模式](D:\picture\typora\java\uml\观察者模式.png)
+
+- jdk中提供的实现
+  - Observable类：抽象主题类
+    - void addObserver(Observer o)
+    - void notifyObservers(Object arg)：越晚加入的观察者越早通知
+    - void setChange()：将一个flag设置为true，该flag为true后，notify方法才能通知观察者，通知过后自动变为false
+  - Observer：抽象观察者
+
+
+
+
+
 #### 中介者模式
+
+- uml图
+  - ![中介者模式](D:\picture\typora\java\uml\中介者模式.png)
+
+
+
+
 
 #### 备忘录模式
 
+- 白盒备忘录
+
+  - ![白箱备忘录模式](D:\picture\typora\java\uml\白箱备忘录模式.png)
+  - RoleStateCaretaker 作为管理 RoleStateMemento（存储数据类）的类，也可以对存储的数据进行修改
+
+- 黑盒备忘录
+
+  - 对发起人提供宽接口，对管理数据类提供窄接口
+    - 定义一个空接口Memento作为窄接口 供RoleStateCaretaker声明使用
+    - 在GameRole内部定义 Memento 的实现类，作为宽接口
+  - ![黑箱备忘录模式](D:\picture\typora\java\uml\黑箱备忘录模式.png)
+
+  - RoleStateCaretaker 不拿到具体实现类，无法向下转型
+
+
+
+
+
 #### 解释器模式
+
+- uml图
+  - ![解释器模式](D:\picture\typora\java\uml\解释器模式.png)
+
+
+
+
 
 #### 状态模式
 
+- 简单模式
+  - ![状态模式前](D:\picture\typora\java\uml\状态模式前.png)
+
+- 状态模式
+  - ![状态模式](D:\picture\typora\java\uml\状态模式.png)
+
+
+
+
+
 #### 策略模式
+
+- uml图
+  - ![策略模式](D:\picture\typora\java\uml\策略模式.png)
+
+
+
+
 
 #### 责任链模式
 
+- uml图
+  - ![责任链模式](D:\picture\typora\java\uml\责任链模式.png)
 
 
 
 
 
+
+
+## 自定义Spring框架
+
+### 7.1 spring使用回顾
+
+自定义spring框架前，先回顾一下spring框架的使用，从而分析spring的核心，并对核心功能进行模拟。
+
+* 数据访问层。定义UserDao接口及其子实现类
+
+  ```java
+  public interface UserDao {
+      public void add();
+  }
+  
+  public class UserDaoImpl implements UserDao {
+  
+      public void add() {
+          System.out.println("userDaoImpl ....");
+      }
+  }
+  ```
+
+* 业务逻辑层。定义UserService接口及其子实现类
+
+  ```java
+  public interface UserService {
+      public void add();
+  }
+  
+  public class UserServiceImpl implements UserService {
+  
+      private UserDao userDao;
+  
+      public void setUserDao(UserDao userDao) {
+          this.userDao = userDao;
+      }
+  
+      public void add() {
+          System.out.println("userServiceImpl ...");
+          userDao.add();
+      }
+  }
+  ```
+
+* 定义UserController类，使用main方法模拟controller层
+
+  ```java
+  public class UserController {
+      public static void main(String[] args) {
+          //创建spring容器对象
+          ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+          //从IOC容器中获取UserService对象
+          UserService userService = applicationContext.getBean("userService", UserService.class);
+          //调用UserService对象的add方法
+          userService.add();
+      }
+  }
+  ```
+
+* 编写配置文件。在类路径下编写一个名为ApplicationContext.xml的配置文件
+
+  ```java
+  <?xml version="1.0" encoding="UTF-8"?>
+  <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://www.springframework.org/schema/beans"
+         xmlns:context="http://www.springframework.org/schema/context"
+         xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://www.springframework.org/schema/context
+          http://www.springframework.org/schema/context/spring-context.xsd">
+  
+      <bean id="userService" class="com.itheima.service.impl.UserServiceImpl">
+          <property name="userDao" ref="userDao"></property>
+      </bean>
+  
+      <bean id="userDao" class="com.itheima.dao.impl.UserDaoImpl"></bean>
+  
+  </beans>
+  ```
+
+  代码运行结果如下：
+
+  ![image-20200429165544151](D:\picture\typora\java\IOC\image-20200429165544151.png)
+
+通过上面代码及结果可以看出：
+
+* userService对象是从applicationContext容器对象获取到的，也就是userService对象交由spring进行管理。
+* 上面结果可以看到调用了UserDao对象中的add方法，也就是说UserDao子实现类对象也交由spring管理了。
+* UserService中的userDao变量我们并没有进行赋值，但是可以正常使用，说明spring已经将UserDao对象赋值给了userDao变量。
+
+上面三点体现了Spring框架的IOC（Inversion of Control）和DI（Dependency Injection, DI）
+
+
+
+### 7.2 spring核心功能结构
+
+Spring大约有20个模块，由1300多个不同的文件构成。这些模块可以分为:
+
+核心容器、AOP和设备支持、数据访问与集成、Web组件、通信报文和集成测试等，下面是 Spring 框架的总体架构图：
+
+![image-20200429111324770](D:\picture\typora\java\IOC\image-20200429111324770.png)
+
+
+
+核心容器由 beans、core、context 和 expression（Spring Expression Language，SpEL）4个模块组成。
+
+* spring-beans和spring-core模块是Spring框架的核心模块，包含了控制反转（Inversion of Control，IOC）和依赖注入（Dependency Injection，DI）。BeanFactory使用控制反转对应用程序的配置和依赖性规范与实际的应用程序代码进行了分离。BeanFactory属于延时加载，也就是说在实例化容器对象后并不会自动实例化Bean，只有当Bean被使用时，BeanFactory才会对该 Bean 进行实例化与依赖关系的装配。
+* spring-context模块构架于核心模块之上，扩展了BeanFactory，为它添加了Bean生命周期控制、框架事件体系及资源加载透明化等功能。此外，该模块还提供了许多企业级支持，如邮件访问、远程访问、任务调度等，ApplicationContext 是该模块的核心接口，它的超类是 BeanFactory。与BeanFactory不同，ApplicationContext实例化后会自动对所有的单实例Bean进行实例化与依赖关系的装配，使之处于待用状态。
+* spring-context-support模块是对Spring IoC容器及IoC子容器的扩展支持。
+* spring-context-indexer模块是Spring的类管理组件和Classpath扫描组件。
+* spring-expression 模块是统一表达式语言（EL）的扩展模块，可以查询、管理运行中的对象，同时也可以方便地调用对象方法，以及操作数组、集合等。它的语法类似于传统EL，但提供了额外的功能，最出色的要数函数调用和简单字符串的模板函数。EL的特性是基于Spring产品的需求而设计的，可以非常方便地同Spring IoC进行交互。
+
+
+
+#### 7.2.1 bean概述
+
+Spring 就是面向 `Bean` 的编程（BOP,Bean Oriented Programming），Bean 在 Spring 中处于核心地位。Bean对于Spring的意义就像Object对于OOP的意义一样，Spring中没有Bean也就没有Spring存在的意义。Spring IoC容器通过配置文件或者注解的方式来管理bean对象之间的依赖关系。
+
+spring中bean用于对一个类进行封装。如下面的配置：
+
+```xml
+<bean id="userService" class="com.itheima.service.impl.UserServiceImpl">
+    <property name="userDao" ref="userDao"></property>
+</bean>
+<bean id="userDao" class="com.itheima.dao.impl.UserDaoImpl"></bean>
+```
+
+为什么Bean如此重要呢？
+
+* spring 将bean对象交由一个叫IOC容器进行管理。
+* bean对象之间的依赖关系在配置文件中体现，并由spring完成。
+
+
+
+### 7.3 Spring IOC相关接口分析
+
+#### 7.3.1 BeanFactory解析
+
+Spring中Bean的创建是典型的工厂模式，这一系列的Bean工厂，即IoC容器，为开发者管理对象之间的依赖关系提供了很多便利和基础服务，在Spring中有许多IoC容器的实现供用户选择，其相互关系如下图所示。
+
+![image-20200429185050396](D:\picture\typora\java\IOC\image-20200429185050396.png)
+
+其中，BeanFactory作为最顶层的一个接口，定义了IoC容器的基本功能规范，BeanFactory有三个重要的子接口：ListableBeanFactory、HierarchicalBeanFactory和AutowireCapableBeanFactory。但是从类图中我们可以发现最终的默认实现类是DefaultListableBeanFactory，它实现了所有的接口。
+
+那么为何要定义这么多层次的接口呢？
+
+每个接口都有它的使用场合，主要是为了区分在Spring内部操作过程中对象的传递和转化，对对象的数据访问所做的限制。例如，
+
+* ListableBeanFactory接口表示这些Bean可列表化。
+* HierarchicalBeanFactory表示这些Bean 是有继承关系的，也就是每个 Bean 可能有父 Bean
+* AutowireCapableBeanFactory 接口定义Bean的自动装配规则。
+
+这三个接口共同定义了Bean的集合、Bean之间的关系及Bean行为。最基本的IoC容器接口是BeanFactory，来看一下它的源码：
+
+```java
+public interface BeanFactory {
+
+	String FACTORY_BEAN_PREFIX = "&";
+
+	//根据bean的名称获取IOC容器中的的bean对象
+	Object getBean(String name) throws BeansException;
+	//根据bean的名称获取IOC容器中的的bean对象，并指定获取到的bean对象的类型，这样我们使用时就不需要进行类型强转了
+	<T> T getBean(String name, Class<T> requiredType) throws BeansException;
+	Object getBean(String name, Object... args) throws BeansException;
+	<T> T getBean(Class<T> requiredType) throws BeansException;
+	<T> T getBean(Class<T> requiredType, Object... args) throws BeansException;
+	
+	<T> ObjectProvider<T> getBeanProvider(Class<T> requiredType);
+	<T> ObjectProvider<T> getBeanProvider(ResolvableType requiredType);
+
+	//判断容器中是否包含指定名称的bean对象
+	boolean containsBean(String name);
+	//根据bean的名称判断是否是单例
+	boolean isSingleton(String name) throws NoSuchBeanDefinitionException;
+	boolean isPrototype(String name) throws NoSuchBeanDefinitionException;
+	boolean isTypeMatch(String name, ResolvableType typeToMatch) throws NoSuchBeanDefinitionException;
+	boolean isTypeMatch(String name, Class<?> typeToMatch) throws NoSuchBeanDefinitionException;
+	@Nullable
+	Class<?> getType(String name) throws NoSuchBeanDefinitionException;
+	String[] getAliases(String name);
+}
+```
+
+在BeanFactory里只对IoC容器的基本行为做了定义，根本不关心你的Bean是如何定义及怎样加载的。正如我们只关心能从工厂里得到什么产品，不关心工厂是怎么生产这些产品的。
+
+BeanFactory有一个很重要的子接口，就是ApplicationContext接口，该接口主要来规范容器中的bean对象是非延时加载，即在创建容器对象的时候就对象bean进行初始化，并存储到一个容器中。
+
+![image-20200430220155371](D:\picture\typora\java\IOC\image-20200430220155371.png)
+
+要知道工厂是如何产生对象的，我们需要看具体的IoC容器实现，Spring提供了许多IoC容器实现，比如：
+
+* ClasspathXmlApplicationContext : 根据类路径加载xml配置文件，并创建IOC容器对象。
+* FileSystemXmlApplicationContext ：根据系统路径加载xml配置文件，并创建IOC容器对象。
+* AnnotationConfigApplicationContext ：加载注解类配置，并创建IOC容器。
+
+
+
+#### 7.3.2 BeanDefinition解析
+
+Spring IoC容器管理我们定义的各种Bean对象及其相互关系，而Bean对象在Spring实现中是以BeanDefinition来描述的，如下面配置文件
+
+```xml
+<bean id="userDao" class="com.itheima.dao.impl.UserDaoImpl"></bean>
+
+bean标签还有很多属性：
+	scope、init-method、destory-method等。
+```
+
+其继承体系如下图所示。
+
+![image-20200429204239868](D:\picture\typora\java\IOC\image-20200429204239868.png)
+
+
+
+#### 7.3.3 BeanDefinitionReader解析
+
+Bean的解析过程非常复杂，功能被分得很细，因为这里需要被扩展的地方很多，必须保证足够的灵活性，以应对可能的变化。Bean的解析主要就是对Spring配置文件的解析。这个解析过程主要通过BeanDefinitionReader来完成，看看Spring中BeanDefinitionReader的类结构图，如下图所示。
+
+![image-20200429204700956](D:\picture\typora\java\IOC\image-20200429204700956.png)
+
+看看BeanDefinitionReader接口定义的功能来理解它具体的作用：
+
+```java
+public interface BeanDefinitionReader {
+
+	//获取BeanDefinitionRegistry注册器对象
+	BeanDefinitionRegistry getRegistry();
+
+	@Nullable
+	ResourceLoader getResourceLoader();
+
+	@Nullable
+	ClassLoader getBeanClassLoader();
+
+	BeanNameGenerator getBeanNameGenerator();
+
+	/*
+		下面的loadBeanDefinitions都是加载bean定义，从指定的资源中
+	*/
+	int loadBeanDefinitions(Resource resource) throws BeanDefinitionStoreException;
+	int loadBeanDefinitions(Resource... resources) throws BeanDefinitionStoreException;
+	int loadBeanDefinitions(String location) throws BeanDefinitionStoreException;
+	int loadBeanDefinitions(String... locations) throws BeanDefinitionStoreException;
+}
+```
+
+
+
+#### 7.3.4 BeanDefinitionRegistry解析
+
+BeanDefinitionReader用来解析bean定义，并封装BeanDefinition对象，而我们定义的配置文件中定义了很多bean标签，所以就有一个问题，解析的BeanDefinition对象存储到哪儿？答案就是BeanDefinition的注册中心，而该注册中心顶层接口就是BeanDefinitionRegistry。
+
+```java
+public interface BeanDefinitionRegistry extends AliasRegistry {
+
+	//往注册表中注册bean
+	void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
+			throws BeanDefinitionStoreException;
+
+	//从注册表中删除指定名称的bean
+	void removeBeanDefinition(String beanName) throws NoSuchBeanDefinitionException;
+
+	//获取注册表中指定名称的bean
+	BeanDefinition getBeanDefinition(String beanName) throws NoSuchBeanDefinitionException;
+    
+	//判断注册表中是否已经注册了指定名称的bean
+	boolean containsBeanDefinition(String beanName);
+    
+	//获取注册表中所有的bean的名称
+	String[] getBeanDefinitionNames();
+    
+	int getBeanDefinitionCount();
+	boolean isBeanNameInUse(String beanName);
+}
+```
+
+继承结构图如下：
+
+![image-20200429211132185](D:\picture\typora\java\IOC\image-20200429211132185.png)
+
+从上面类图可以看到BeanDefinitionRegistry接口的子实现类主要有以下几个：
+
+* DefaultListableBeanFactory
+
+  在该类中定义了如下代码，就是用来注册bean
+
+  ```java
+  private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(256);
+  ```
+
+* SimpleBeanDefinitionRegistry
+
+  在该类中定义了如下代码，就是用来注册bean
+
+  ```java
+  private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
+  ```
+
+
+
+#### 7.3.5 创建容器
+
+ClassPathXmlApplicationContext对Bean配置资源的载入是从refresh（）方法开始的。refresh（）方法是一个模板方法，规定了 IoC 容器的启动流程，有些逻辑要交给其子类实现。它对 Bean 配置资源进行载入，ClassPathXmlApplicationContext通过调用其父类AbstractApplicationContext的refresh（）方法启动整个IoC容器对Bean定义的载入过程。
+
+
+
+
+
+### 7.4 自定义SpringIOC
+
+现要对下面的配置文件进行解析，并自定义Spring框架的IOC对涉及到的对象进行管理。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+    <bean id="userService" class="com.itheima.service.impl.UserServiceImpl">
+        <property name="userDao" ref="userDao"></property>
+    </bean>
+    <bean id="userDao" class="com.itheima.dao.impl.UserDaoImpl"></bean>
+</beans>
+```
+
+#### 7.4.1 定义bean相关的pojo类
+
+##### 7.4.1.1 PropertyValue类
+
+用于封装bean的属性，体现到上面的配置文件就是封装bean标签的子标签property标签数据。
+
+```java
+public class PropertyValue {
+
+  private String name;
+  private String ref;
+  private String value;
+
+  public PropertyValue() {
+  }
+
+  public PropertyValue(String name, String ref,String value) {
+    this.name = name;
+    this.ref = ref;
+    this.value = value;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getRef() {
+    return ref;
+  }
+
+  public void setRef(String ref) {
+    this.ref = ref;
+  }
+
+  public String getValue() {
+    return value;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
+  }
+}
+```
+
+
+
+##### 7.4.1.2 MutablePropertyValues类
+
+一个bean标签可以有多个property子标签，所以再定义一个MutablePropertyValues类，用来存储并管理多个PropertyValue对象。
+
+```java
+public class MutablePropertyValues implements Iterable<PropertyValue> {
+
+    private final List<PropertyValue> propertyValueList;
+
+    public MutablePropertyValues() {
+        this.propertyValueList = new ArrayList<PropertyValue>();
+    }
+
+    public MutablePropertyValues(List<PropertyValue> propertyValueList) {
+        this.propertyValueList = (propertyValueList != null ? propertyValueList : new ArrayList<PropertyValue>());
+    }
+
+    public PropertyValue[] getPropertyValues() {
+        return this.propertyValueList.toArray(new PropertyValue[0]);
+    }
+
+    public PropertyValue getPropertyValue(String propertyName) {
+        for (PropertyValue pv : this.propertyValueList) {
+            if (pv.getName().equals(propertyName)) {
+                return pv;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Iterator<PropertyValue> iterator() {
+        return propertyValueList.iterator();
+    }
+
+    public boolean isEmpty() {
+        return this.propertyValueList.isEmpty();
+    }
+
+    public MutablePropertyValues addPropertyValue(PropertyValue pv) {
+        for (int i = 0; i < this.propertyValueList.size(); i++) {
+            PropertyValue currentPv = this.propertyValueList.get(i);
+            if (currentPv.getName().equals(pv.getName())) {
+                this.propertyValueList.set(i, new PropertyValue(pv.getName(),pv.getRef(), pv.getValue()));
+                return this;
+            }
+        }
+        this.propertyValueList.add(pv);
+        return this;
+    }
+
+    public boolean contains(String propertyName) {
+        return getPropertyValue(propertyName) != null;
+    }
+}
+```
+
+
+
+##### 7.4.1.3 BeanDefinition类
+
+BeanDefinition类用来封装bean信息的，主要包含id（即bean对象的名称）、class（需要交由spring管理的类的全类名）及子标签property数据。
+
+```java
+public class BeanDefinition {
+    private String id;
+    private String className;
+
+    private MutablePropertyValues propertyValues;
+
+    public BeanDefinition() {
+        propertyValues = new MutablePropertyValues();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public void setPropertyValues(MutablePropertyValues propertyValues) {
+        this.propertyValues = propertyValues;
+    }
+
+    public MutablePropertyValues getPropertyValues() {
+        return propertyValues;
+    }
+}
+```
+
+
+
+#### 7.4.2 定义注册表相关类
+
+##### 7.4.2.1 BeanDefinitionRegistry接口
+
+BeanDefinitionRegistry接口定义了注册表的相关操作，定义如下功能：
+
+* 注册BeanDefinition对象到注册表中
+* 从注册表中删除指定名称的BeanDefinition对象
+* 根据名称从注册表中获取BeanDefinition对象
+* 判断注册表中是否包含指定名称的BeanDefinition对象
+* 获取注册表中BeanDefinition对象的个数
+* 获取注册表中所有的BeanDefinition的名称
+
+```java
+public interface BeanDefinitionRegistry {
+
+    //注册BeanDefinition对象到注册表中
+    void registerBeanDefinition(String beanName, BeanDefinition beanDefinition);
+
+    //从注册表中删除指定名称的BeanDefinition对象
+    void removeBeanDefinition(String beanName) throws Exception;
+
+    //根据名称从注册表中获取BeanDefinition对象
+    BeanDefinition getBeanDefinition(String beanName) throws Exception;
+
+    boolean containsBeanDefinition(String beanName);
+
+    int getBeanDefinitionCount();
+
+    String[] getBeanDefinitionNames();
+}
+```
+
+
+
+##### 7.4.2.2 SimpleBeanDefinitionRegistry类
+
+该类实现了BeanDefinitionRegistry接口，定义了Map集合作为注册表容器。
+
+```java
+public class SimpleBeanDefinitionRegistry implements BeanDefinitionRegistry {
+
+    private Map<String, BeanDefinition> beanDefinitionMap = new HashMap<String, BeanDefinition>();
+
+    @Override
+    public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
+        beanDefinitionMap.put(beanName,beanDefinition);
+    }
+
+    @Override
+    public void removeBeanDefinition(String beanName) throws Exception {
+        beanDefinitionMap.remove(beanName);
+    }
+
+    @Override
+    public BeanDefinition getBeanDefinition(String beanName) throws Exception {
+        return beanDefinitionMap.get(beanName);
+    }
+
+    @Override
+    public boolean containsBeanDefinition(String beanName) {
+        return beanDefinitionMap.containsKey(beanName);
+    }
+
+    @Override
+    public int getBeanDefinitionCount() {
+        return beanDefinitionMap.size();
+    }
+
+    @Override
+    public String[] getBeanDefinitionNames() {
+        return beanDefinitionMap.keySet().toArray(new String[1]);
+    }
+}
+```
+
+
+
+#### 7.4.3 定义解析器相关类
+
+##### 7.4.3.1 BeanDefinitionReader接口
+
+BeanDefinitionReader是用来解析配置文件并在注册表中注册bean的信息。定义了两个规范：
+
+* 获取注册表的功能，让外界可以通过该对象获取注册表对象。
+* 加载配置文件，并注册bean数据。
+
+```java
+public interface BeanDefinitionReader {
+
+	//获取注册表对象
+    BeanDefinitionRegistry getRegistry();
+	//加载配置文件并在注册表中进行注册
+    void loadBeanDefinitions(String configLocation) throws Exception;
+}
+```
+
+
+
+##### 7.4.3.2 XmlBeanDefinitionReader类
+
+XmlBeanDefinitionReader类是专门用来解析xml配置文件的。该类实现BeanDefinitionReader接口并实现接口中的两个功能。
+
+```java
+public class XmlBeanDefinitionReader implements BeanDefinitionReader {
+
+    private BeanDefinitionRegistry registry;
+
+    public XmlBeanDefinitionReader() {
+        this.registry = new SimpleBeanDefinitionRegistry();
+    }
+
+    @Override
+    public BeanDefinitionRegistry getRegistry() {
+        return registry;
+    }
+
+    @Override
+    public void loadBeanDefinitions(String configLocation) throws Exception {
+
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream(configLocation);
+        SAXReader reader = new SAXReader();
+        Document document = reader.read(is);
+        Element rootElement = document.getRootElement();
+        //解析bean标签
+        parseBean(rootElement);
+    }
+
+    private void parseBean(Element rootElement) {
+
+        List<Element> elements = rootElement.elements();
+        for (Element element : elements) {
+            String id = element.attributeValue("id");
+            String className = element.attributeValue("class");
+            BeanDefinition beanDefinition = new BeanDefinition();
+            beanDefinition.setId(id);
+            beanDefinition.setClassName(className);
+            List<Element> list = element.elements("property");
+            MutablePropertyValues mutablePropertyValues = new MutablePropertyValues();
+            for (Element element1 : list) {
+                String name = element1.attributeValue("name");
+                String ref = element1.attributeValue("ref");
+                String value = element1.attributeValue("value");
+                PropertyValue propertyValue = new PropertyValue(name,ref,value);
+                mutablePropertyValues.addPropertyValue(propertyValue);
+            }
+            beanDefinition.setPropertyValues(mutablePropertyValues);
+
+            registry.registerBeanDefinition(id,beanDefinition);
+        }
+    }
+}
+```
+
+
+
+#### 7.4.4 IOC容器相关类
+
+##### 7.4.4.1 BeanFactory接口
+
+在该接口中定义IOC容器的统一规范即获取bean对象。
+
+```java
+public interface BeanFactory {
+	//根据bean对象的名称获取bean对象
+    Object getBean(String name) throws Exception;
+	//根据bean对象的名称获取bean对象，并进行类型转换
+    <T> T getBean(String name, Class<? extends T> clazz) throws Exception;
+}
+```
+
+
+
+##### 7.4.4.2 ApplicationContext接口
+
+该接口的所以的子实现类对bean对象的创建都是非延时的，所以在该接口中定义 `refresh()` 方法，该方法主要完成以下两个功能：
+
+* 加载配置文件。
+* 根据注册表中的BeanDefinition对象封装的数据进行bean对象的创建。
+
+```java
+public interface ApplicationContext extends BeanFactory {
+	//进行配置文件加载并进行对象创建
+    void refresh() throws IllegalStateException, Exception;
+}
+```
+
+
+
+##### 7.4.4.3 AbstractApplicationContext类
+
+* 作为ApplicationContext接口的子类，所以该类也是非延时加载，所以需要在该类中定义一个Map集合，作为bean对象存储的容器。
+
+* 声明BeanDefinitionReader类型的变量，用来进行xml配置文件的解析，符合单一职责原则。
+
+  BeanDefinitionReader类型的对象创建交由子类实现，因为只有子类明确到底创建BeanDefinitionReader哪儿个子实现类对象。
+
+```java
+public abstract class AbstractApplicationContext implements ApplicationContext {
+
+    protected BeanDefinitionReader beanDefinitionReader;
+    //用来存储bean对象的容器   key存储的是bean的id值，value存储的是bean对象
+    protected Map<String, Object> singletonObjects = new HashMap<String, Object>();
+
+    //存储配置文件的路径
+    protected String configLocation;
+
+    public void refresh() throws IllegalStateException, Exception {
+
+        //加载BeanDefinition
+        beanDefinitionReader.loadBeanDefinitions(configLocation);
+
+        //初始化bean
+        finishBeanInitialization();
+    }
+
+    //bean的初始化
+    private void finishBeanInitialization() throws Exception {
+        BeanDefinitionRegistry registry = beanDefinitionReader.getRegistry();
+        String[] beanNames = registry.getBeanDefinitionNames();
+
+        for (String beanName : beanNames) {
+            BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);
+            getBean(beanName);
+        }
+    }
+}
+```
+
+> 注意：该类finishBeanInitialization()方法中调用getBean()方法使用到了模板方法模式。
+
+
+
+##### 7.4.4.4 ClassPathXmlApplicationContext类
+
+该类主要是加载类路径下的配置文件，并进行bean对象的创建，主要完成以下功能：
+
+* 在构造方法中，创建BeanDefinitionReader对象。
+* 在构造方法中，调用refresh()方法，用于进行配置文件加载、创建bean对象并存储到容器中。
+* 重写父接口中的getBean()方法，并实现依赖注入操作。
+
+```java
+public class ClassPathXmlApplicationContext extends AbstractApplicationContext{
+
+    public ClassPathXmlApplicationContext(String configLocation) {
+        this.configLocation = configLocation;
+        //构建XmlBeanDefinitionReader对象
+        beanDefinitionReader = new XmlBeanDefinitionReader();
+        try {
+            this.refresh();
+        } catch (Exception e) {
+        }
+    }
+
+    //根据bean的id属性值获取bean对象
+    @Override
+    public Object getBean(String name) throws Exception {
+
+        //return singletonObjects.get(name);
+        Object obj = singletonObjects.get(name);
+        if(obj != null) {
+            return obj;
+        }
+
+        BeanDefinitionRegistry registry = beanDefinitionReader.getRegistry();
+        BeanDefinition beanDefinition = registry.getBeanDefinition(name);
+        if(beanDefinition == null) {
+            return null;
+        }
+        String className = beanDefinition.getClassName();
+        Class<?> clazz = Class.forName(className);
+        Object beanObj = clazz.newInstance();
+        MutablePropertyValues propertyValues = beanDefinition.getPropertyValues();
+        for (PropertyValue propertyValue : propertyValues) {
+            String propertyName = propertyValue.getName();
+            String value = propertyValue.getValue();
+            String ref = propertyValue.getRef();
+            if(ref != null && !"".equals(ref)) {
+
+                Object bean = getBean(ref);
+                String methodName = StringUtils.getSetterMethodNameByFieldName(propertyName);
+                Method[] methods = clazz.getMethods();
+                for (Method method : methods) {
+                    if(method.getName().equals(methodName)) {
+                        method.invoke(beanObj,bean);
+                    }
+                }
+            }
+
+            if(value != null && !"".equals(value)) {
+                String methodName = StringUtils.getSetterMethodNameByFieldName(propertyName);
+                Method method = clazz.getMethod(methodName, String.class);
+                method.invoke(beanObj,value);
+            }
+        }
+        singletonObjects.put(name,beanObj);
+        return beanObj;
+    }
+
+    @Override
+    public <T> T getBean(String name, Class<? extends T> clazz) throws Exception {
+
+        Object bean = getBean(name);
+        if(bean != null) {
+            return clazz.cast(bean);
+        }
+        return null;
+    }
+}
+```
+
+
+
+#### 7.4.5 自定义Spring IOC总结
+
+##### 7.4.5.1 使用到的设计模式
+
+* 工厂模式。这个使用工厂模式 + 配置文件的方式。
+* 单例模式。Spring IOC管理的bean对象都是单例的，此处的单例不是通过构造器进行单例的控制的，而是spring框架对每一个bean只创建了一个对象。
+* 模板方法模式。AbstractApplicationContext类中的finishBeanInitialization()方法调用了子类的getBean()方法，因为getBean()的实现和环境息息相关。
+* 迭代器模式。对于MutablePropertyValues类定义使用到了迭代器模式，因为此类存储并管理PropertyValue对象，也属于一个容器，所以给该容器提供一个遍历方式。
+
+spring框架其实使用到了很多设计模式，如AOP使用到了代理模式，选择JDK代理或者CGLIB代理使用到了策略模式，还有适配器模式，装饰者模式，观察者模式等。
+
+##### 7.4.5.2 符合大部分设计原则
+
+##### 7.4.5.3 整个设计和Spring的设计还是有一定的出入
+
+spring框架底层是很复杂的，进行了很深入的封装，并对外提供了很好的扩展性。而我们自定义SpringIOC有以下几个目的：
+
+* 了解Spring底层对对象的大体管理机制。
+* 了解设计模式在具体的开发中的使用。
+* 以后学习spring源码，通过该案例的实现，可以降低spring学习的入门成本。
 
 
 
@@ -5922,7 +7761,7 @@ public void testQueryWrapper(){
     //方式三：lambda格式按条件查询
     LambdaQueryWrapper<User> lqw = new LambdaQueryWrapper();
     lqw.lt(User::getMoney,12000);
-
+    
     List list = userDao.selectList(lqw);
     for (Object o : list) {
         System.out.println(o);
@@ -5931,6 +7770,7 @@ public void testQueryWrapper(){
 ```
 
 - 常用条件
+  - eq：等于
   - lt：小于
   - le：小于等于
   - gt：大于
@@ -8713,8 +10553,6 @@ public class MainActivity extends AppCompatActivity {
 
 #### zookeeper
 
-#### Consul
-
 
 
 #### Nacos
@@ -8884,6 +10722,14 @@ public class MainActivity extends AppCompatActivity {
 
   - 方式一：在用@Value读取nacos配置文件的类上加上@RefreshScope
 
+    ```java
+    @RefreshScope
+    public class Test {
+        @Value("${pattern.dateformat}")
+        private String dateformat;
+    }
+    ```
+
   - 方式二：使用ConfigurationProperties自动刷新
 
     ```java
@@ -8901,7 +10747,7 @@ public class MainActivity extends AppCompatActivity {
 
   - 步骤：
 
-    - 新建配置，命名为[spring.application.name]如customeService.yaml
+    - 新建配置，命名为[spring.application.name].yaml如customeService.yaml
 
     - 读取nacos文件
 
@@ -8952,7 +10798,7 @@ public class MainActivity extends AppCompatActivity {
 
   - 选择策略
 
-    - 方式一：注册一个IRule接口的bean，返回对应的实现类
+    - 方式一：注册一个IRule接口的bean，放在@SpringBootApplication扫描的的地方，返回对应的实现类
 
       ```java
       @Bean
@@ -8961,8 +10807,20 @@ public class MainActivity extends AppCompatActivity {
       }
       ```
 
-    - 方式二：在order-service（服务消费者）的application.yml文件中，添加新的配置
+    - 方式二：bean放在@SpringBootApplication扫描不到的地方，用@RibbonClient注解
 
+      ```java
+      @SpringBootApplication
+      @RibbonClient(name="customerService", configuration=MyselfRule.class)
+      public class App {
+          public static void main(String[] args) {
+              SpringApplication.run(App.class, args);
+          }
+      }
+      ```
+      
+    - 方式二：在order-service（服务消费者）的application.yml文件中，添加新的配置
+    
       ```yml
       userservice:
        ribbon:
@@ -8984,26 +10842,25 @@ public class MainActivity extends AppCompatActivity {
 
     
 
-#### Feign
+#### openFeign
 
 - 基本使用
 
   - 引入依赖
 
     ```xml
+    <!-- openfeign依赖携带ribbon依赖 -->
     <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-openfeign</artifactId>
         <version>3.1.4</version>
     </dependency>
-    
-    
     ```
-
-  - 启动类加@EnableFeighClients
-
+    
+  - 启动类加@EnableFeignClients(clients = CustomerClient.class)
+  
   - 定义和使用Feign客户端
-
+  
     ```java
     @FeignClient("customerService(服务器名)")
     public interface CustomerClient {
@@ -9011,11 +10868,11 @@ public class MainActivity extends AppCompatActivity {
         Customer findById(@PathVariable("id") Long id);
     }
     ```
-
+  
     ```java
     Customer customer = customerClient.findById({id});
     ```
-
+  
 - 配置
 
   | 类型                | 作用             | 说明                                             |
@@ -9076,6 +10933,16 @@ public class MainActivity extends AppCompatActivity {
         max-connection-per-route: 50 # 每个路径的最大连接数
       ```
 
+- 超时控制
+
+  ```yaml
+  ribbon:
+   # 建立连接所用的时间，使用与网络状况正常的情况下，两端连接所用的时间
+   ConnectTimeout: 5000
+   # 建立连接后从服务器读取到可用资源所用的时间
+   ReadTimeout: 5000
+  ```
+  
 - 最佳实践
 
   - 方法一
@@ -9110,7 +10977,429 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-#### 网关
+### 服务监控与保护
+
+#### Hystrix
+
+##### 使用步骤
+
+- 依赖
+
+  ```xml
+  <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+      <version>2.2.10.RELEASE</version>
+  </dependency>
+  ```
+
+- 开启Hystrix：启动类加@EnableCircuitBreaker/@EnableHystrix
+
+- 设置超时时间
+
+
+
+##### 服务降级
+
+- 服务超时或出错时的回馈
+
+- @HystrixCommand
+
+  ```java
+  @Override
+  @HystrixCommand(fallbackMethod = "customer_timeoutHandler", commandProperties = {
+      @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "3000")
+  })
+  public String customer_timeout() {
+      //int a = 10/0;
+      int millis = 5000;
+      try {
+          Thread.sleep(millis);
+      } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+      }
+      return "成功，延时："+millis;
+  }
+  
+  public String customer_timeoutHandler(){
+      return "失败";
+  }
+  ```
+
+- orderService（消费端）也可以使用服务降级，以免请求超时
+
+  - 打开feign的hystrix设置：在application.yml中配置
+
+    ```yaml
+    # 若在feignClient中配置服务降级，须开启以下配置
+    feign:
+     hystrix:
+      enabled: true
+      
+    # 上面配置开启后，hystrix也会有一个默认超时时间，类似于ribbon
+    # 区别于之前配置的ribbon超时时间，两者都要配置
+    hystrix:
+      command:
+        default:
+          execution:
+            isolation:
+              thread:
+                timeoutInMilliseconds: 5000
+    # ribbon 超时报错：Read timed out
+    # hystrix 超时报错：java.util.concurrent.TimeoutException: null
+    ```
+
+  - 服务降级：orderController中使用服务降级
+
+    - @HystrixCommand
+
+      ```java
+      @HystrixCommand(fallbackMethod = "timeoutHandler", commandProperties = {
+          @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "3000")
+      })
+      @GetMapping("/timeout")
+      public String timeout(){
+          // 调用feignclient方法
+          String str = customerClient.customer_timeout();
+          return str;
+      }
+      
+      public String timeoutHandler(){
+          return "失败";
+      }
+      ```
+
+  - 消费端统一配置
+
+    - FeignClient端
+
+      ```java
+      @FeignClient("customerService", fallback = CustomerFallbackClient.class)
+      public interface CustomerClient {
+          @GetMapping("/customer/{id}")
+          Customer findById(@PathVariable int id);
+      
+          @GetMapping("/customer/timeout")
+          String customer_timeout();
+      }
+      ```
+
+    - 统一配置降级类
+
+      ```java
+      @Component
+      public class CustomerFallbackClient implements CustomerClient{
+          @Override
+          public Customer findById(int id){
+              return null;
+          }
+          
+          @Override
+          public String customer_timeout(){
+              return "失败";
+          }
+      }
+      ```
+
+- 另外，统一配置降级还可以使用：@DefaultProperties(defaultFallback = "defaultMethod")，加在类上，用于向该类中加了@HystrixCommand但未指定处理方法的方法指定默认处理方法
+
+
+
+##### 服务熔断
+
+- 熔断
+
+  ```java
+  @Override
+  @HystrixCommand(fallbackMethod = "customer_breakHandler", commandProperties = {
+      @HystrixProperty(name = "circuitBreaker.enabled", value = "true"), // 是否开启断路器
+      @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "10"), // 请求次数默认20
+      @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000"), // 拒绝请求时间，默认5000
+      @HystrixProperty(name = "circuitBreaker.timeInMilliseconds", value = "10000"), // 时间窗口（内部时钟），默认10000
+      @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "60") // 失败率达到60%后跳闸，默认50
+  })
+  public String customer_break(int id) {
+      if (id < 0){
+          throw new RuntimeException("id不能为负数");
+      }
+      String uuid = UUID.randomUUID().toString();
+      return "成功，流水号："+uuid;
+  }
+  
+  public String customer_breakHandler(int id){
+      return "失败";
+  }
+  ```
+
+- 熔断打开：请求不再进行调用当前服务，内部设置时钟一般为MTTR（平均故障处理时间），当打开时长达到所设置时钟则进入半熔断状态
+- 熔断关闭：
+- 熔断半开：部分请求根据规则调用当前服务，如果请求成功且复合规则默认认为当前服务恢复正常，关闭熔断
+
+
+
+##### 服务监控
+
+- 新建一个springboot模块
+
+- 引入依赖
+
+  ```xml
+  <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
+      <version>2.2.10.RELEASE</version>
+  </dependency>
+  <!-- 监控依赖 -->
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+  </dependency>
+  ```
+
+- 配置端口
+
+- 主启动类添加@EnableHystrixDashboard
+
+- 所有微服务提供类需要添加监控依赖配置
+
+
+
+
+
+
+#### Sentinel
+
+##### 使用步骤
+
+- 下载启动 sentinel-dashboard-1.8.6.jar
+
+  - docker pull bladex/sentinel-dashboard
+  - docker run --name sentinel -p 8858:8858 -td bladex/sentinel-dashboard
+
+- 导入依赖
+
+  ```xml
+  <dependency>
+      <groupId>com.alibaba.cloud</groupId>
+      <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+  </dependency>
+  <dependency>
+      <groupId>com.alibaba.cloud</groupId>
+      <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+  </dependency>
+  ```
+  
+- application.yml
+
+  ```yaml
+  server:
+    port: 8401
+  
+  spring:
+    application:
+      name: sentinel-customerService
+    cloud:
+      nacos:
+        discovery:
+          server-addr: 192.168.36.131:8848
+      sentinel:
+        transport:
+          dashboard: 192.168.336.131:8858
+          # 默认端口8719，假如被占用会自动从8719开始依次+1扫描未被占用端口
+          port: 8719
+  
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: '*'
+  
+  # 若使用openFeign的fallback类须开启以下配置
+  feign:
+    sentinel:
+      enabled: true
+  ```
+  
+  
+
+##### 流控规则
+
+- 资源名：唯一名称，默认请求路径
+- 针对来源：Sentinel可以针对调用者进行限流
+- 阈值类型/单机阈值
+  - QPS（每秒的请求数量）：当调用该api的QPS达到阈值时进行限流
+  - 线程数：当调用该api的线程数达到阈值时，进行限流
+- 是否集群
+- 流控模式：
+  - 直接：api达到限流条件时，直接限流
+  - 关联：当关联的资源达到阈值时，限流自己
+  - 链路：只记录指定链路上的流量（指定资源从入口资源进来的流量，如果达到阈值，就进行限流）
+- 流控效果：
+  - 快速失败：直接失败，抛异常
+  - Warm Up：根据codeFactory（冷加载因子，默认3）的值，经过预热时长，才达到QPS阈值
+  - 排队等待：
+
+
+
+##### 流控降级
+
+- 资源名
+- 熔断策略
+  - RT（慢调用比例）
+  - 异常比例
+  - 异常数
+- 比例阈值
+- 熔断时间
+- 最小请求数
+
+
+
+##### 热点规则
+
+- java
+
+  - ```java
+    @GetMapping("/hotKey")
+    @SentinelResource(value = "hotKey", blockHandler = "deal_testHotKey")
+    public String getForHotKey(
+        @RequestParam(value = "p1", required = false) String p1,
+        @RequestParam(value = "p2", required = false) String p2
+    ) {
+        return "------testHotKey:   p1->"+p1+"  p2->"+p2;
+    }
+    public String deal_testHotKey(String p1, String p2, BlockException blockException) {
+        return "-------deal_hotkey";
+    }
+    ```
+  
+- 图形化配置
+
+  - 资源名
+  - 参数索引：java代码中的索引号参数
+  - 单机阈值
+  - 统计窗口期
+  - 参数例外项：指定参数值为某个特定值时，可单独指定该值的限流阈值
+
+
+
+##### 系统规则
+
+- 阈值类型
+  - Load
+  - RT
+  - 线程数
+  - 入口QPS
+  - cpu使用率
+
+
+
+##### @SentinelResource
+
+- value：资源名
+
+- blockHandlerClass：指定规则处理类
+
+- blockHandler：指定规则处理方法，该方法只会 在控制台上配置的问题产生时 调用
+
+- fallbackClass：指定异常处理类
+
+- fallback：指定异常处理方法，该方法会 在java代码出现异常时 调用
+
+  - ```java
+    @GetMapping("/fallback/{number1}/{number2}")
+    @SentinelResource(value = "fallback", fallback = "deal_fallback")
+    public String getForFallback(@PathVariable("number2") int number2,
+                                 @PathVariable("number1") int number1) {
+        if (number2 == -1) {
+            throw new RuntimeException("请求非法");
+        }
+        return "number 值为："+number1;
+    }
+    public String deal_fallback(int number2, int number1, Throwable throwable) {
+        return "number2的值为 "+number2+"  ->  "+throwable.getMessage();
+    }
+    ```
+
+- fallback和blockHandler两者都配置：规则归blockHandler处理，异常归fallback处理
+
+- exceptionToIgnore：忽略指定异常的处理
+
+
+
+##### 配置持久化
+
+- 依赖
+
+  - ```xml
+    <dependency>
+        <groupId>com.alibaba.csp</groupId>
+        <artifactId>sentinel-datasource-nacos</artifactId>
+    </dependency>
+    ```
+
+- yaml配置
+
+  - ```yaml
+    spring:
+      application:
+        name: customerServer-sentinel
+      cloud:
+        nacos:
+          server-addr: 192.168.36.132:8848
+        sentinel:
+          transport:
+            port: 8720
+            dashboard: 192.168.36.132:8858
+          # 用于配置持久化到nacos上
+          datasource:
+            ds1:
+              nacos:
+                server-addr: 192.168.36.132:8848
+                data-id: ${spring.application.name}
+                group-id: DEFAULT_GROUP
+                data-type: json
+                rule-type: flow
+    ```
+
+- nacos新建配置
+
+  - Data ID：customerServer-sentinel
+
+  - 格式配置：json
+
+  - 配置内容
+
+    - 配置
+
+      - resource：资源名
+      - limitApp：来源应用
+      - grade：阈值类型，0表示线程数，1表示QPS
+      - count：单机阈值
+      - strategy：流控模式，0表示直接，1表示关联，2表示链路
+      - controlBehavior：流控效果，0表示快速失败，1表示Warm up，2表示排队等待
+      - clusterMode：是否集群
+
+    - ```json
+      [
+          {
+              "resource": "/customer/{id}",
+              "limitApp": "default",
+              "grade": 1,
+              "count": 1,
+              "strategy": 0,
+              "controlBehavior": 0,
+              "clusterMode": false
+          }
+      ]
+      ```
+
+      
+
+
+
+
+
+### 服务网关
 
 #### Gateway
 
@@ -9149,10 +11438,10 @@ public class MainActivity extends AppCompatActivity {
         nacos:
           server-addr: 192.168.36.131:8848
         gateway:
-          #discovery:
-            #locator:
+          discovery:
+            locator:
             # 开启注册中心动态创建路由的功能，利用微服务名进行路由
-            #enabled: true
+            enabled: true
             # eureka 自动大写服务名时，可开启
             #lowerCaseServiceId: true
           routes:
@@ -9165,11 +11454,72 @@ public class MainActivity extends AppCompatActivity {
               uri: lb://orderService
               predicates:
                 - Path=/order/**
-              filters:
-                - StripPrefix=1
+              #filters:
+                #- StripPrefix=1
     ```
   
 - 断言工厂
+
+  - Path
+
+    - ```yml
+      predicates:
+        - Path=/order/**
+      ```
+
+  - 其他断言
+
+    - ```yml
+      predicates:
+        - Path=/order/**
+        # 时间格式：2022-01-01T00:00:00.000+08:00[Asia/Shanghai]
+        - After=时间
+        - Before=时间
+        - Between=时间A,时间B
+        
+        # 前一个为键名，后一个为正则表达式
+        # 携带键值对为 username=zzyy 的cookie
+        - Cookie=username, zzyy
+        # 携带一个键为 X-Request-Id, 值为整数的Header
+        - Header=X-Request-Id, \d+
+        - Host=**.baidu.com
+        - Method=Get
+        # 携带userId=整数的参数 http://localhost/order/userId=3
+        - Query=userId, \d+
+      ```
+
+- 过滤器
+
+  - 全局过滤器
+
+  - 自定义过滤器
+
+    - ```java
+      @Component
+      public class MyGatewayFilter implements GlobalFilter, Ordered {
+          @Override
+          public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+              System.out.println("filter执行了。。。");
+              if (!exchange.getRequest().getPath().toString().contains("order")) {
+                  exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+                  return exchange.getResponse().setComplete();
+              }
+              return chain.filter(exchange);
+          }
+      
+          /**
+           * 加载过滤器的顺序
+           * @return 数字越小优先级越高
+           */
+          @Override
+          public int getOrder() {
+              return 0;
+          }
+      }
+      ```
+
+      
+
 
 
 
@@ -9313,7 +11663,7 @@ public class MainActivity extends AppCompatActivity {
         nginx 
     ```
 
-  - 目录挂载
+  - 目录挂载（宿主机目录、文件未提前创建会自动创建目录，不会创建文件）
 
     - -v [宿主机目录]:[容器内目录]
     - -v [宿主机文件]:[容器内文件]
@@ -9383,6 +11733,88 @@ public class MainActivity extends AppCompatActivity {
   # -t t是tag（javaweb:1.0是一个tag）
   # . 表示dockerfile所在的目录
   ```
+
+
+
+#### 运行镜像
+
+- redis
+  
+  - 创建文件夹
+  
+    ```shell
+    mkdir -p /var/docker-volume/redis/conf
+    touch /var/docker-volume/redis/conf/redis.conf
+    mkdir -p /var/docker-volume/redis/data
+    ```
+  
+  - 运行镜像
+  
+    ```shell
+    docker run -p 6379:6379 --name redis \
+    -v /var/docker-volume/redis/data:/data \
+    -v /var/docker-volume/redis/conf/redis.conf:/etc/redis/redis.conf \
+    -d redis \
+    redis-server /etc/redis/redis.conf \
+    appendonly yes
+    ```
+  
+  - redis-server /etc/redis/redis.conf  以配置文件启动redis，加载容器内的conf文件，最终找到的是挂载的目录/usr/local/docker/redis.conf
+  
+  - appendonly yes 开启redis 持久化
+  
+- mysql:5.7
+
+  - 创建文件夹
+
+    ```shell
+    mkdir -p /var/docker-volume/mysql/log
+    mkdir -p /var/docker-volume/mysql/data
+    mkdir -p /var/docker-volume/mysql/conf
+    ```
+
+  - 运行镜像
+
+    ```shell
+    docker run -p 3306:3306 --name mysql \
+    	-v /var/docker-volume/mysql/log:/var/log/mysql \
+    	-v /var/docker-volume/mysql/data:/var/lib/mysql \
+    	-v /var/docker-volume/mysql/conf:/etc/mysql \
+    	-e MYSQL_ROOT_PASSWORD=root \
+    	-d mysql:5.7
+    ```
+
+- nginx
+
+  - 创建挂载目录
+
+    ```shell
+    mkdir -p /var/docker-volume/nginx/conf
+    mkdir -p /var/docker-volume/nginx/log
+    mkdir -p /var/docker-volume/nginx/html
+    ```
+
+  - 复制文件到挂载目录
+
+    ```shell
+    # 先生成容器
+    docker run --name nginx -p 9999:80 -d nginx
+    
+    # 复制容器中的文件到挂载目录
+    docker cp nginx:/etc/nginx/nginx.conf /var/docker-volume/nginx/conf/nginx.conf
+    docker cp nginx:/etc/nginx/conf.d /var/docker-volume/nginx/conf/conf.d
+    docker cp nginx:/usr/share/nginx/html /var/docker-volume/nginx/
+    ```
+
+  - 移出nginx容器后重新运行
+
+    ```shell
+    
+    ```
+
+    
+
+
 
 
 
@@ -9811,6 +12243,464 @@ public class MainActivity extends AppCompatActivity {
     kibana:7.17.6
   ```
 
+
+
+
+
+
+
+
+
+
+
+
+# Netty
+
+
+
+## BIO
+
+### 同步阻塞案例
+
+- Server
+
+  ```java
+  public class Server {
+      public static void main(String[] args) {
+          try {
+              ServerSocket server = new ServerSocket(8848);
+              System.out.println("服务端已启动");
+              Socket socket = server.accept();
+              InputStream is = socket.getInputStream();
+              BufferedReader br = new BufferedReader(new InputStreamReader(is));
+              String msg;
+              // 此处用if
+              if ((msg = br.readLine()) != null){
+                  System.out.println("服务端收到：【 "+msg+" 】");
+              }
+  
+          } catch (IOException e) {
+              throw new RuntimeException(e);
+          }
+      }
+  }
+  ```
+
+- Client
+
+  ```java
+  public class Client {
+      public static void main(String[] args) throws IOException {
+          Socket socket = new Socket("127.0.0.1", 8848);
+          OutputStream outputStream = socket.getOutputStream();
+          PrintStream ps = new PrintStream(outputStream);
+          // 用print未写完一行数据，服务器无法读取到完整一行
+          ps.print("hello, server!");
+          ps.flush();
+          // 未关闭，java.net.SocketException: Connection reset
+      }
+  }
+  ```
+
+
+
+### 多发多收
+
+- Server
+
+  ```java
+  public class Server {
+      public static void main(String[] args) {
+          try {
+              ServerSocket server = new ServerSocket(8848);
+              System.out.println("服务端已启动");
+              Socket socket = server.accept();
+              InputStream is = socket.getInputStream();
+              BufferedReader br = new BufferedReader(new InputStreamReader(is));
+              String msg;
+              // 此处用while
+              while ((msg = br.readLine()) != null){
+                  System.out.println("服务端收到：【 "+msg+" 】");
+              }
+  
+          } catch (IOException e) {
+              throw new RuntimeException(e);
+          }
+      }
+  }
+  ```
+
+- Client
+
+  ```java
+  public class Client {
+      public static void main(String[] args) throws IOException {
+          Socket socket = new Socket("127.0.0.1", 8848);
+          OutputStream outputStream = socket.getOutputStream();
+          PrintStream ps = new PrintStream(outputStream);
+          Scanner scanner = new Scanner(System.in);
+          while (true) {
+              System.out.print("请说：");
+              ps.println(scanner.next());
+              ps.flush();
+          }
+      }
+  }
+  ```
+
+
+
+### 接收多个客户端
+
+- Server：多线程
+
+  ```java
+  public class Server {
+      public static void main(String[] args) {
+          try {
+              ServerSocket server = new ServerSocket(8848);
+              System.out.println("服务端已启动");
+              while (true){
+                  Socket socket = server.accept();
+                  // 开启线程
+                  new Thread(() -> {
+                      try {
+                          InputStream is = socket.getInputStream();
+                          BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                          String msg;
+                          while ((msg = br.readLine()) != null){
+                              System.out.println("服务端收到"+Thread.currentThread()+"的消息：【 "+msg+" 】");
+                          }
+                      }catch (IOException e) {
+                          throw new RuntimeException(e);
+                      }
+                  }).start();
+              }
+          } catch (IOException e) {
+              throw new RuntimeException(e);
+          }
+      }
+  }
+  ```
+
+- Client
+
+
+
+### 伪异步
+
+- Server：线程池
+
+  ```
+  
+  ```
+
+- Client
+
+
+
+### 文件传输
+
+- Server
+
+  ```java
+  public class Server {
+      public static void main(String[] args) {
+          try {
+              ServerSocket server = new ServerSocket(8848);
+              Socket socket = server.accept();
+              DataInputStream dis = new DataInputStream(socket.getInputStream());
+              String suffix = dis.readUTF();
+              System.out.println(suffix);
+              // 读取文件 ...
+  
+          }catch (Exception e){
+              e.printStackTrace();
+          }
+      }
+  }
+  ```
+
+- Client
+
+  ```java
+  public class Client {
+      public static void main(String[] args) {
+          File file = new File("D:\\picture\\4823e7c.31a80e298383812fe498b567.png");
+          String fileName = file.getName();
+          String[] split = fileName.split("\\.");
+  
+          try(InputStream is = new FileInputStream(file);) {
+              Socket socket = new Socket("127.0.0.1", 8848);
+              DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+              dos.writeUTF(split[split.length-1]);
+              byte[] buffer = new byte[1024];
+              int len;
+              while ((len = is.read(buffer)) != -1){
+                  dos.write(buffer, 0, len);
+              }
+              dos.flush();
+              dos.close();
+              // 及时关闭通道
+              socket.shutdownOutput();
+          }catch (Exception e){
+              e.printStackTrace();
+          }
+      }
+  }
+  ```
+
+  
+
+### 端口转发
+
+- Server
+
+  ```java
+  public class Server {
+      // 定义一个静态集合，用来存储在线的socket
+      private static List<Socket> socketsOnline = new ArrayList<>();
+  
+      public static void main(String[] args) {
+          try {
+              ServerSocket server = new ServerSocket(8848);
+              System.out.println("服务器启动");
+              while (true){
+                  Socket socket = server.accept();
+                  Server.socketsOnline.add(socket);
+                  new Thread(() -> {
+                      try {
+                          BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                          String msg;
+                          while ((msg = br.readLine()) != null){
+                              // 服务端接收到客户端的消息后，推送给所有在线的客户端
+                              for (Socket socketOnline : Server.socketsOnline) {
+                                  PrintStream printStream = new PrintStream(socket.getOutputStream());
+                                  printStream.println(msg);
+                                  printStream.flush();
+                              }
+                          }
+                      }catch (Exception e){
+                          // 捕获到连接重置异常后表示有人下线
+                          System.out.println(socket+" 客户端用户下线");
+                          Server.socketsOnline.remove(socket);
+                      }
+                  }).start();
+              }
+  
+          } catch (IOException e) {
+              throw new RuntimeException(e);
+          }
+      }
+  }
+  ```
+
+- Client
+
+
+
+
+
+## NIO
+
+### Buffer
+
+#### 常用API
+
+- 缓冲区操作
+
+  - Buffer clear()：清空缓冲区并返回对缓冲区的引用
+  - Buffer flip()：将 limit 的位置设置到 position 上，并将 position 的位置改为0
+  - int capacity()：返回 Buffer 的 capacity 大小
+  - boolean hasRemaining()：判断缓冲区中是否还有元素
+  - int limit()：返回 Buffer 的 limit 的位置
+  - Buffer limit(int n)：设置 limit 为n，并返回对缓冲区的引用
+  - Buffer mark()：对缓冲区设置标记
+  - int position()：返回 position 的位置
+  - Buffer position(int n)：设置 position 的位置，并返回对缓冲区的引用
+  - int remaining()：返回 position 和 limit 间的元素个数
+  - Buffer reset()：将位置 position 转到之前设置的 mark 位置上
+  - Buffer rewind()：将 position 设置为0，取消之前的 mark
+- 数据操作
+
+  - get()：读取单个字节
+  - get(byte[] dst)：批量读取多个字节到 dst 中
+  - get(int index)：读取指定索引位置的字节（不会移动position）
+  - put(byte b)：将单个字节写到 position 位置上
+  - put(byte[] src)：将src中的字节写入到 position 位置上
+  - put(int index, byte b)：将指定字节写入的索引位置上（不会移动position）
+
+
+
+
+#### 直接内存缓冲区
+
+- 非直接内存作用链
+  - 本地IO -> 直接内存 -> 非直接内存 -> 直接内存 -> 本地IO
+- 直接内存作用链
+  - 本地IO -> 直接内存 -> 本地IO
+- 直接内存效率更高，但申请慢，需要及时关闭
+- API
+  - 创建直接内存：Buffer.allocateDirect(int bytes);
+  - 判断是否是直接内存：buffer.isDirect();
+
+
+
+
+
+### Channel
+
+#### 概述
+
+- 类似于Stream流，但channel是双向的
+- 用于在缓冲区和位于通道另一侧的实体间的数据传输
+- 通道依赖于缓冲区，从而可以实现异步读写数据
+- channel实现
+  - FileChannel：从文件中读写数据
+  - DatagramChannel：能通过UDP读写网络中的数据
+  - SocketChannel：能通过TCP读写网络中的数据
+  - ServerSocketChannel：可以监听新来的TCP连接，类似于web服务器，对每个新进来的连接都会创建一个SocketChannel
+- 支持通道的类（调用getChannel()方法）
+  - FileInputStream、FileOutputStream
+  - RandomAccessFile
+  - DatagramSocket
+  - Socket、ServerSocket
+
+
+
+#### 常用API
+
+- FileChannel
+  - int read(ByteBuffer dst)：从 channel 中读取数据到 ByteBuffer
+  - long read(ByteBuffer[] dsts)：将 Channel 中的数据“分散”到 ByteBuffer[]中
+  - int write(ByteBuffer src)：将 ByteBuffer 中的数据写入到 channel
+  - long write(ByteBuffer[] srcs)：将 ByteBuffer[] 中的数据“聚集”到 channel
+  - long positon()：返回此通道的文件位置
+  - FileChannel position(long p)：设置此通道的文件位置
+  - long size()：返回此通道的文件当前大小
+  - FileChannel truncate(long s)：将此通道的文件截取为给定大小
+  -  void force(boolean metaData) ：强制将所有对此通道的文件更新写入到存储设备中
+  - long transferFrom(ReadableChannel str, long position, long count)
+  - long transferTo(long position, long, count, WritableByteChannel target)
+
+
+
+
+
+### Selector
+
+#### 概述
+
+- Selector 是 SelectableChannle 对象的多路复用器，Selector 可以同时监听控制多个 SelectableChannel 的 IO 事件
+- Selector 是非阻塞 IO 的核心
+- 不必为每个连接都创建一个线程，避免了多线程间上下文切换导致的开销
+
+
+
+
+
+### 网络通信
+
+#### 服务端流程
+
+- 当客户端连接服务端时，服务端会通过 ServerSocketChannel 得到 SocketChannel：
+
+  ```java
+  ServerSocketChannel sschannel = ServerSocketChannel.open();
+  ```
+
+- 切换非阻塞模式（在注册选择器前设置阻塞模式）
+
+  ```java
+  sschannel.configureBlocking(false);
+  ```
+
+- 绑定连接
+
+  ```java
+  ssChannel.bind(new InetSocketAddress(8080));
+  ```
+
+- 获取连接器
+
+  ```java
+  Selector selector = Selector.open();
+  ```
+
+- 将通道注册到选择器上，并且指定“监听接收事件”
+
+  ```java
+  sschannel.register(selector, SelectionKey.OP_ACCEPT);
+  ```
+
+  - 监听接收事件
+    - 读：SelectionKey.OP_READ（1）
+    - 写：SelectionKey.OP_WRITE（4）
+    - 连接：SelectionKey.OP_CONNECT（8）
+    - 接收：SelectionKey.OP_ACCEPT（16）
+    - 多个事件可用 "|" 来连接
+
+- 轮询式获取选择器上已经“准备就绪”的事件
+
+  ```java
+  while(selector.select() > 0) {
+      Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+      while(it.hasNext()){
+          SelectionKey sk = it.next();
+          if(sk.isAcceptable()){
+              SocketChannel sChannel = ssChannel.accept();
+              sChannel.configureBlocking(false);
+              sChannel.resgister(selecotr. SelectionKey.OP_READ);
+          }else if(sk.isReadable()){
+              SocketChannel sChannel = (SocketChannel) sk.channel();
+              ByteBuffer buf = ByteBuffer.allocate(1024);
+              int len;
+              while((len = sChannel.read(buf)) != -1){
+                  buf.flip();
+                  System.out.println(new String(buf.array(), 0, len));
+                  buf.clear();
+              }
+          }
+          it.remove();
+      }
+  }
+  ```
+
+
+
+#### 客户端流程
+
+- 获取通道
+
+  ```java
+  SocketChannel sChannel = SocketChannel.open(new InetSocketAddress("127.0.0.1",8080));
+  ```
+
+- 切换非阻塞模式
+
+  ```java
+  sChannel.configureBlocking(false);
+  ```
+
+- 分配指定大小的缓冲区
+
+  ```java
+  ByteBuffer buf = ByteBuffer.allocate(1024);
+  ```
+
+- 发送数据给服务端
+
+  ```java
+  Scanner scanner = new Scanner(System.in);
+  while(scanner.hasNext()){
+      System.out.println("请输入：");
+      String str = scanner.nextLine();
+      buf.put((new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(System.currentTimeMillis())+"/n"+str).getBytes());
+      buf.flip();
+      sChannel.write(buf);
+      buf.clear();
+  }
+  ```
   
 
 
@@ -9821,6 +12711,609 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+# Redis
+
+
+
+## 基础篇
+
+### 安装redis
+
+#### 配置文件
+
+```bash
+# Redis configuration file example.
+#
+# Note that in order to read the configuration file, Redis must be
+# started with the file path as first argument:
+# 
+# 开始启动时必须如下指定配置文件
+
+# ./redis-server /path/to/redis.conf
+
+# Note on units: when memory size is needed, it is possible to specify
+# it in the usual form of 1k 5GB 4M and so forth:
+# 
+# 存储单位如下所示
+
+# 1k => 1000 bytes
+# 1kb => 1024 bytes
+# 1m => 1000000 bytes
+# 1mb => 1024*1024 bytes
+# 1g => 1000000000 bytes
+# 1gb => 1024*1024*1024 bytes
+
+################################## INCLUDES ###################################
+
+# 如果需要使用多配置文件配置redis，请用include
+#
+# include /path/to/local.conf
+# include /path/to/other.conf
+
+################################## MODULES ##################################### modules
+
+# 手动设置加载模块（当服务无法自动加载时设置）
+#
+# loadmodule /path/to/my_module.so
+# loadmodule /path/to/other_module.so
+
+################################## NETWORK #####################################
+
+# Examples:
+#
+# bind 192.168.1.100 10.0.0.1
+# bind 127.0.0.1 ::1
+# 
+# 设置绑定的ip
+bind 127.0.0.1
+
+# 保护模式：不允许外部网络连接redis服务
+protected-mode yes
+
+# 设置端口号
+port 6379
+
+# TCP listen() backlog.
+# 
+# TCP 连接数，此参数确定了TCP连接中已完成队列(完成三次握手之后)的长度
+tcp-backlog 511
+
+# Unix socket.
+# 
+# 通信协议设置，本机通信使用此协议不适用tcp协议可大大提升性能
+# unixsocket /tmp/redis.sock
+# unixsocketperm 700
+
+
+
+# TCP keepalive.
+# 
+# 定期检测cli连接是否存活
+tcp-keepalive 300
+
+################################# GENERAL #####################################
+
+# 是否守护进程运行（后台运行）
+daemonize yes
+
+# 是否通过upstart和systemd管理Redis守护进程
+supervised no
+
+# 以后台进程方式运行redis，则需要指定pid 文件
+pidfile /var/run/redis_6379.pid
+
+# 日志级别
+# 可选项有： # debug（记录大量日志信息，适用于开发、测试阶段）； # verbose（较多日志信息）； # notice（适量日志信息，使用于生产环境）； 
+# warning（仅有部分重要、关键信息才会被记录）。
+loglevel notice
+
+# 日志文件的位置
+logfile ""
+
+# 数据库的个数
+databases 16
+
+# 是否显示logo
+always-show-logo yes
+
+################################ SNAPSHOTTING  ################################
+#
+# Save the DB on disk:
+# 
+# 持久化操作设置 900秒内触发一次请求进行持久化，300秒内触发10次请求进行持久化操作，60s内触发10000次请求进行持久化操作
+
+save 900 1
+save 300 10
+save 60 10000
+
+# 持久化出现错误后，是否依然进行继续进行工作
+stop-writes-on-bgsave-error yes
+
+# 使用压缩rdb文件 yes：压缩，但是需要一些cpu的消耗。no：不压缩，需要更多的磁盘空间
+rdbcompression yes
+
+# 是否校验rdb文件，更有利于文件的容错性，但是在保存rdb文件的时候，会有大概10%的性能损耗
+rdbchecksum yes
+
+# dbfilename的文件名
+dbfilename dump.rdb
+
+# dbfilename文件的存放位置
+dir ./
+
+################################# REPLICATION #################################
+
+# replicaof 即slaveof 设置主结点的ip和端口
+# replicaof <masterip> <masterport>
+
+# 集群节点访问密码
+# masterauth <master-password>
+
+# 从结点断开后是否仍然提供数据
+replica-serve-stale-data yes
+
+# 设置从节点是否只读
+replica-read-only yes
+
+# 是或否创建新进程进行磁盘同步设置
+repl-diskless-sync no
+
+# master节点创建子进程前等待的时间
+repl-diskless-sync-delay 5
+
+# Replicas发送PING到master的间隔，默认值为10秒。
+# repl-ping-replica-period 10
+
+# 
+# repl-timeout 60
+
+# 
+repl-disable-tcp-nodelay no
+
+#
+# repl-backlog-size 1mb
+
+#
+# repl-backlog-ttl 3600
+
+# 
+replica-priority 100
+
+#
+# min-replicas-to-write 3
+# min-replicas-max-lag 10
+#
+# replica-announce-ip 5.5.5.5
+# replica-announce-port 1234
+
+################################## SECURITY ###################################
+
+# 设置连接时密码
+# requirepass 123456
+
+################################### CLIENTS ####################################
+
+# 最大连接数
+# maxclients 10000
+
+############################## MEMORY MANAGEMENT ################################
+
+# redis配置的最大内存容量
+# maxmemory <bytes>
+
+# 内存达到上限的处理策略
+# maxmemory-policy noeviction
+
+# 处理策略设置的采样值
+# maxmemory-samples 5
+
+# 是否开启 replica 最大内存限制
+# replica-ignore-maxmemory yes
+
+############################# LAZY FREEING ####################################
+
+# 惰性删除或延迟释放
+lazyfree-lazy-eviction no
+lazyfree-lazy-expire no
+lazyfree-lazy-server-del no
+replica-lazy-flush no
+
+############################## APPEND ONLY MODE ###############################
+
+# 是否使用AOF持久化方式
+appendonly no
+
+# appendfilename的文件名
+
+appendfilename "appendonly.aof"
+
+# 持久化策略
+# appendfsync always
+appendfsync everysec
+# appendfsync no
+
+# 持久化时（RDB的save | aof重写）是否可以运用Appendfsync，用默认no即可，保证数据安全性
+no-appendfsync-on-rewrite no
+
+# 设置重写的基准值
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+
+# 指定当发生AOF文件末尾截断时，加载文件还是报错退出
+aof-load-truncated yes
+
+# 开启混合持久化，更快的AOF重写和启动时数据恢复
+aof-use-rdb-preamble yes
+
+################################ REDIS CLUSTER  ###############################
+
+# 是否开启集群
+# cluster-enabled yes
+
+# 集群结点信息文件
+# cluster-config-file nodes-6379.conf
+
+# 等待节点回复的时限
+# cluster-node-timeout 15000
+
+# 结点重连规则参数
+# cluster-replica-validity-factor 10
+
+#
+# cluster-migration-barrier 1
+
+#
+# cluster-require-full-coverage yes
+
+#
+# cluster-replica-no-failover no
+```
+
+
+
+#### docker部署
+
+- 创建/var/docker -volume/redis/redis.conf文件，以便之后的文件挂载
+- docker run -p 6379:6379 --name redis -v /var/docker-volume/redis/redis.conf:/etc/redis/redis.conf -v /var/docker-volume/redis/data:/data -d redis:6.2.7 redis-server /etc/redis/redis.conf --appendonly yes
+  - -p 6379:6379 端口映射：前表示主机部分，：后表示容器部分。
+  - --name myredis  指定该容器名称，查看和进行操作都比较方便。
+  - -v 挂载目录，规则与端口映射相同。
+  - -d redis 表示后台启动redis
+  - redis-server /etc/redis/redis.conf  以配置文件启动redis，加载容器内的conf文件，最终找到的是挂载的目录/usr/local/docker/redis.conf
+  - appendonly yes 开启redis 持久化
+
+
+
+
+
+### Redis命令
+
+#### 使用命令行
+
+- redis-cli [options] [commands]
+  - 常用options
+    - -h 127.0.0.1：指定redis节点的ip，默认为127.0.0.1
+    - -p 6379：指定连接的redis节点的端口，默认是6379
+    - -a redis：指定redis的访问密码
+  - commands是redis的操作命令
+    - ping：与redis服务做心跳测试，服务正常返回pong
+    - AUTH redis：指定redis的访问密码
+    - select (index)：切换库
+  - 不指定commands，会进入redis-cli的交互控制台
+
+
+
+#### 通用命令
+
+- 查看帮助文档：help @generic
+- 常用命令：
+  - KEYS (pattern)：查看复合模板的所有key
+    - keys *：查询所有键
+    - keys a*：查询以a开头的键
+  - DEL (key ...)：删除一个或多个key，返回值为删除的key的个数
+  - EXISTS (key ...)：判断key是否存在，返回值为存在的key的个数
+  - EXPIRE (key seconds)：设置一个key的存活时间
+  - TTL (key)：查看一个key的剩余存活时间，返回值-2为不存在，-1为永久有效
+
+
+
+#### String类型
+
+- string类型的value是字符串，不过根据字符串的格式不同，又可分为3类
+  - string：普通字符串
+  - int：整数类型，可以做自增、自减操作
+  - float：浮点类型，可以做自增、自减操作
+- 不管哪种格式，底层都是字节数组格式存储，只不过数字类型为减小存储大小而采用不同编码方式。字符串类型的最大空间不能超过512m
+- 常用命令
+  - SET (key value) [EX seconds|PX milliseconds|EXAT timestamp|PXAT milliseconds-timestamp|KEEPTTL] [NX|XX] [GET]
+  - GET (key)：由key获得value
+  - MSET (key value ...)：创建多个key和value
+  - MGET (key ...)：获得多个value
+  - INCR (key)：让一个整型的key自增1
+  - INCRBY (key increment)：让一个整型的key自增指定步长
+  - INCRBYFLOAT (key increment)：让一个浮点型的key自增指定步长
+  - SETNX (key value)：添加一个string类型的键值对，前提是这个key不存在，否则不执行
+  - SETEX (key seconds value)：添加一个指定类型的键值对，并指定有效期
+
+
+
+#### Hash类型
+
+- 类型
+
+  | key    | value |          |
+  | ------ | ----- | -------- |
+  |        | field | value    |
+  | user:1 | name  | zhangsan |
+  |        | age   | 21       |
+  | user:2 | name  | lisi     |
+  |        | age   | 18       |
+
+- 常用指令
+
+  - HSET key field value：添加或修改hash类型key的field的值
+
+  - HGET key field：获取一个hash类型key的field的值
+
+  - HMSET key field value：批量添加多个hash类型的key的field和值
+
+  - HMGET：批量获取多个hash类型的key的field的值
+
+  - HGETALL：获取一个hash类型的key中的所有field和value
+
+  - HKEYS：获取一个hash类型的key中的所有的field
+
+  - HVALS：获取一个hash类型的key中的所有的value
+
+  - HINCRBY：让一个hash类型key的字段自增并指定步长
+
+  - HSETNX：添加一个hash类型的key的field值，前提field不存在，否则不执行
+
+
+
+#### List类型
+
+- 常用指令
+  - LPUSH key element ...：向key对应的列表左侧插入一个或多个元素
+  - LPOP key [count]：移出并返回key对应的列表左侧前n个元素，没有则返回nil
+  - RPUSH key element ...：向key对应的列表右侧插入一个或多个元素
+  - RPOP key [count]：移出并返回key对应的列表右侧前n个元素，没有则返回nil
+  - LRANGE key start end：返回一个角段内的所有元素
+  - BLPOP和BRPOP key ... timeout：与LPOP和RPOP类似，不过在没有元素时，等待指定时间，而不是直接返回nil
+
+
+
+#### Set类型
+
+- 常用指令
+  - SADD key member ... ：向set中添加一个或多个元素
+  - SREM key member ... ：移出set中的指定元素
+  - SCARD key：返回set中元素的个数
+  - SISMEMBER key member：判断一个元素是否存在于set中
+  - SMEMBERS：获取set中的所有元素
+  - SINTER key1 key2 ...：求key1与key2的交集
+  - SDIFF key1 key2 ...：求key1和key2的差集（key1中有key2中没有的）
+  - SUNION key1 key2 ...：求key1和key2的并集
+
+
+
+#### SortedSet类型
+
+- 常用指令
+  - ZADD key score member：添加一个或多个元素到sorted set ，如果已经存在则更新其score
+  - ZREM key member：删除sorted set的一个指定元素
+  - ZSORE key member：获取sorted set中的指定元素的score值
+  - ZRANK key member：获取sorted set中的指定元素的排名
+  - ZCARD key：获取sorted set中的元素个数
+  - ZCOUNT key min max：统计score值在给定范围内的所有元素的个数
+  - ZINCRBY key increment member：让sorted set中的指定元素的score值自增指定步长
+  - ZRANGE key min max：按照score排序后，获取指定排名范围内的元素
+  - ZRANGEBYSCORE key min max：按照socre排序后，获取指定score范围内的元素
+  - ZDIFF、ZINTER、ZUNION：求差集、交集、并集
+
+
+
+
+
+### Java
+
+#### Jedis
+
+##### 基本使用
+
+- 引入依赖
+
+  ```xml
+  <dependency>
+      <groupId>redis.clients</groupId>
+      <artifactId>jedis</artifactId>
+      <version>3.7.1</version>
+  </dependency>
+  <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.8.2</version>
+      <scope>test</scope>
+  </dependency>
+  ```
+
+- 建立连接
+
+  ```java
+  private Jedis jedis;
+  
+  @BeforeEach
+  void setUp(){
+      jedis = new Jedis("192.168.36.131", 6379);
+      jedis.auth("redis");
+      jedis.select(0);
+  }
+  ```
+
+- 测试
+
+  ```java
+  @Test
+  void testString(){
+      String result = jedis.set("name", "zhangsan"); // OK
+      String name = jedis.get("name"); // 
+  }
+  ```
+
+- 释放资源
+
+  ```java
+  @AfterEach
+  void tearDown(){
+      if(jedis != null){
+          jedis.close();
+      }
+  }
+  ```
+
+
+
+
+##### jedis连接池
+
+```java
+public class JedisConnectionFactory {
+    private static final JedisPool jedisPool;
+
+    static {
+        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        // 最大连接
+        jedisPoolConfig.setMaxTotal(8);
+        // 最大空闲连接
+        jedisPoolConfig.setMaxIdle(8);
+        // 最小空闲连接
+        jedisPoolConfig.setMinIdle(0);
+        // 连接池中没有连接时的最长等待时间，默认-1表示一直等待
+        jedisPoolConfig.setMaxWaitMillis(200);
+        jedisPool = new JedisPool(jedisPoolConfig, "192.168.36.131", 6379, 1000, "redis");
+    }
+    
+    // 获取Jedis对象
+    public static Jedis getJedis(){
+        return jedisPool.getResource();
+    }
+}
+```
+
+
+
+
+
+#### SpringDataRedis
+
+##### RedisTemplate
+
+| API              | 返回值类型      | 说明                  |
+| ---------------- | --------------- | --------------------- |
+| rt.opsForValue() | ValueOperations | 操作String类型数据    |
+| rt.opsForHash()  | HashOperations  | 操作Hash类型数据      |
+| rt.opsForList()  | ListOperations  | 操作List类型数据      |
+| rt.opsForSet()   | SetOperations   | 操作Set类型数据       |
+| rt.opsForZSet()  | ZSETOperations  | 操作SortedSet类型数据 |
+| rt               |                 | 通用的命令            |
+
+
+
+##### 快速入门
+
+- 引入依赖（基于boot）
+
+  ```xml
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+  </dependency>
+  <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-pool2</artifactId>
+  </dependency>
+  ```
+
+- 配置文件
+
+  ```yml
+  spring:
+    redis:
+      host: 192.168.36.131
+      port: 6379
+      password: redis
+      database: 0
+      # spring默认使用lettuce，若用jedis，须导入jedis依赖
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: 1000ms
+  ```
+
+- 注入RedisTemplate
+
+  ```java
+  @Autowired
+  private RedisTemplate redisTemplate;
+  ```
+
+
+
+##### 序列化
+
+- 自动序列化
+
+  - redisTemplate默认使用java的序列化方式
+
+  - 导入jackson-databind依赖
+
+  - 重写RedisTemplate的Bean
+
+    ```java
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory){
+        // 创建 RedisTemplate 对象
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        // 设置连接工厂
+        template.setConnectionFactory(factory);
+        // 创建JSON序列化工具
+        GenericJackson2JsonRedisSerializer jackson2JsonRedisSerializer = new GenericJackson2JsonRedisSerializer();
+        // 设置Key的序列化
+        template.setKeySerializer(RedisSerializer.string());
+        template.setHashKeySerializer(RedisSerializer.string());
+        // 设置Value的序列化
+        template.setValueSerializer(jackson2JsonRedisSerializer);
+        template.setHashValueSerializer(jackson2JsonRedisSerializer);
+        // 返回
+        return template;
+    }
+    ```
+
+  - 问题：存对象时，会存入类字节码路径
+
+- 手动序列化
+
+  - Spring默认提供了一个StringRedisTemplate类，它的key和value的序列化方式默认是String方式。省去了自定义RedisTemplate的过程
+
+  ```java
+  private static final ObjectMapper mapper = new ObjectMapper();
+  @Autowired
+  private StringRedisTemplate stringRedisTemplate;
+  
+  @Test
+  void testStringTemplate() throws JsonProcessingException {
+      User temp = new User("zhangsan", 18);
+      // 存入数据
+      String json = mapper.writeValueAsString(temp);
+      stringRedisTemplate.opsForValue().set("user", json);
+      // 读取数据
+      String jsonFromRedis = stringRedisTemplate.opsForValue().get("user");
+      User user = mapper.readValue(jsonFromRedis, User.class);
+      System.out.println(user);
+  }
+  ```
 
 
 
@@ -9829,6 +13322,84 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+## 实战篇
+
+### hutool
+
+- json与对象的转换
+
+  - 普通对象
+
+    - ```java
+      String shopJson = JSONUtil.toJsonStr(shop);
+      ```
+
+    - ```java
+      Shop shop = JSONUtil.toBean(shopJson, Shop.class);
+      ```
+
+  - list集合
+
+    - ```java
+      String shopTypeJson = JSONUtil.toJsonStr(typeList);
+      ```
+
+    - ```java
+      JSONArray jsonArray = JSONUtil.parseArray(shopTypeJson);
+      List<ShopType> shopTypes = JSONUtil.toList(jsonArray, ShopType.class);
+      ```
+
+- 拷贝属性
+
+  - ```java
+    UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+    ```
+
+- 对象转map
+
+  - ```java
+    Map<String, Object> userMap = null;
+    userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
+                                 // 可定义转换规则
+                                 CopyOptions.create()
+                                 .setIgnoreNullValue(true)
+                                 .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()))
+    ```
+
+- 生成是否生成不带中划线的uuid
+
+  - ```java
+    String token = UUID.randomUUID().toString(false); // 生成带中划线的uuid
+    ```
+
+    
+
+### 缓存
+
+#### 缓存的使用
+
+- 缓存穿透
+
+  ![缓存穿透](D:\picture\typora\java\缓存穿透.png)
+
+- 缓存雪崩
+
+  - 问题：多项缓存同时失效或redis宕机
+  - 解决
+    - 多级缓存
+    - 随机有效期
+    - redis集群
+
+- 缓存击穿
+
+  ![缓存击穿](D:\picture\typora\java\缓存击穿.png)
+
+
+
+#### 秒杀
+
+- redis缓存商品信息和库存
+- 可用redis的set集合
 
 
 
@@ -9836,12 +13407,311 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+### Redisson
+
+#### 基础配置
+
+- 引入依赖
+
+  - ```xml
+    <dependency>
+    	<groupId>org.redisson</groupId>
+        <artifactId>redisson</artifactId>
+        <version>3.13.6</version>
+    </dependency>
+    ```
+
+- 配置Redisson客户端
+
+  - ```java
+    @Configuration
+    public class RedisConfig {
+        @Bean
+        public RedissonClient redissonClient() {
+            // 配置类
+            Config config = new Config();
+            // 添加单点的redis地址，也可以使用config.userClusterServers()添加集群地址
+            config.useSingleServer()
+                .setAddress("redis://192.168.36.131:6379")
+                .setPassword("redis");
+            // 创建客户端并返回
+            return Redisson.create(config);
+        }
+    }
+    ```
+
+
+
+#### 分布式锁
+
+- 基于redis实现分布式锁
+  - 以 lock:order:userId 作为键，以 uuid 作为值，设置合适的存活时间，以免死锁
+  - 执行业务时，判断该键是否存在
+  - 若键不存在，生成键值，执行业务
+  - 执行完业务后，删除该键用来代表归还锁
+  - 若键存在，说明用户在不同服务端下重复申请
+  - 细节
+    - 可通过 uuid 判断 生成键与将要销毁键 的是否是同一线程，若不是，则不允许该线程销毁
+    - 是否是可重入的锁
+
+- 单锁
+
+  - ```java
+    @Resource
+    private RedissonClient redissonClient;
+    
+    // 此方法用于模拟分布式下一人一单的 锁 操作
+    @Test
+    void testRedisson(int userId) throws InterruptedException {
+        // 获取锁（可重入），指定锁的名称
+        RLock lock = redissonClient.getLock("lock:order:" + userId);
+        // 尝试获取锁，参数分别是：获取锁的最大等待时间（期间会重试），锁自动释放时间，时间单位
+        // 默认值：(-1, 30*1000, TimeUnit.毫秒); -1 表示不等待
+        boolean isLock = lock.tryLock(2, 10, TimeUnit.SECONDS);
+        // 判断是否获取成功
+        if (isLock) {
+            try {
+                System.out.println("执行业务");
+            }finally {
+                lock.unlock();
+            }
+        }
+    }
+    ```
+
+- 连锁（不使用redis集群，单纯在三个redis数据库间建立连锁。连锁：所有的锁都拿到，才能真正获得锁）
+
+  - ```java
+    @Resource
+    private RedissonClient redissonClient1;
+    @Resource
+    private RedissonClient redissonClient2;
+    @Resource
+    private RedissonClient redissonClient3;
+    
+    private RLock lock;
+    
+    @BeforeEach
+    void setUp() {
+        RLock lock1 = redissonClient1.getLock("lock:order:" + userId);
+        RLock lock2 = redissonClient2.getLock("lock:order:" + userId);
+        RLock lock3 = redissonClient3.getLock("lock:order:" + userId);
+        
+        lock = redissonClient.getMultiLock(lock1, lock2, lock3);
+    }
+    ```
+
+    
 
 
 
 
 
 
+
+# Nginx
+
+
+
+## 部署
+
+### docker部署
+
+- 下载镜像
+
+  - ```shell
+    docker pull nginx
+    ```
+
+- 创建挂载目录
+
+  - ```shell
+    mkdir -p /var/docker-volume/nginx/conf
+    mkdir -p /var/docker-volume/nginx/log
+    mkdir -p /var/docker-volume/nginx/html
+    ```
+
+- 复制文件到挂载目录
+
+  - ```shell
+    # 先生成容器
+    docker run --name nginx -p 9999:80 -d nginx
+    
+    # 复制容器中的文件到挂载目录
+    docker cp nginx:/etc/nginx/nginx.conf /var/docker-volume/nginx/conf/nginx.conf
+    docker cp nginx:/etc/nginx/conf.d /var/docker-volume/nginx/conf/conf.d
+    docker cp nginx:/usr/share/nginx/html /var/docker-volume/nginx/
+    ```
+
+- 移出nginx容器后重新运行
+
+  - ```shell
+    # 移出刚才生成的容器
+    docker stop nginx
+    docker rm nginx
+    
+    # 重新运行
+    docker run \
+    -p 9999:80 \
+    --name nginx \
+    -v /var/docker-volume/nginx/conf/nginx.conf:/etc/nginx/nginx.conf \
+    -v /var/docker-volume/nginx/conf/conf.d:/etc/nginx/conf.d \
+    -v /var/docker-volume/nginx/log:/var/log/nginx \
+    -v /var/docker-volume/nginx/html:/usr/share/nginx/html \
+    -d nginx
+    ```
+
+    
+
+
+
+
+
+## 基础
+
+### 配置文件
+
+```shell
+user  nginx;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    include /etc/nginx/conf.d/*.conf;
+}
+
+server {
+    listen       80;
+    listen  [::]:80;
+    server_name  localhost;
+
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+```
+
+
+
+#### 虚拟主机
+
+```shell
+# 可配置多个主机
+server {
+    listen       80;
+    # 域名、主机名
+    server_name  localhost www.test.cn;
+
+    location / {
+        root   /usr/share/nginx/html/test01;
+        index  index.html index.htm;
+    }
+}
+    
+server {
+    listen       80;
+    # 支持通配符。匹配顺序：精准匹配 > 头通配符匹配 > 尾通配符匹配 > 正则匹配
+    server_name  *.test.*;
+
+    location / {
+        root   /usr/share/nginx/html/test02;
+        index  index.html index.htm;
+    }
+}
+```
+
+
+
+#### 反向代理
+
+```shell
+server {
+    listen       80;
+    server_name  localhost www.test.cn;
+
+    location / {
+        # 代理
+        proxy_pass https://www.baidu.com;
+    }
+}
+```
+
+
+
+#### 负载均衡
+
+```shell
+upstream httpds {
+	# 配置负载均衡，可配置权重、是否进行负载均衡、配置备用机
+	server 192.168.36.133:9999 weight=6 down;
+	server 192.168.36.134:9999 weight=2;
+	server 192.168.36.134:9999 weight=2 backup;
+}
+server {
+    listen       80;
+    server_name  localhost www.test.cn;
+
+    location / {
+        proxy_pass http://httpds;
+    }
+}
+```
+
+
+
+#### 动静分离
+
+```shell
+# 配置多个location
+server {
+    listen       80;
+    server_name  localhost www.test.cn;
+
+    location / {
+    	# 定义匹配规则："$1" 表示匹配第一个 "(正则表达式)"
+    	# last 本条规则匹配完成后，获得的新的URI会再次进行location匹配
+    	# break 本条规则匹配完成即终止，不再匹配后面任何规则
+    	# redirect 返回302临时重定向，浏览器地址栏会显示跳转后的URL地址
+    	# permanent 返回301永久重定向，浏览器地址栏会显示跳转后的URL地址
+    	rewrite ^/([0-9]+).html$   /index.html?pageNum=$1  break;
+        proxy_pass http://httpds;
+    }
+    
+    location ~*/(css|img|css) {
+    	root /usr/share/nginx/html;
+    	index index.html index.htm;
+    }
+}
+```
 
 
 
