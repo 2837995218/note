@@ -11557,7 +11557,7 @@ public class MainActivity extends AppCompatActivity {
                lvm2 --skip-broken
     ```
 
-  - 更新本地镜像源
+  - 配置docker的yum源：告诉linux去哪下载
 
     ```shell
     yum-config-manager \
@@ -12185,65 +12185,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     ```
-
-
-
-
-
-
-### Elasticsearch
-
-#### 安装
-
-- 因为还需要部署kibana容器，因此需要让es和kibana容器互联。这里先创建个网络：
-
-  ```shell
-  docker network create es-net
-  ```
-
-- 拉去镜像
-
-  ```shell
-  docker pull elasticsearch:7.17.6
-  ```
-
-- es没有权限操作挂载目录，无法绑定节点，开放挂载目录权限
-
-  ```shell
-  # rwx -> 4+2+1 = 7
-  # rw -> 4+2 = 6
-  # rx -> 4+1 = 5
-  sudo chmod 777 /var/docker-volume/es/**
-  ```
-
-- 运行容器
-
-  ```shell
-  docker run -d \
-    --name es \
-    -e "ES_JAVA_OPTS=-Xms512m -Xmx1024m" \
-    -e "discovery.type=single-node" \
-    -v /var/docker-volume/es/es-data:/usr/share/elasticsearch/data \
-    -v /var/docker-volume/es/es-plugins:/usr/share/elasticsearch/plugins \
-    --privileged \
-    --network es-net \
-    -p 9200:9200 \
-    -p 9300:9300 \
-    elasticsearch:7.17.6
-  ```
-
-- 安装kibana
-
-  ```shell
-  docker run -d \
-    --name kibana \
-    -e ELASTICSEARCH_HOST=http://es:9200 \
-    --network es-net \
-    -p 5601:5601 \
-    kibana:7.17.6
-  ```
-
-
 
 
 
@@ -13712,32 +13653,5 @@ server {
     }
 }
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
