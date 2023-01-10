@@ -598,7 +598,361 @@
 
 # JavaScript
 
+
+
 ## ECMAScript
+
+### ES6
+
+#### 箭头函数
+
+- 使用
+
+  ```js
+  // let fn = function(a, b) {return a+b}
+  
+  let fn = (a, b) => {return a+b}
+  console.log(fn(1, 2))
+  ```
+
+- 特性
+
+  - this 是静态的，this始终是执行函数声明时所在作用域下的 this 的值
+  - 箭头函数不能作为构造器实例化对象
+  - 不能使用 arguments 变量
+  - 箭头函数的简写
+    - 省略小括号：参数只有一个
+    - 省略大括号：函数体只有一行，有return，return必须省略
+
+- 使用
+
+  ```js
+  const arr = [1, 6, 9, 10, 11, 20, 100]
+  //const result = arr.filter(function(item) {
+  //    if(item % 2 === 0) {
+  //        return true;
+  //    }else{
+  //        return false;
+  //    }
+  //})
+  const result = arr.filter(item => item % 2 === 0)
+  ```
+
+
+
+#### 形参初始值
+
+```js
+function print(str = 'hello,world') {
+    console.log(str)
+}
+print('你好，世界')
+```
+
+```js
+function conn({host, username='root', passowrd, port='3306'}){
+	// 假设下面的方法是连接数据库的方法
+	connection(host, username, password, port);
+}
+conn({host: 'localhost', password= 'root'})
+```
+
+
+
+#### rest
+
+- ES6 引入 rest 参数，用于获取函数的实参，用来代替 arguments
+
+- 使用：必须放到参数的最后
+
+  ```js
+  //function data() {
+  //    console.log(arguments) // __proto__: Object 对象
+  //}
+  function data(...args) {
+      console.log(args); // Array数组
+  }
+  date('张三', '李四', '王五')
+  ```
+
+
+
+#### 扩展运算符
+
+```js
+function shopping() {
+    console.log(arguments);
+}
+const customers = ['zhangsan', 'lisi', 'wangwu']
+
+shopping(customers) // 接收到一个数组
+shopping(...customers) // 接收到数组里的三个对象
+```
+
+- 其他使用场景
+  - 数组的合并：const arr = [...arr1, ...arr2]
+  - 数组的克隆：const copyArr = [...arr]
+  - 伪数组转数组：let divs = [...document.querrySelectorAll('div')]
+
+
+
+
+
+#### Symbol
+
+- 新数据类型，表示独一无二的值，不能和其他值进行运算
+
+- 创建方式
+
+  ```js
+  let s = Symbol();
+  // console.log(s, typeof s) // symbol
+  let s2 = Symbol("张三");
+  let s3 = Symbol("张三");
+  // console.log(s2 === s3) // false
+  let s4 = Symbol.for("张三");
+  let s5 = Symbol.for("张三");
+  // console.log(s4 === s5) // true
+  ```
+
+
+
+#### 迭代器
+
+- 使用迭代器
+
+  ```js
+  const customers = ['zhangsan', 'lisi', 'wangwu']
+  
+  // for(let c in customers)：c 是键或索引
+  for(let c of customers) {
+      console.log(c) // c 是值
+  }
+  ```
+
+- 定义迭代器
+
+  ```js
+  const book = {
+      name: '西游记',
+      stus: ['唐僧', '猪悟能', '沙悟净', '孙悟空'],
+      [Symbol.iterator]() {
+          let index = 0;
+          let _this = this;
+          return {
+              next: function() {
+                  if(index < _this.stus.length) {
+                      const result = {value: _this.stus[index], done: false};
+                      index++;
+                      return result;
+                  }else {
+                      return {value: undefined, done: true};
+                  }
+              }
+          }
+      }
+  }
+  ```
+
+
+
+#### 生成器
+
+- 使用方法
+
+  ```js
+  // yield是ES6的新关键字，使生成器函数执行暂停，yield关键字后面的表达式的值返回给生成器的调用者。
+  function* gen() {
+      console.log('111');
+      let one = yield '这是第一部分';
+      console.log('222');
+      yield '这是第二部分';
+  }
+  let iterator = gen(); // 获得的是一个迭代器对象
+  
+  //for(let v of iterator){
+  //    console.log(v);
+  //}
+  
+  console.log(iterator.next());
+  // next方法也可以传入实参，作为yield的返回值
+  console.log(iterator.next("BBB"));
+  console.log(iterator.next());
+  ```
+
+- 举例
+
+  ```java
+  function handle(data) {
+      console.log("根据 "+data+" 执行操作")
+  }
+  function * gen(data) {
+      handle(data)
+      let data1 = yield first();
+      handle(data1)
+      let data2 = yield second();
+      handle(data2)
+  }
+  let iterator = gen('初始数据');
+  iterator.next()
+  
+  function first() {
+      setTimeout(() => {
+          let data = "第一步数据";
+          iterator.next(data)
+      }, 1000)
+  }
+  function second() {
+      setTimeout(() => {
+          let data = "第二步数据";
+          iterator.next(data)
+      }, 1000)
+  }
+  ```
+
+  
+
+#### Promise
+
+- 快速使用
+
+  ```js
+  const p = new Promise((resolve, reject) => {
+      setTimeout(() => {
+          let data = "数据库返回的信息";
+          //resolve(data); // 调用成功函数，p 的状态变为成功
+          reject(data); // 调用失败函数，p的状态变为失败
+      }, 100)
+  })
+  // 根据 p 的状态，若成功，调用前一个参数为value的函数，反之则调用后一个函数
+  p.then(value => console.log("成功 "+value), reason => console.log("失败 "+reason))
+  ```
+
+- then方法的返回结果是Promise对象（下面简称为p）
+
+  - 如果 then 方法参数中的函数 return 一个Promise对象，p的状态由该 Promise 的回调函数 resolve 和reject 决定
+  - 如果 then 方法参数中的函数 return 一个非Promise对象，p的状态为成功
+  - 如果 then 方法中抛出错误，p的状态为失败
+
+  ```js
+  new Promise(resolve => {resolve('第一步成功')})
+      .then(value => {
+          console.log(value) // 打印 “第一步成功”
+          return new Promise((resolve, reject) => reject("第二步失败"))
+      }, reason => console.log(reason))
+  
+      .then(value => console.log(value)) //虽然状态为失败，但不对失败进行处理
+  
+      .then(value => console.log(value), reason => {
+          console.log(reason)// 依旧会打印 “第二步失败”，因为前面为对失败进行处理
+          return false;
+      })
+      .catch(reason => console.log(reason))
+  ```
+
+- catch方法：失败时调用，与then类似，语法糖，省略第一个参数
+
+
+
+#### Set、Map
+
+
+
+#### Class
+
+```js
+// 构造方法
+function Phone(brand, price){
+    this.brand = brand;
+    this.price = price;
+}
+
+//添加方法
+Phone.prototype.call = function() {console.log("打电话")}
+
+//实例化对象
+let huaWei = new Phone("华为", 6999);
+huaWei.call();
+```
+
+```js
+class Phone {
+    constructor(brand, price) {
+        this.brand = brand;
+        this.price = price;
+    }
+    call() {
+        console.log("打电话")
+    }
+}
+let phone = new Phone("小米", 1999);
+phone.call()
+
+
+class SmartPhone extends Phone{
+    constructor(brand, price, color, size) {
+        super(brand, price);
+        this.color = color
+        this.size = size
+    }
+}
+
+let smartPhone = new SmartPhone("华为", 5999, "blue", 5.5);
+smartPhone.call()
+```
+
+```js
+class Phone {
+    get brand() {
+        console.log('读取brand')
+    }
+    set brand(newBrand) {
+        console.brand("设置brand为：" + newBrand)
+    }
+}
+```
+
+
+
+#### 模块化
+
+- export
+
+  - 分别暴露：export let name = "zhangsan"
+
+    ```js
+    export let name = 'zhangsan'
+    export function f() {}
+    ```
+
+  - 统一暴露：export {name, ...}
+
+    ```js
+    let name = 'zhangsan'
+    function f() {}
+    exprot {name, f}
+    ```
+
+  - 默认暴露：
+
+    ```js
+    export default {
+        name: 'zhangsan',
+        change: function(){
+            console.log("改变")
+        }
+    }
+    ```
+
+- import
+
+  - 通用导入：import * as m1 form "../js/m1.js"
+  - 结构赋值形式：
+    - import {name, f as fun} from "../js/m1.js"
+    - import {default as m3} from "../js/m3.js"
+  - 简便导入：import m3 from "../js/m3.js"
+
+
 
 
 
@@ -1941,9 +2295,27 @@ btn.onclick = function(){
 
 ### CORS
 
+- 服务端设置响应头
 
+  - response.setHeader("Access-Control_Allow_Origin", "*");
 
+    - 第二个参数：允许跨域的网页的 url，* 表示所有
 
+  - 其他响应头
+
+    - Access-Control-Expose-Headers
+    - Access-Control-Max-Age
+    - Access-Control-Allow-Credentials
+    - Access-Control-Allow-Methods：设置允许跨域请求的方法，默认get、post
+    - Access-Control-Allow-Headers：允许发送请求时携带自定义的请求头
+
+  - ```java
+    response.setHeader("Access-Control_Allow_Origin", "*");
+    response.setHeader("Access-Control_Allow_Methods", "*");
+    response.setHeader("Access-Control_Allow_Heade", "*");
+    ```
+
+    
 
 
 
@@ -2502,14 +2874,21 @@ new Vue({
 - 组件定义
 
 ```js
+// 第一句可简写成 const stu = {...}
 const stu = Vue.extend({
-    template:`姓名：{{name}}<br>年龄：{{age}}`,
+    // 可以定义组件在vue开发者工具中的名字
+    name: 's',
+    template:`姓名：{{name}}<br>年龄：{{age}}<br>学校：<School></>`,
     // 组件中data要用方法的格式，因为对象是传递地址值
     data(){
         return {
             name: '张三',
             age: 18
         }
+    },
+    // 这里可以注册已定义的组件，实现组件嵌套
+    components: {
+        School: sch
     }
 })
 ```
@@ -2517,9 +2896,9 @@ const stu = Vue.extend({
 - 添加组件
 
 ```js
-// 全局
+// 全局注册
 Vue.component("组件名",组件)
-
+// 局部注册
 new Vue({
     el: '#root',
     data(){return {}},
@@ -2544,7 +2923,7 @@ new Vue({
 
 
 
-#### VueComponent
+#### Component
 
 - student组件本质是一个名为VueComponent的构造函数，且不是程序员定义的，是Vue.extend生成的
 
@@ -2562,7 +2941,13 @@ new Vue({
 
 
 
-#### VueCLI
+
+
+### VueCLI
+
+http://cli.vuejs.org/zh
+
+#### 快速入门
 
 - 全局安装VueCLI 
 
@@ -2581,6 +2966,7 @@ new Vue({
 - 启动项目
 
   ```shell
+  cd xxxx
   npm run serve
   ```
 
@@ -2603,6 +2989,7 @@ new Vue({
   ├── package.json: 应用包配置文件
   ├── README.md: 应用描述文件
   ├── package-lock.json：包版本控制文件
+  ├── vue.config.js：修改vue核心配置的文件
   ```
 
 - render函数
@@ -2623,11 +3010,120 @@ new Vue({
   })
   ```
 
-- vue.config.js配置文件
-  - 使用 vue inspect > output.js 可以查看vue脚手架的默认配置
-  - 使用vue.config可以对脚手架进行个性化定制，详情见：http://cli.vuejs.org/zh
+- 修改vue的配置
+
+  - 使用 vue inspect > output.js 可以 **查看** vue脚手架的默认配置
+
+  - 在与src的同级目录中创建 vue.config.js 文件，在其中添加配置
+
+    ```js
+    // vue.config.js
+    module.exports = {
+        //关闭语法检查
+        lintOnSave: false
+    }
+    ```
+
+  - 具体配置见：https://cli.vuejs.org/zh/config/
 
 
+
+
+#### ref
+
+- 被用来给元素或子组件注册引用信息
+
+- 应用在html标签上获取的是真实Dom元素，应用在组件标签上获取的是组件实例对象（vc）
+
+  ```vue
+  <template>
+  <div>
+      <h1 src="test">测试src</h1>
+      <TimeTable src="timetable"></TimeTable>
+      <button @click="showDom">点我输出上方元素</button>
+  </div>
+  </template>
+  
+  <script>
+      import TimeTable from "@/components/timetable";
+  
+      export default {
+          name: 'App',
+          components: {
+              TimeTable
+          },
+          methods: {
+              showDom() {
+                  console.log(this.$refs.test) // 输出的是Dom元素
+                  console.log(this.$refs.timetable) // 输出的是vc
+              }
+          }
+      }
+  </script>
+  ```
+
+  
+
+#### props属性
+
+- 设置参数
+
+  ```vue
+  <template>
+  <div>
+      学生姓名：{{name}} <br/>
+      学生年龄：{{age}}
+  </div>
+  </template>
+  
+  <script>
+      export default{
+          name: 'Student',
+          //props: ['name', 'age'] //简单声明接收
+          
+          // 限制类型
+          /*props: {
+              name: String,
+              age: Number
+          }*/
+          
+          props: {
+              name: {
+                  type: String,
+                  required: true // name是必要的
+              },
+              age: {
+                  type: Number,
+                  default: 99 // 默认值
+              }
+          }
+      }
+  </script>
+  ```
+
+- 传入参数
+
+  ```vue
+  <template>
+  <div>
+      <!-- 通过v-bind引号中为表达式的特性解决传递Number的问题 -->
+  <Student name="zhangsan" :age="18"></Student>
+  </div>
+  </template>
+  
+  <script>
+      import Student from '@/components/student';
+  
+      export default {
+          name: 'App',
+          components: {
+              Student
+          }
+      }
+  </script>
+  ```
+
+- props中的属性优先被放到vm上，所以可以在data中通过 this.属性 获得
 
 
 
@@ -10114,263 +10610,6 @@ Spider.create(new P())
 
 
 
-# Android
-
-
-
-## 快速入门
-
-### 布局
-
-- 在layout目录中创建xml文件
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical">
-
-    <TextView
-        android:id="@+id/tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello,world!!!" />
-
-</LinearLayout>
-```
-
-
-
-### MainActivity
-
-```java
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.os.Bundle;
-import android.widget.TextView;
-
-public class MainActivity extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main2);
-        TextView tv = findViewById(R.id.tv);
-        tv.setText("你好，世界！！！");
-    }
-}
-```
-
-
-
-### 容器
-
-- 在AndroidManifest.xml中注册页面配置
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="cn.langh.myapplication">
-
-    <application
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/ic_launcher_foreground"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.MyApplication"
-        tools:targetApi="31">
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-
-</manifest>
-```
-
-
-
-
-
-## 简单控件
-
-### 文本显示
-
-- 设置文本内容的两种方式
-  - 在 xml 文件中通过属性 android:text 设置文本
-  - 在 java 代码中调用文本视图对象的 setText 方法设置文本
-  - 在values包中的 string.xml 文件可定义字符串，引用："@string/(name)"
-- 设置文本的大小
-  - 在 java 代码中调用 setTextSize 方法
-  - 在xml中通过属性 android:textSize 指定文本大小，此时需要指定字号单位
-    - px：是手机屏幕的最小显示单位，与设备的显示屏有关
-    - dp：与设备无关的显示单位，之与屏幕的尺寸有关
-    - sp：专门用来设置字体大小，在系统设置中可以调整字体的大小
-- 颜色设置
-  - 在xml中设置属性 android:textColor="#00ff00"
-  - 在java中调用 setTextColor(颜色参数) ，参数可以是
-    - Color类中的枚举
-    - 0xff00ff00l：以此为 进制、透明度、红、绿、蓝
-
-  - 在values包中的 colors.xml 文件中可定义颜色，引用："@color/(name)"
-
-
-
-
-### 视图基础
-
-- 宽高属性值
-  - match_parent：表示与上级视图保持一致
-  - wrap_content：表示与内容自适应
-  - 以dp、px、sp等为单位的具体尺寸
-- 在java中设置视图宽高
-  - 确保xml中宽高的属性值为wrap_content，接着打开该页面对应的java代码
-  - 调用控件对象的 getLayoutParams 方法，获取该控件的布局参数
-  - 布局参数的width、height表示宽高（单位为像素）
-  - 调用控件对象的 setLayoutParams 方法，填入修改后的布局参数使之生效
-- 视图间距
-  - layout_margin：外间距
-  - layout_padding：内间距
-- 视图的对齐方式
-  - layout_gravity：指定当前视图相对上一级视图的对齐方式
-  - gravity：指定了下级视图相对于当前视图的对齐方式
-  - 取值：
-    - right、left、top、bottom、center
-    - right|bottom
-- 滚动视图：
-  - scrollView：垂直方向的滚动视图
-    - layout_height要设置为wrap_content
-
-  - HorizontalScrollView：水平方向的滚动视图
-    - layout_width要设置为wrap_content
-
-
-
-
-### 常用布局
-
-- 线性布局：LinearLayout
-  - orientation属性
-    - horizontal：内部视图在水平方向从左往右排列（默认）
-    - certical：内部视图在垂直方向从上往下排列
-  - 宽高方向上的权重
-    - 如果宽或高设置为0，layout_weight设置的值为该方向上的权重
-- 相对布局：RelativeLayout
-  - 指定视图（属性值为某一视图）
-    - layout_toLeft/RightOf：当前视图在指定视图的左/右边
-    - layout_above/below：当前视图在指定视图的上/下方
-    - layout_alignLeft/Right/Top/Bottom：当前视图与指定视图的左/右/上/下测对齐
-
-  - 上级视图（属性值为true/flase）
-    - layout_centerInParent：当前视图在上级视图的中间
-    - layout_centerHorizontal/Vertical：当前视图在上级视图的水平/垂直方向居中
-    - layout_alignParentLeft/Right/Top/Bottom：当前视图与上级视图的左/右/上/下测对齐
-
-- 网格布局：GridLayout
-  - 支持多行多列的表格排列
-  - 属性
-    - columnCount：指定了网格的列数
-    - rowCount：指定了网格的行数
-
-
-
-
-### 按钮触控
-
-- Button继承TextView
-  - Button拥有默认的按钮背景，内部文本默人对齐，默认将英文字母专为大写
-  - Button新增属性
-    - textAllCaps：是否将英文字母转大写
-    - onClick：值为java代码中的方法名
-
-- onClick
-
-```xml
-<Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Hello,world!"
-        android:onClick="doClick"/>
-<TextView
-          android:id="@+id/msg"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"/>
-```
-
-```java
-public void doClick(View view){
-    Button button = (Button) view;
-    CharSequence text = button.getText();
-    setContentView(R.layout.activity_main2);
-    TextView tv = findViewById(R.id.msg);
-    tv.setText(text+LocalTime.now().toString());
-}
-```
-
-- 监听器
-  - 点击监听器：setOnClickListener(OnClickListener接口的实现类对象)
-  - 长按监听器：setOnLongClickListener(OnClickListener接口的实现类对象)
-
-```java
-public class MainActivity extends AppCompatActivity {
-    private TextView tv;
-    
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main2);
-        
-        Button button = findViewById(R.id.btn);
-        tv = findViewById(R.id.msg2);
-        button.setOnClickListener(new OnClickListenerImpl(tv));
-    }
-    
-    // 使用静态的匿名内部类可防止内存的泄露
-    static class OnClickListenerImpl implements View.OnClickListener{
-        private final TextView tv;
-        public OnClickListenerImpl(TextView tv){
-            this.tv = tv;
-        }
-
-        @Override
-        public void onClick(View v) {
-            tv.setText(LocalTime.now().toString());
-        }
-    }
-}
-```
-
-
-
-### 图像显示
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # SpringCloud
 
 ![springcloud](D:\picture\typora\java\springcloud.png)
@@ -13653,5 +13892,4 @@ server {
     }
 }
 ```
-
 
