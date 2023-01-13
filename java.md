@@ -852,6 +852,31 @@ shopping(...customers) // 接收到数组里的三个对象
 
 - catch方法：失败时调用，与then类似，语法糖，省略第一个参数
 
+- 发送ajax
+
+  ```js
+  function sendAjax(url) {
+      return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open("GET", url)
+          xhr.send()
+          xhr.onreadystatechange = () => {
+              if (xhr.readyState === 4) {
+                  if (xhr.status >= 200 && xhr.status < 300) {
+                      resolve(xhr.response)
+                  }else {
+                      reject(xhr.status)
+                  }
+              }
+          }
+      })
+  }
+  sendAjax("http://39.101.75.72/weather/check?size=2")
+  .then(value => console.log(value), reason => console.log("状态码码："+reason))
+  ```
+
+  
+
 
 
 #### Set、Map
@@ -953,6 +978,287 @@ class Phone {
   - 简便导入：import m3 from "../js/m3.js"
 
 
+
+
+
+### ES7
+
+- includes
+
+```js
+const customers = ['zhangsan', 'lisi', 'wangwu']
+console.log(customers.includes('zhangsan'))
+```
+
+- 幂运算
+
+```js
+console.log(2**10)
+console.log(Math.pow(2, 10))
+```
+
+
+
+
+
+### ES8
+
+#### async和await
+
+- async
+
+  - ```js
+    async function fun(data) {
+        let result = await new Promise((resolve, reject) => reject(data))
+            .catch(reason =>  new Promise((resolve, reject) => resolve(data)))
+    }
+    fun('abc').then(value => console.log("success:"+value), reason => console.log("fail:"+reason)) // success:abc
+    ```
+    
+  - 方法内返回的不是一个Promise对象，则p的状态为成功
+
+  - 方法内产生异常，则p的状态为失败
+
+  - 方法内返回的是一个Promise对象，则p的状态与返回的Promise对象的状态保持一致
+
+- await
+
+  - await 必须写在 async 函数中
+
+  - await 右侧的表达式一般为 promise 对象
+
+  - await 返回的是 promise 成功的值
+
+  - await 的 promise 失败了，就会抛出异常，需要通过 try..catch 捕获处理
+
+  - ```js
+    async function fun(data) {
+        let result = await new Promise((resolve, reject) => resolve(data))
+            .then(value => new Promise((resolve, reject) => reject(value)))
+            .catch(reason =>  new Promise((resolve, reject) => resolve(data)))
+            .then(value => console.log("promise内部处理："+data))//
+    
+        console.log("被await接收："+result)
+    }
+    fun('abc')
+    
+    // 控制台输出
+    promise内部处理：abc
+    被await接收：undefined
+    ```
+
+  - 发送Ajax
+
+    ```js
+    function sendAjax(url) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest()
+            xhr.open("GET", url)
+            xhr.send()
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(xhr.response)
+                    }else {
+                        reject(xhr.status)
+                    }
+                }
+            }
+        })
+    }
+    async function main() {
+        let result = await sendAjax("http://39.101.75.72/weather/check?size=2");
+        console.log(result)
+    }
+    ```
+
+
+
+
+#### 对象方法
+
+- Object.values()
+  - 方法返回一个给定对象的所有可枚举属性值的数组
+  - Object.keys()：获取对象的所有可枚举键
+- Object.entries()
+  - 方法返回一个给定对象自身可遍历的属性 [key, value] 的数组
+  - const m = new Map(Object.entries(obj))
+- Object.getOwnPropertyDescriptors()
+  - 返回对象属性的描述对象
+
+
+
+
+
+### ES9
+
+#### rest升级
+
+```js
+function connect({host, port, ...user}) {
+    console.log(user) // { username: 'root', password: 'root' }
+}
+connect({
+    host: '127.0.0.1',
+    port: '3306',
+    username: 'root',
+    password: 'root'
+})
+```
+
+```js
+const one = {first: 1}
+const two = {second: 2}
+const three = {three: 3}
+const both = {...one, ...three}
+const all = {...one, ...three, ...two} // 存在同一属性，后加入的覆盖先加入的
+console.log(both) //{ second: 3, first: 1 }
+console.log(all) //{ first: 1, second: 2 }
+```
+
+
+
+####         正则升级
+
+- 命名捕获分组
+- 反向断言
+- dotAll模式
+
+
+
+
+
+### ES10
+
+- 字符串处理
+  - trimStart()：处理头部空白
+  - trimEnd()：处理尾部空白
+- 数组方法
+  - [1, 2, [3, [4, 5]]].flat(Number num)
+    - 不传参：扁平化一次
+    - 传递Number参数：扁平化具体次数
+      - 传递 Infinity（无限）：全部展开
+  - 映射：map()
+    - [1, 2, 3].map(i => i**3)：所有数据变为其三次方
+  - 映射并扁平：flatMap()
+    - [1, 2, 3].flatMap(i => [i**3])
+
+
+
+
+
+### ES11
+
+#### 私有属性
+
+- 定义类时，用 # 标注私有属性
+- 私有属性无法在类的外部被直接调用
+
+```js
+class Persion {
+    name;
+    #age;
+    constructor(name, age) {
+        this.name = name
+        this.#age = age
+    }
+}
+```
+
+
+
+#### Promise补充
+
+- Promise.allSettled()：
+  - 返回的是一个Promise对象
+  - 状态：成功
+  - 值：传入的所有promise的状态和值形成的对象
+- Promise.all()：
+  - 返回的是一个Promise对象
+  - 状态：传入的所有promise都成功才为成功
+  - 值：
+    - 若状态为失败，则值为：所有失败的promise中的第一个promise值
+    - 若状态为成功，则值为：所有promise的值
+
+```js
+let p1 = new Promise(resolve => resolve("p1成功"));
+let p2 = new Promise((resolve, reject) => reject("p2失败"));
+let p3 = new Promise((resolve, reject) => reject("p3失败"));
+Promise.allSettled([p3, p2]).then(value => console.log(value))
+Promise.all([p1, p3, p2]).then(value => console.log('成功'+value), reason => console.log("失败"+reason))
+```
+
+
+
+#### matchAll
+
+- String.prototype.matchAll方法
+
+```js
+const regex = /<li>(.*?)<\/?li>/
+const result = str.matchAll(regex)
+```
+
+
+
+#### 可选链操作符
+
+```js
+function main(config) {
+    // config 或 config.db 为空时报错
+    //const dbHost= config.db.host
+
+    // 传统写法
+    //const dbHost = config && config.db && config.db.host;
+
+    const dbHost = config?.db?.host
+    console.log(dbHost);
+}
+main({
+    db: {
+        host: "127.0.0.1"
+    }
+})
+```
+
+
+
+#### 动态import
+
+- 静态引入
+
+  ```js
+  import * as module1 from './hello.js'
+  ```
+
+- 动态引入
+
+  ```js
+  window.onload = function() {
+      // 返回的是一个Promise对象
+      import('./hello.js').then(module1 => {
+          
+      })
+  }
+  ```
+
+  
+
+#### bigint
+
+- 获得
+  - let n = 521n;
+  - let n = BigInt(521);
+- 大数值运算
+  - 不能用BigInt和Number进行运算
+  - BigInt(13) \** BigInt(43)
+
+
+
+#### globalThis
+
+- 始终指向全局对象
+  - 浏览器下是Window
 
 
 
@@ -1997,7 +2303,7 @@ btn.onclick = function(){
     if(isSending){xhr.abort()}
     
     xhr = new XMLHttpRequest()
-    // 自动转json，设置响应体数据类型
+    // 自动转json，设置响应体数据类型（同步请求不能设置响应数据类型）
     xhr.responseType = "json"
     // 网络异常处理
     xhr.timeout = 2000
@@ -2019,11 +2325,11 @@ btn.onclick = function(){
 
     // xhr.abort() // 取消当前请求
 
-    xhr.onreadystatechange = function(){
+    xhr.onreadystatechange = () => {
         // readystate的值：
         // 0-未初始化 1-open方法调用完毕 2-send方法调用完毕 3-返回部分结果 4-返回全部结果
         if(xhr.readyState == 4){
-            if(xhr.status >= 200 && xhr.statud < 300){
+            if(xhr.status >= 200 && xhr.status < 300){
                 // 处理结果  行、头、体
                 // 手动将响应转为json
                 let data = JSON.parse(xhr.response)
@@ -2312,7 +2618,7 @@ btn.onclick = function(){
   - ```java
     response.setHeader("Access-Control_Allow_Origin", "*");
     response.setHeader("Access-Control_Allow_Methods", "*");
-    response.setHeader("Access-Control_Allow_Heade", "*");
+    response.setHeader("Access-Control_Allow_Headers", "*");
     ```
 
     
@@ -2960,7 +3266,8 @@ http://cli.vuejs.org/zh
 - 切换到要创建项目的目录
 
   ```shell
-  vue create xxxx
+  # -n 表示不用git管理
+  vue create xxxx -n
   ```
 
 - 启动项目
@@ -2968,6 +3275,8 @@ http://cli.vuejs.org/zh
   ```shell
   cd xxxx
   npm run serve
+  # 生成
+  npm run build
   ```
 
 - 结构
@@ -3064,7 +3373,7 @@ http://cli.vuejs.org/zh
 
   
 
-#### props属性
+#### props
 
 - 设置参数
 
@@ -3073,20 +3382,21 @@ http://cli.vuejs.org/zh
   <div>
       学生姓名：{{name}} <br/>
       学生年龄：{{age}}
-  </div>
+      </div>
   </template>
   
   <script>
       export default{
           name: 'Student',
-          //props: ['name', 'age'] //简单声明接收
-          
+          //props: ['name', 'age', 'getName'] //简单声明接收
+  
           // 限制类型
           /*props: {
               name: String,
-              age: Number
+              age: Number,
+              getName: Function
           }*/
-          
+  
           props: {
               name: {
                   type: String,
@@ -3095,8 +3405,13 @@ http://cli.vuejs.org/zh
               age: {
                   type: Number,
                   default: 99 // 默认值
-              }
-          }
+              },
+              getName: {
+        			default: function () {
+          			console.log("App未获得姓名")
+        			}
+      		}
+      	}
       }
   </script>
   ```
@@ -3106,8 +3421,8 @@ http://cli.vuejs.org/zh
   ```vue
   <template>
   <div>
-      <!-- 通过v-bind引号中为表达式的特性解决传递Number的问题 -->
-  <Student name="zhangsan" :age="18"></Student>
+      <!-- 通过v-bind引号中为表达式的特性解决传递Number或其他对象的问题 -->
+  <Student name="zhangsan" :age="18" :getName="getName"></Student>
   </div>
   </template>
   
@@ -3118,6 +3433,11 @@ http://cli.vuejs.org/zh
           name: 'App',
           components: {
               Student
+          },
+          method: {
+              getName(name) {
+                  console.log("App收到学生姓名："+name)
+              }
           }
       }
   </script>
@@ -3127,15 +3447,87 @@ http://cli.vuejs.org/zh
 
 
 
+#### mixin
+
+- 定义
+
+  ```js
+  // 定义文件 mixin.js
+  export const mixin =  {
+      data() {
+        return {
+            name: "李四"
+        }  
+      },
+      methods: {
+          showName() {
+              alert(this.name)
+          }
+      }
+  }
+  ```
+
+- 使用
+
+  ```js
+  import {mixin} from "../mixin";
+  
+  export default {
+    data() {
+      return {
+        name: '张三',
+        age: 18
+      }
+    },
+    mixins: [mixin]
+  }
+  ```
+
+- data中的数据、methods中的方法，与vc中的发生冲突时，以vc为主。而生命周期钩子函数都会执行
+
+- 全局混入：Vue.mixin({})
 
 
 
+#### 插件
+
+- 定义插件
+
+  ```js
+  // 定义文件plugin.js
+  export default {
+      // 可以带其他参数
+      install(Vue, [args...]) {
+          // 定义全局过滤器
+          Vue.filter()
+          // 定义全局指令
+          Vue.directive()
+          // 定义全局混入
+          Vue.mixin({})
+          // 给Vue原型上添加方法，vue实例可以使用方法
+          Vue.prototype.oneMethod = () => {}
+      }
+  }
+  ```
+
+- 使用插件
+
+  ```js
+  import Vue from 'vue'
+  import plugin form './plugin'
+  
+  Vue.use(plugin)
+  ```
 
 
 
+#### 样式
 
-
-
+- scoped：解决不同组件样式层叠问题
+- lang：样式语言
+  - 查看脚手架中webpack的版本：node_modules/webpack/package.json
+  - 查看框架的所有版本：npm view xxx versions
+  - 安装脚手架中webpack版本对应的less-loader版本：npm i less-loader@10
 
 
 
@@ -7643,7 +8035,7 @@ public class ProjectExceptionAdvice {
 ```java
 @Component
 public class ProjectInterceptor implements HandlerInterceptor {
-    // 在原始操作前运行
+    // 此方法会在进入controller之前执行，返回Boolean值决定是否执行后续操作。
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         System.out.println("preHandle...");
@@ -7651,13 +8043,13 @@ public class ProjectInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    // 原始操作后运行
+    // 在controller执行之后执行，但是视图还没有解析，可向ModelAndView中添加数据(前后端不分离的)。
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
         System.out.println("postHandle...");
     }
     
-	// 在postHandle操作后运行
+	// 该方法会在整个请求结束（请求结束，但是并未返回结果给客户端）之后执行， 可获取响应数据及异常信息。
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         System.out.println("afterCompletion...");
@@ -9114,7 +9506,7 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
   - %m或者%msg：信息
   - %n：换行
 
-- 配置文件logback.
+- 配置文件logback.xml
 
   ```xml
   <?xml version="1.0" encoding="UTF-8" ?>
@@ -10603,6 +10995,103 @@ Spider.create(new P())
 ```
 
 
+
+
+
+## 正则
+
+### 基础
+
+#### 转义符
+
+- 元字符-转义符 
+
+  - 需要用到转义符号的字符有：
+
+    ```java
+    . * ( ) $ / \ ? [ ] ^ { }
+    ```
+
+
+
+#### 字符匹配符
+
+| 符号 | 含义                     | 示例       | 解释                                                |
+| ---- | ------------------------ | ---------- | --------------------------------------------------- |
+| [ ]  | 可接收的字符列表         | [efgh]     | 表示e、f、g、h中的任意1个字符                       |
+| [^ ] | 不可接收的字符列表       | [^abc\]    | 除a、b、c之外的任意1个字符，<br/>包括数字和特殊字符 |
+| -    | 连字符                   | A-Z        | 任意单个大写字母                                    |
+| .    | 匹配除\n以为的任何字符   | a..b       | 以a开头，b结尾，<br/>中间包括2个任意字符的字符串    |
+| \d   | 匹配单个数字字符         | \d{3}(\d)? | 包含3或4个数字的字符串                              |
+| \w   | 匹配单个数字或字母的字符 | \d{3}\w{4} | 3个数字开头长度为7的数字字母字符串                  |
+| \D   | 匹配单个非数字字符       |            |                                                     |
+| \W   | 匹配单个非数字非字母字符 |            |                                                     |
+| \s   | 空白字符：空格、制表符等 |            |                                                     |
+| \S   | 非空白字符               |            |                                                     |
+
+
+
+#### 选择匹配符
+
+- | ：(H|h)ello：匹配 Hello、hello
+
+
+
+#### 限定符
+
+| 符号  | 指定字符串重复n次 | 示例    | 说明                    |
+| ----- | ----------------- | ------- | ----------------------- |
+| *     | n无要求           | (abc)*  | 仅包含任意个abc的字符串 |
+| +     | n>=1              | m+abc   | 以至少1个m开头，后接abc |
+| ?     | n=0或1            | colou?r | 匹配color和colour       |
+| {i}   | n=i               | 23{3}   | 匹配2333                |
+| {i,j} | i<n<j             |         |                         |
+
+
+
+#### 定位符
+
+| 符号 | 含义                   | 示例          | 说明                                        |
+| ---- | ---------------------- | ------------- | ------------------------------------------- |
+| ^    | 指定起始字符           | ^[0-9]+[a-z]* | 以至少一个数字开头，<br/>后接任意个小写字母 |
+| $    | 指定结束字符           |               |                                             |
+| \b   | 匹配目标字符串的边界   | 233\b         | 233233：匹配后一个233<br/>23323：匹配不到   |
+| \B   | 匹配目标字符串的非边界 | 233\B         | 2333233233：匹配前两个233                   |
+
+
+
+
+
+### 拓展
+
+#### 分组
+
+- (pattern)：如 (/d{2}){2}（前面括号里的是一组，一共就一组）
+- (?\<name> pattern)：为组命名，可在mather.group(String name)时使用
+- (?:pattern)：非捕获分组组
+- (?=pattern)：非捕获分组，（ win(?=10|11) 会匹配win10和win11中的win，不会匹配win8中的win）
+- (?!pattern)：非捕获分组，（ win(?!10|11) 不会匹配win10和win11中的win，会匹配win8中的win）
+- (?<=pattern)：非捕获分组，（ (?<=10|11)win 会匹配10win和11win中的win，不会匹配8win中的win）
+- (?<!pattern)：非捕获分组，（ (?<!10|11)win 不会匹配10win和11win中的win，会匹配8win中的win）
+
+
+
+#### 非贪婪匹配
+
+- 默认使用贪婪匹配
+  - {非常}+："这里非常非常非常好看" -> "非常非常非常"
+  - 23+："23333" -> "23333"
+- 使用非贪婪匹配
+  - {非常}+?："这里非常非常非常好看" -> "非常"、"非常"、"非常"
+  - 23+?："23333" -> "23"
+
+
+
+#### 反向引用
+
+- 格式：(pattern)\组号
+  - 匹配多个连续相同的字：(\w+)\1
+  - 回文：(\w+)(\w+)\2\1
 
 
 
@@ -13546,7 +14035,7 @@ public class JedisConnectionFactory {
                                  .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()))
     ```
 
-- 生成是否生成不带中划线的uuid
+- 生成是否不带中划线的uuid
 
   - ```java
     String token = UUID.randomUUID().toString(false); // 生成带中划线的uuid
