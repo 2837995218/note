@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<!-- saved from url=(0047)https://www.cnblogs.com/linyfeng/p/8072002.html -->
+<html lang="zh-cn" style="--olcb-folder-code-block-max-height: 80vh; --cnb-code-bg: rgb(245, 245, 245); --cnb-code-font-size: 12px; --cnb-code-color: rgb(68, 68, 68);"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="origin-when-cross-origin">
+    <meta name="description" content="bat脚本就是DOS批处理脚本，就是将一系列DOS命令按照一定顺序排列而形成的集合，运行在windows命令行环境上。本文主要介绍bat脚本基础语法，希望完成本文内容学习之后具备基础的bat脚本开发能力，提高工作效率。 为什么学习bat脚本？ 在开始学习bat脚本前可能大家会有一个就是为什么要学习b">
+    <meta property="og:description" content="bat脚本就是DOS批处理脚本，就是将一系列DOS命令按照一定顺序排列而形成的集合，运行在windows命令行环境上。本文主要介绍bat脚本基础语法，希望完成本文内容学习之后具备基础的bat脚本开发能力，提高工作效率。 为什么学习bat脚本？ 在开始学习bat脚本前可能大家会有一个就是为什么要学习b">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>bat脚本基础教程 - 锅边糊 - 博客园</title>
+    <link id="favicon" rel="shortcut icon" href="https://common.cnblogs.com/favicon.svg" type="image/svg+xml">
+    
+    <style>#home :not(.cnblogs_code):not(.cnblogs_Highlighter)>pre:not([highlighted]):not([class*="brush:"]) code:not(.hljs), :not(.cnblogs_code):not(.cnblogs_Highlighter)>pre:not([highlighted]):not([class*="brush:"]) code:not(.hljs) {background: rgb(245, 245, 245);
+        padding: 12px;
+        border: 0.8px solid rgb(204, 204, 204);
+        border-radius: 3px;
+        border-color: transparent;
+        color: rgb(68, 68, 68);
+        font-family: "Courier New", sans-serif;
+        font-size: 12px</style><link rel="stylesheet" href="./bat脚本基础教程_files/blog-common.min.css">
+    
+
+    <link id="MainCss" rel="stylesheet" href="./bat脚本基础教程_files/bundle-marvin2-blue.min.css">
+        <link id="highlighter-theme-cnblogs" type="text/css" rel="stylesheet" href="./bat脚本基础教程_files/cnblogs.css">
+    <link type="text/css" rel="stylesheet" href="./bat脚本基础教程_files/custom.css">
+    
+    <link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="./bat脚本基础教程_files/bundle-marvin2-blue-mobile.min.css">
+    
+    <link type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/linyfeng/rss">
+    <link type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/linyfeng/rsd.xml">
+    <link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/linyfeng/wlwmanifest.xml">
+    <script type="text/javascript" src="./bat脚本基础教程_files/encoder.js.下载"></script><script>
+        var currentBlogId = 277319;
+        var currentBlogApp = 'linyfeng';
+        var isLogined = false;
+        var isBlogOwner = false;
+        var skinName = 'marvin2-blue';
+        var visitorUserId = '';
+        var hasCustomScript = false;
+        try {
+            if (hasCustomScript && document.referrer && document.referrer.indexOf('baidu.com') >= 0) {
+                Object.defineProperty(document, 'referrer', { value: '' });
+                Object.defineProperty(Document.prototype, 'referrer', { get: function () { return ''; } });
+            }
+        } catch (error) { }
+        window.cb_enable_mathjax = false;
+        window.mathEngine = 0;
+        window.codeHighlightEngine = 1;
+        window.enableCodeLineNumber = false;
+        window.codeHighlightTheme = 'cnblogs';
+        window.darkModeCodeHighlightTheme = 'vs2015';
+        window.isDarkCodeHighlightTheme = false;
+        window.isDarkModeCodeHighlightThemeDark = true;
+        window.isDisableCodeHighlighter = false;
+        window.enableCodeThemeTypeFollowSystem = false;
+        window.enableMacStyleCodeBlock = false
+    </script>
+        <script>
+            var currentPostDateAdded = '2017-12-20 08:33';
+        </script>
+    <script src="./bat脚本基础教程_files/jquery-2.2.0.min.js.下载"></script>
+    <script src="./bat脚本基础教程_files/blog-common.min.js.下载"></script><style>.medium-zoom-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 300ms;
+  will-change: opacity;
+}
+
+.medium-zoom--opened .medium-zoom-overlay {
+  cursor: pointer;
+  cursor: zoom-out;
+  opacity: 1;
+}
+
+.medium-zoom-image {
+  cursor: pointer;
+  cursor: zoom-in;
+  /*
+    The `transition` is marked as "!important" for the animation to happen
+    even though it's overriden by another inline `transition` style attribute.
+
+    This is problematic with frameworks that generate inline styles on their
+    images (e.g. Gatsby).
+
+    See https://github.com/francoischalifour/medium-zoom/issues/110
+   */
+  transition: transform 300ms cubic-bezier(0.2, 0, 0.2, 1) !important;
+}
+
+.medium-zoom-image--hidden {
+  visibility: hidden;
+}
+
+.medium-zoom-image--opened {
+  position: relative;
+  cursor: pointer;
+  cursor: zoom-out;
+  will-change: transform;
+}
+</style><script id="hljs-script" src="./bat脚本基础教程_files/highlight.min.js.下载" type="text/javascript" async=""></script>
+    
+
+    
+<meta property="og:image" content="https://common.cnblogs.com/logo_square.png"></head>
+<body class="skin-marvin2-blue has-navbar">
+    <a name="top"></a>
+    <div id="top_nav" class="navbar forpc">
+        <nav id="nav_main" class="navbar-main">
+            <ul id="nav_left" class="navbar-list navbar-left">
+                <li class="navbar-branding">
+                    <a href="https://www.cnblogs.com/" title="开发者的网上家园" role="banner">
+                        <img src="./bat脚本基础教程_files/logo.svg" alt="博客园Logo">
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.cnblogs.com/" onclick="countClicks(&#39;skin-navbar-sitehome&#39;)">首页</a>
+                </li>
+                <li>
+                    <a href="https://news.cnblogs.com/" onclick="countClicks(&#39;nav&#39;, &#39;skin-navbar-news&#39;)">新闻</a>
+                </li>
+                <li>
+                    <a href="https://q.cnblogs.com/" onclick="countClicks(&#39;nav&#39;, &#39;skin-navbar-q&#39;)">博问</a>
+                </li>
+                <li><a href="https://cnblogs.vip/">会员</a></li>
+                <li>
+                    <a href="https://ing.cnblogs.com/" onclick="countClicks(&#39;nav&#39;, &#39;skin-navbar-ing&#39;)">闪存</a>
+                </li>
+                <li>
+                    <a href="https://edu.cnblogs.com/" onclick="countClicks(&#39;nav&#39;, &#39;skin-navbar-edu&#39;)">班级</a>
+                </li>
+            </ul>
+            <ul id="nav_right" class="navbar-list navbar-right">
+                <li>
+                    <form id="zzk_search" class="navbar-search dropdown" action="https://zzk.cnblogs.com/s" method="get" role="search">
+                        <input name="w" id="zzk_search_input" placeholder="代码改变世界" type="search" tabindex="3" autocomplete="off">
+                        <button id="zzk_search_button" onclick="window.navbarSearchManager.triggerActiveOption()">
+                            <img id="search_icon" class="focus-hidden" src="./bat脚本基础教程_files/search.svg" alt="搜索">
+                            <img class="hidden focus-visible" src="./bat脚本基础教程_files/enter.svg" alt="搜索">
+                        </button>
+                        <ul id="navbar_search_options" class="dropdown-menu quick-search-menu">
+                            <li tabindex="0" class="active" onclick="zzkSearch(event, document.getElementById(&#39;zzk_search_input&#39;).value)">
+                                <div class="keyword-wrapper">
+                                    <img src="./bat脚本基础教程_files/search.svg" alt="搜索">
+                                    <div class="keyword"></div>
+                                </div>
+                                <span class="search-area">所有博客</span>
+                            </li>
+                                    <li tabindex="1" onclick="zzkBlogSearch(event, &#39;linyfeng&#39;, document.getElementById(&#39;zzk_search_input&#39;).value)">
+                                        <div class="keyword-wrapper">
+                                            <img src="./bat脚本基础教程_files/search.svg" alt="搜索">
+                                            <div class="keyword"></div>
+                                        </div>
+                                        <span class="search-area">当前博客</span>
+                                    </li>
+                        </ul>
+                    </form>
+                </li>
+                <li id="navbar_login_status" class="navbar-list">
+                    <a class="navbar-user-info navbar-blog" href="https://i.cnblogs.com/EditPosts.aspx?opt=1" alt="写随笔" title="写随笔" style="display: none;">
+                        <img id="new_post_icon" class="navbar-icon" src="./bat脚本基础教程_files/newpost.svg" alt="写随笔">
+                    </a>
+                    <a id="navblog-myblog-icon" class="navbar-user-info navbar-blog" href="https://passport.cnblogs.com/GetBlogApplyStatus.aspx" alt="我的博客" title="我的博客" style="display: none;">
+                        <img id="myblog_icon" class="navbar-icon" src="./bat脚本基础教程_files/myblog.svg" alt="我的博客">
+                    </a>
+                    <a class="navbar-user-info navbar-message navbar-icon-wrapper" href="https://msg.cnblogs.com/" alt="短消息" title="短消息" style="display: none;">
+                        <img id="msg_icon" class="navbar-icon" src="./bat脚本基础教程_files/message.svg" alt="短消息">
+                        <span id="msg_count" style="display: none"></span>
+                    </a>
+                    <a id="navbar_lite_mode_indicator" data-current-page="blog" style="display: none" href="javascript:void(0)" alt="简洁模式" title="简洁模式启用，您在访问他人博客时会使用简洁款皮肤展示">
+                        <img class="navbar-icon" src="./bat脚本基础教程_files/lite-mode-on.svg" alt="简洁模式">
+                    </a>
+                    <div id="user_info" class="navbar-user-info dropdown" style="display: none;">
+                        <a class="dropdown-button" href="https://home.cnblogs.com/">
+                            <img id="user_icon" class="navbar-avatar" src="./bat脚本基础教程_files/avatar-default.svg" alt="用户头像">
+                        </a>
+                        <div class="dropdown-menu">
+                            <a id="navblog-myblog-text" href="https://passport.cnblogs.com/GetBlogApplyStatus.aspx">我的博客</a>
+                            <a href="https://home.cnblogs.com/">我的园子</a>
+                            <a href="https://account.cnblogs.com/settings/account">账号设置</a>
+                            <a href="javascript:void(0)" id="navbar_lite_mode_toggle" title="简洁模式会使用简洁款皮肤显示所有博客">
+    简洁模式 <img id="navbar_lite_mode_on" src="./bat脚本基础教程_files/lite-mode-check.svg" class="hide" style="display: none;"><span id="navbar_lite_mode_spinner" class="hide">...</span>
+</a>
+                            <a href="javascript:void(0)" onclick="account.logout();">退出登录</a>
+                        </div>
+                    </div>
+                    <a class="navbar-anonymous" href="https://account.cnblogs.com/signup" style="display: inline;">注册</a>
+                    <a class="navbar-anonymous" href="javascript:void(0);" onclick="account.login()" style="display: inline;">登录</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    
+
+    <div id="top">
+
+<h1><a id="Header1_HeaderTitle" class="headermaintitle HeaderMainTitle" href="https://www.cnblogs.com/linyfeng/">Beng Dou</a>
+</h1>
+<p id="tagline">一只站在树上的鸟儿，从来不会害怕树枝断裂，因为它相信的不是树枝，而是它自己的翅膀。</p>
+
+
+</div>
+<div id="leftmenu">
+
+	
+<h3>导航</h3>
+<ul>
+	<li>
+		<a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">
+博客园</a>
+</li>
+	<li>
+<a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/linyfeng/">
+首页</a>
+</li>
+	<li>
+
+<a id="blog_nav_newpost" class="menu" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">
+新随笔</a>
+</li>
+	<li>
+		
+<a id="blog_nav_contact" class="menu" href="https://msg.cnblogs.com/send/%E9%94%85%E8%BE%B9%E7%B3%8A">
+联系</a></li>
+	<li>
+		
+<a id="blog_nav_rss" class="menu" href="javascript:void(0)" data-rss="https://www.cnblogs.com/linyfeng/rss/">
+订阅</a>
+<a id="blog_nav_rss_image" href="https://www.cnblogs.com/linyfeng/rss/">
+    <img src="./bat脚本基础教程_files/xml.gif" alt="订阅">
+</a></li>
+	<li>
+		
+<a id="blog_nav_admin" class="menu" href="https://i.cnblogs.com/">
+管理</a>
+</li>
+</ul>
+
+
+	<div id="calendar"><div id="blog-calendar" style="">
+
+<table id="blogCalendar" class="Cal" cellspacing="0" cellpadding="0" title="Calendar" border="0">
+    <tbody>
+        <tr>
+            <td colspan="7">
+                <table class="CalTitle" cellspacing="0" border="0">
+                    <tbody>
+                        <tr>
+                            <td class="CalNextPrev">
+                                <a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2023/08/23&#39;); return false;">&lt;</a>
+                            </td>
+                            <td align="center">2023年9月</td>
+                            <td align="right" class="CalNextPrev">
+                                <a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2023/10/23&#39;); return false;">&gt;</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    <tr>
+        <th class="CalDayHeader" align="center" abbr="日" scope="col">日</th>
+        <th class="CalDayHeader" align="center" abbr="一" scope="col">一</th>
+        <th class="CalDayHeader" align="center" abbr="二" scope="col">二</th>
+        <th class="CalDayHeader" align="center" abbr="三" scope="col">三</th>
+        <th class="CalDayHeader" align="center" abbr="四" scope="col">四</th>
+        <th class="CalDayHeader" align="center" abbr="五" scope="col">五</th>
+        <th class="CalDayHeader" align="center" abbr="六" scope="col">六</th>
+    </tr>
+            <tr>
+                            <td class="CalOtherMonthDay" align="center">27</td>
+                            <td class="CalOtherMonthDay" align="center">28</td>
+                            <td class="CalOtherMonthDay" align="center">29</td>
+                            <td class="CalOtherMonthDay" align="center">30</td>
+                            <td class="CalOtherMonthDay" align="center">31</td>
+                        <td class="" align="center">
+                            1
+                        </td>
+                    <td class="CalWeekendDay" align="center">
+                        2
+                    </td>
+            </tr>
+                <tr>
+                        <td class="CalWeekendDay" align="center">
+                            3
+                        </td>
+                            <td class="" align="center">
+                                4
+                            </td>
+                            <td class="" align="center">
+                                5
+                            </td>
+                            <td class="" align="center">
+                                6
+                            </td>
+                            <td class="" align="center">
+                                7
+                            </td>
+                            <td class="" align="center">
+                                8
+                            </td>
+                        <td class="CalWeekendDay" align="center">
+                            9
+                        </td>
+                </tr>
+                <tr>
+                        <td class="CalWeekendDay" align="center">
+                            10
+                        </td>
+                            <td class="" align="center">
+                                11
+                            </td>
+                            <td class="" align="center">
+                                12
+                            </td>
+                            <td class="" align="center">
+                                13
+                            </td>
+                            <td class="" align="center">
+                                14
+                            </td>
+                            <td class="" align="center">
+                                15
+                            </td>
+                        <td class="CalWeekendDay" align="center">
+                            16
+                        </td>
+                </tr>
+                <tr>
+                        <td class="CalWeekendDay" align="center">
+                            17
+                        </td>
+                            <td class="" align="center">
+                                18
+                            </td>
+                            <td class="" align="center">
+                                19
+                            </td>
+                            <td class="" align="center">
+                                20
+                            </td>
+                            <td class="" align="center">
+                                21
+                            </td>
+                            <td class="" align="center">
+                                22
+                            </td>
+                        <td class="CalTodayDay" align="center">
+                            23
+                        </td>
+                </tr>
+                <tr>
+                        <td class="CalWeekendDay" align="center">
+                            24
+                        </td>
+                            <td class="" align="center">
+                                25
+                            </td>
+                            <td class="" align="center">
+                                26
+                            </td>
+                            <td class="" align="center">
+                                27
+                            </td>
+                            <td class="" align="center">
+                                28
+                            </td>
+                            <td class="" align="center">
+                                29
+                            </td>
+                        <td class="CalWeekendDay" align="center">
+                            30
+                        </td>
+                </tr>
+                <tr>
+                        <td class="CalOtherMonthDay" align="center">
+                            1
+                        </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                2
+                            </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                3
+                            </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                4
+                            </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                5
+                            </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                6
+                            </td>
+                        <td class="CalOtherMonthDay" align="center">
+                            7
+                        </td>
+                </tr>
+    </tbody>
+</table></div></div>                
+                    <script>loadBlogDefaultCalendar();</script>
+	<h3>统计</h3>
+<ul>
+	<li>
+		随笔 -
+		184</li>
+	<li>
+		文章 -
+		1</li>
+	<li>
+		评论 -
+		102</li>
+	<li>
+		阅读 - 
+		
+<span title="总阅读数: 1246972">
+124万</span>
+	</li>
+</ul>
+
+
+	<div id="sidebar_news" class="newsItem">
+    <h3>公告</h3>
+	<div id="blog-news">    
+    <div id="sidebar_news_content">
+<div id="profile_block">
+    昵称：
+    <a href="https://home.cnblogs.com/u/linyfeng/">
+        锅边糊
+    </a>
+    <br>
+    园龄：
+    <a href="https://home.cnblogs.com/u/linyfeng/" title="入园时间：2015-06-14">
+        8年3个月
+    </a>
+    <br>
+    粉丝：
+    <a class="follower-count" href="https://home.cnblogs.com/u/linyfeng/followers/">
+        225
+    </a>
+    <br>
+    关注：
+    <a class="folowing-count" href="https://home.cnblogs.com/u/linyfeng/followees/">
+        5
+    </a>
+    <div id="p_b_follow" class="follow-tip">
+<a href="javascript:void(0)" onclick="follow(&#39;6e9dd725-2712-e511-b908-9dcfd8948a71&#39;)">+加关注</a></div>
+    <script>getFollowStatus('6e9dd725-2712-e511-b908-9dcfd8948a71');</script>
+</div>
+</div>
+</div>
+<script>loadBlogNews();</script>
+
+ 
+</div>
+<div id="sidebar_c3"></div>
+	<div id="blog-sidecolumn"><!-- 搜索 -->
+<div id="sidebar_search" class="sidebar-block">
+    <div id="sidebar_search" class="mySearch">
+        <h3 class="catListTitle">搜索</h3>
+        <div id="sidebar_search_box">
+            <div id="widget_my_zzk" class="div_my_zzk">
+                <input type="text" id="q" onkeydown="return zzk_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="zzk_go()" type="button" value="找找看" id="btnZzk" class="btn_my_zzk">
+            </div>
+            <div id="widget_my_google" class="div_my_zzk">
+                <input type="text" name="google_q" id="google_q" onkeydown="return google_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="google_go()" type="button" value="谷歌搜索" class="btn_my_zzk">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 常用链接 -->
+<div id="sidebar_shortcut" class="sidebar-block">
+<h3 class="catListTitle">
+常用链接
+</h3>
+<ul>
+    <li><a href="https://www.cnblogs.com/linyfeng/p/" title="我的博客的随笔列表">我的随笔</a></li>
+<li><a href="https://www.cnblogs.com/linyfeng/MyComments.html" title="我的发表过的评论列表">我的评论</a></li>
+<li><a href="https://www.cnblogs.com/linyfeng/OtherPosts.html" title="我评论过的随笔列表">我的参与</a></li>
+<li><a href="https://www.cnblogs.com/linyfeng/comments" title="我的博客的评论列表">最新评论</a></li>
+<li><a href="https://www.cnblogs.com/linyfeng/tag/" title="我的博客的标签列表">我的标签</a></li>
+
+</ul>
+</div>
+
+<!-- 最新随笔 -->
+
+
+<!-- 我的标签 -->
+<div id="sidebar_toptags" class="sidebar-block"><h3><a href="https://www.cnblogs.com/linyfeng/tag/" class="sidebar-card-title-a">我的标签</a></h3>
+<div id="MyTag">
+    <ul>
+                <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/linux/">linux<span class="tag-count">(65)</span></a>
+        </li>
+        <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/Python/">Python<span class="tag-count">(44)</span></a>
+        </li>
+        <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/shell/">shell<span class="tag-count">(20)</span></a>
+        </li>
+        <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/Windows/">Windows<span class="tag-count">(16)</span></a>
+        </li>
+        <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/oracle/">oracle<span class="tag-count">(13)</span></a>
+        </li>
+        <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/%E8%BD%AF%E4%BB%B6%E6%B5%8B%E8%AF%95/">软件测试<span class="tag-count">(12)</span></a>
+        </li>
+        <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/%E9%BB%91%E7%9B%92%E6%B5%8B%E8%AF%95/">黑盒测试<span class="tag-count">(12)</span></a>
+        </li>
+        <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/%E6%B5%8B%E8%AF%95%E8%AE%BE%E8%AE%A1/">测试设计<span class="tag-count">(10)</span></a>
+        </li>
+        <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/pyqt/">pyqt<span class="tag-count">(8)</span></a>
+        </li>
+        <li>
+            <a href="https://www.cnblogs.com/linyfeng/tag/%E6%B5%8B%E8%AF%95%E5%B7%A5%E7%A8%8B%E6%96%B9%E6%B3%95/">测试工程方法<span class="tag-count">(8)</span></a>
+        </li>
+    <li>
+        <a href="https://www.cnblogs.com/linyfeng/tag/">更多</a>
+    </li>
+
+    </ul>
+</div>
+</div>
+
+<!-- 积分与排名 -->
+<div id="sidebar_scorerank" class="sidebar-block"><h3>积分与排名</h3>
+<ul>
+    <li>
+        积分 - 
+317242
+    </li>
+    <li>
+        排名 - 
+2704
+    </li>
+</ul></div>
+
+<!-- 随笔分类、随笔档案、文章分类、新闻分类、相册、链接 -->
+<div id="sidebar_categories">
+
+    <h3>
+        
+    <a class="sidebar-card-title-a" href="https://www.cnblogs.com/linyfeng/post-categories">随笔分类</a>
+<span class="sidebar-category-item-count">
+    (176)
+</span>
+
+
+    </h3>
+    <ul>
+            <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/1576189.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">BAT入门教程(1)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/864013.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">Linux系统管理(25)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/864014.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">Oracle管理(16)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/1546338.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">PyQt入门教程(8)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/864010.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">Python(27)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/1546339.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">Python入门教程(14)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/864011.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">SHELL(15)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/1572541.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">Shell入门教程(9)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/1076043.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">测试案例(3)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/1082035.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">测试工具(26)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/1098963.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">测试管理(7)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/864012.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">测试技术(19)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/category/1101703.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">性能测试(6)</a>
+ 
+            </li>                
+    </ul>
+    <h3>
+        
+随笔档案<span class="sidebar-category-item-count">
+    (184)
+</span>
+
+
+    </h3>
+    <ul>
+            <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2020/08.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2020年8月(2)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2020/04.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2020年4月(3)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2020/03.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2020年3月(5)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2020/02.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2020年2月(3)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2020/01.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2020年1月(2)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/11.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年11月(2)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/10.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年10月(3)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/09.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年9月(1)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/08.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年8月(4)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/07.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年7月(5)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/06.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年6月(3)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/05.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年5月(2)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/04.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年4月(1)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/03.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年3月(1)</a>
+ 
+            </li>                    <li data-category-list-item-visible="true" style="display: block">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/02.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年2月(2)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2019/01.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2019年1月(2)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2018/12.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2018年12月(4)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2018/08.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2018年8月(3)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2018/06.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2018年6月(17)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2018/05.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2018年5月(7)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2018/04.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2018年4月(10)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2018/03.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2018年3月(2)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2018/02.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2018年2月(3)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2018/01.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2018年1月(8)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/12.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年12月(5)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/11.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年11月(7)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/10.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年10月(24)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/09.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年9月(18)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/08.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年8月(12)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/07.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年7月(10)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/05.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年5月(4)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/04.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年4月(4)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/03.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年3月(2)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/02.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年2月(1)</a>
+ 
+            </li>                    <li data-category-list-item-visible="false" style="display: none">
+                
+<a href="https://www.cnblogs.com/linyfeng/archive/2017/01.html" style="--cnb-category-item-link-indent-size: calc(0 * 1em)" class="category-item-link" rel="" target="">2017年1月(2)</a>
+ 
+            </li>                <li><a href="javascript:void(0)" onclick="sideColumnManager.loadMore(this)">更多</a></li>
+    </ul>
+</div>
+
+<!-- 最新评论 -->
+<!-- 阅读排行榜 -->
+<div id="sidebar_topviewedposts" class="sidebar-block">
+<div id="topview_posts_wrap">
+    <h3 class="catListTitle">
+        <a href="https://www.cnblogs.com/linyfeng/most-viewed" class="sidebar-card-title-a">
+    阅读排行榜
+</a>
+
+    </h3>
+    <div id="TopViewPostsBlock">
+        <ul style="word-break:break-all">
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/9496126.html">
+                            1. wireshark抓包新手使用教程(153579)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/11223707.html">
+                            2. [ PyQt入门教程 ] Qt Designer工具的使用(99085)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/7123423.html">
+                            3. Python中xlrd和xlwt模块使用方法(84261)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/7534677.html">
+                            4. Linux IP和网关配置(79461)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/11832237.html">
+                            5. [ PyQt入门教程 ] PyQt5中数据表格控件QTableWidget使用方法(54726)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/8072002.html">
+                            6. bat脚本基础教程(39324)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/7536466.html">
+                            7. Linux系统提示"No space left on device"解决方法(39205)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/7460838.html">
+                            8. impdp导入文件失败问题解决(ORA-39001/ORA-39000/ORA-39143)(32840)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/12239856.html">
+                            9. [ PyQt入门教程 ] PyQt5中多线程模块QThread使用方法(32183)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/10934995.html">
+                            10. Linux上error while loading shared libraries问题解决方法(31132)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/7203211.html">
+                            11. pip安装提示PermissionError: [WinError 5]错误问题解决(30493)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/11223711.html">
+                            12. [ PyQt入门教程 ] PyQt5基本控件使用:消息弹出、用户输入、文件/目录选择对话框(29749)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/12591725.html">
+                            13. nmap端口扫描工具安装和使用方法(28531)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/11216494.html">
+                            14. [ PyQt入门教程 ] PyQt5开发环境搭建和配置(25770)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/7231603.html">
+                            15. ORA-01078和LRM-00109问题导致ORACLE启动失败解决方法(21835)
+                        </a>
+                    </li>
+        </ul>
+    </div>
+</div></div>
+
+<!-- 评论排行榜 -->
+<div id="sidebar_topcommentedposts" class="sidebar-block"><div id="topfeedback_posts_wrap">
+    <h3 class="catListTitle">
+        <a href="https://www.cnblogs.com/linyfeng/most-commented" class="sidebar-card-title-a">评论排行榜</a>
+
+    </h3>
+    <div id="TopFeedbackPostsBlock">
+        <ul style="word-break:break-all">
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/9496126.html">
+                            1. wireshark抓包新手使用教程(24)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/11223707.html">
+                            2. [ PyQt入门教程 ] Qt Designer工具的使用(9)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/11185923.html">
+                            3. Notepad++提升工作效率小技巧(9)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/11832237.html">
+                            4. [ PyQt入门教程 ] PyQt5中数据表格控件QTableWidget使用方法(8)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/linyfeng/p/11621320.html">
+                            5. 我的软件测试故事：成长、迷茫、奋斗(7)
+                        </a>
+                    </li>
+        </ul>
+    </div>
+</div></div>
+
+<!-- 推荐排行榜 -->
+<div id="sidebar_topdiggedposts" class="sidebar-block">
+<div id="topdigg_posts_wrap">
+    <div class="catListView">
+        <h3 class="catListTitle">
+            <a href="https://www.cnblogs.com/linyfeng/most-liked" class="sidebar-card-title-a">推荐排行榜</a>
+
+        </h3>
+        <div id="TopDiggPostsBlock">
+            <ul style="word-break: break-all">
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/9496126.html">
+                                1. wireshark抓包新手使用教程(56)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/11223707.html">
+                                2. [ PyQt入门教程 ] Qt Designer工具的使用(19)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/11621320.html">
+                                3. 我的软件测试故事：成长、迷茫、奋斗(10)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/10356390.html">
+                                4. 我对测试工作的一些认识(10)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/11832237.html">
+                                5. [ PyQt入门教程 ] PyQt5中数据表格控件QTableWidget使用方法(9)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/11185923.html">
+                                6. Notepad++提升工作效率小技巧(9)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/11294173.html">
+                                7. [ PyQt入门教程 ] PyQt5基本控件使用:单选按钮、复选框、下拉框、文本框(5)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/7123423.html">
+                                8. Python中xlrd和xlwt模块使用方法(5)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/11223711.html">
+                                9. [ PyQt入门教程 ] PyQt5基本控件使用:消息弹出、用户输入、文件/目录选择对话框(4)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/linyfeng/p/12239856.html">
+                                10. [ PyQt入门教程 ] PyQt5中多线程模块QThread使用方法(3)
+                            </a>
+                        </li>
+            </ul>
+        </div>
+    </div>
+</div></div><div id="sidebar_recentcomments" class="sidebar-block"><div id="recent_comments_wrap" class="RecentComment">
+    <h3 class="catListTitle"><a href="https://www.cnblogs.com/linyfeng/comments" class="sidebar-card-title-a">最新评论</a></h3>    
+    <div class="RecentCommentBlock">
+        <ul>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/linyfeng/p/9496126.html">1. Re:wireshark抓包新手使用教程</a></li>
+                <li class="recent_comment_body"><p>写的真的很不错，小白也能看懂</p>
+</li>
+                <li class="recent_comment_author">--麻辣牛腩面</li>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/linyfeng/p/11832237.html">2. Re:[ PyQt入门教程 ] PyQt5中数据表格控件QTableWidget使用方法</a></li>
+                <li class="recent_comment_body"><p>一只站在树上的鸟儿，从来不会害怕树枝断裂，因为它相信的不是树枝，而是它自己的翅膀</p>
+</li>
+                <li class="recent_comment_author">--顺子2016</li>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/linyfeng/p/12239856.html">3. Re:[ PyQt入门教程 ] PyQt5中多线程模块QThread使用方法</a></li>
+                <li class="recent_comment_body"><p>让槽函数接收信号和生产信号在递进关系上解耦<br>
+可以理解为display这个槽函数被调用了20次？</p>
+</li>
+                <li class="recent_comment_author">--顺子2016</li>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/linyfeng/p/12239856.html">4. Re:[ PyQt入门教程 ] PyQt5中多线程模块QThread使用方法</a></li>
+                <li class="recent_comment_body"><p>nice</p>
+</li>
+                <li class="recent_comment_author">--顺子2016</li>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/linyfeng/p/11294173.html">5. Re:[ PyQt入门教程 ] PyQt5基本控件使用:单选按钮、复选框、下拉框、文本框</a></li>
+                <li class="recent_comment_body"><p>继续下一篇</p>
+</li>
+                <li class="recent_comment_author">--顺子2016</li>
+        </ul>
+    </div>
+</div></div>
+
+
+</div>
+                    <script>loadBlogSideColumn();</script>
+
+</div>
+<div id="main">
+	<div id="post_detail">
+	<div class="post">
+		<h2>
+			
+<a id="cb_post_title_url" class="postTitle2 vertical-middle" href="https://www.cnblogs.com/linyfeng/p/8072002.html">
+    <span role="heading" aria-level="2">bat脚本基础教程</span>
+    
+
+
+
+</a><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button>
+
+		</h2>
+		<div id="cnblogs_post_body" class="blogpost-body blogpost-body-html">
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; &nbsp;&nbsp;bat脚本就是DOS批处理脚本，就是将一系列DOS命令按照一定顺序排列而形成的集合，运行在windows命令行环境上。本文主要介绍bat脚本基础语法，希望完成本文内容学习之后具备基础的bat脚本开发能力，提高工作效率。</span></p>
+<h1><span style="font-family: Microsoft YaHei; font-size: 18px">为什么学习bat脚本？</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; &nbsp; 在开始学习bat脚本前可能大家会有一个就是为什么要学习bat脚本，特别是拥有Python、Java、Shell等各种语言可以满足自己开发小工具完成工作提高效率的情况下。在大家去搜索或者想了解bat脚本的时候或许已经给自己找到了一些理由。我学习bat脚本的原因很简单，是因为我在用Notepad++编辑器写完代码后总是要跑到cmd命令行下执行Python myScript.py才能运行程序，多了很多操作步骤，很繁琐（开始我还不知道Notepad++可以直接运行Python，配置参考<a href="https://www.cnblogs.com/linyfeng/p/8429947.html" target="_blank" rel="noopener">Notepad++好用的功能和插件</a>）。可以编写一个myScript.bat脚本直接双击执行python脚本，myScript.bat脚本内容如下：</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span><span style="color: rgba(0, 0, 0, 1)">
+python myScript</span>.<span style="color: rgba(0, 0, 0, 1)">py
+</span><span style="color: rgba(0, 0, 255, 1)">pause</span></span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; &nbsp;如果你的Windows环境上同时装有Python2.X和Python3.X，但是脚本必须使用Python2.X程序运行，可以使用Python2.X软件绝对路径，如下：</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span><span style="color: rgba(0, 0, 0, 1)">
+C:</span>\Python27\python.exe myScript.<span style="color: rgba(0, 0, 0, 1)">py
+</span><span style="color: rgba(0, 0, 255, 1)">pause</span></span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 大家可以自己测试感受下，从我个人总结来说学习bat的理由有以下2点：</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1）bat脚本作为Python的配套使用工具确实可以提高的编码效率和工作效率。</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）学习bat脚本<strong>基础语法</strong>不会占用太多时间。</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; &nbsp; 下面开始学习bat脚本基础语法。</span></p>
+<h1><span style="font-family: Microsoft YaHei; font-size: 18px">阅读说明&amp;建议</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1）本文描述内容为bat脚本最基础内容，仅适合bat初学者。如果想完整学习，建议下载<a href="https://pan.baidu.com/s/1bqWYN0r" target="_blank" rel="noopener">DOS批处理高级教程</a>学习。</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）常用"help command"或"command /?"查看命令的使用方法，如color /?。对于命令的基本语法和使用技巧列举的很详细。</span></p>
+<h1><span style="font-family: Microsoft YaHei; font-size: 18px">基本概念</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; &nbsp;bat脚本就是DOS批处理脚本，就是将一些列DOS命令按照一定顺序排列而形成的集合，运行在windows命令行环境上。</span></p>
+<h1><span style="font-family: Microsoft YaHei; font-size: 18px">变量设置和读取</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1）常用系统变量</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">%<span style="color: rgba(0, 0, 255, 1)">CD</span><span style="color: rgba(0, 0, 0, 1)">%  获取当前目录
+%</span><span style="color: rgba(0, 0, 255, 1)">PATH</span><span style="color: rgba(0, 0, 0, 1)">%  获取命令搜索路径
+%</span><span style="color: rgba(0, 0, 255, 1)">DATE</span><span style="color: rgba(0, 0, 0, 1)">%  获取当前日期。
+%</span><span style="color: rgba(0, 0, 255, 1)">TIME</span><span style="color: rgba(0, 0, 0, 1)">%  获取当前时间。
+%RANDOM% 获取 </span>0 和 32767<span style="color: rgba(0, 0, 0, 1)"> 之间的任意十进制数字。
+%</span><span style="color: rgba(0, 0, 255, 1)">ERRORLEVEL</span>% 获取上一命令执行结果码</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）变量读取。使用%variable%可以获取变量值，举例如下</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">D:\&gt;<strong><span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> %RANDOM%
+</span></strong>157</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（3）&nbsp;变量设置。使用set命令显示、设置或删除 windows环境变量。set命令用法可以在cmd下执行"set /?" 或"help set"查看。</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">SET</span> [variable=<span style="color: rgba(0, 0, 0, 1)">[string]] #variable表示变量名，string表示变量值。</span></span></pre>
+</div>
+<p><span style="font-size: 16px; font-family: Microsoft YaHei">&nbsp; 举例如下：</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">D:\&gt;<span style="color: rgba(0, 0, 255, 1)">set</span> VAR1="I Love BAT Script"<span style="color: rgba(0, 0, 0, 1)">
+D:</span>\&gt;<span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> %VAR1%
+</span>"I Love BAT Script"</span></pre>
+</div>
+<h1><span style="font-family: Microsoft YaHei; font-size: 16px">字符串基本操作</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1）字符串截取。使用命令 <strong>echo %var:~n,k%，</strong>其中"%var"，表示待截取字符的字符串，"~"取字符标志符，"n”表示字符截取起始位置，"k" 表示截取结束位置（不包含该字符）。举例如下<br></span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span> 
+<span style="color: rgba(0, 0, 255, 1)">set</span> str=<span style="color: rgba(0, 0, 0, 1)">superhero
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> str=<span style="color: rgba(0, 0, 0, 1)">%str% 
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> str:~0,5=%str:~0,5<span style="color: rgba(0, 0, 0, 1)">%
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> str:~3=%str:~3<span style="color: rgba(0, 0, 0, 1)">%
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> str:~-3=%str:~-3<span style="color: rgba(0, 0, 0, 1)">% 
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> str:~0,-3=%str:~0,-3<span style="color: rgba(0, 0, 0, 1)">% 
+</span><span style="color: rgba(0, 0, 255, 1)">pause</span> </span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">输出结果如下：</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">str=<span style="color: rgba(0, 0, 0, 1)">superhero
+str:~</span>0,5=<span style="color: rgba(0, 0, 0, 1)">super
+str:~</span>3=<span style="color: rgba(0, 0, 0, 1)">erhero
+str:~-</span>3=<span style="color: rgba(0, 0, 0, 1)">ero
+str:~</span>0,-3=<span style="color: rgba(0, 0, 0, 1)">superh
+请按任意键继续</span>. . .</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）字符串替换。使用命令<strong>%var:old_str=new_str%</strong>&nbsp;，举例如下</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span> 
+<span style="color: rgba(0, 0, 255, 1)">set</span> str=<span style="color: rgba(0, 0, 0, 1)">hello world!
+</span><span style="color: rgba(0, 0, 255, 1)">set</span> temp=%str<span style="color: rgba(128, 0, 0, 1)">:hello</span>=<span style="color: rgba(0, 0, 0, 1)">good% 
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> %temp% 
+</span><span style="color: rgba(0, 0, 255, 1)">pause</span> </span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">输出结果如下：</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 0, 1)">good world!
+请按任意键继续</span>. . .</span></pre>
+</div>
+<h1><span style="font-family: Microsoft YaHei; font-size: 18px">DOS基本命令介绍</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1）<strong>rem</strong>&nbsp;注释符，也可以用两个冒号代替(::)</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 128, 0, 1)">REM</span><span style="color: rgba(0, 128, 0, 1)"> [comment]</span></span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）<strong>echo</strong> &nbsp;显示信息，或启用或关闭命令回显。@字符放在命令前将关闭该命令回显，无论此时echo是否为打开状态。</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">echo</span> <span style="color: rgba(0, 0, 255, 1)">on</span><span style="color: rgba(0, 0, 0, 1)"> 批处理命令在执行时显示自身命令行
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span><span style="color: rgba(0, 0, 0, 1)"> 批处理命令在执行时不显示自身命令行
+</span><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span><span style="color: rgba(0, 0, 0, 1)"> 关闭echo off命令行自身的显示
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> Hello World 打印Hello World
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span>. 输出空行,"."可以用，：；”／[\<span style="color: rgba(0, 0, 0, 1)">]＋等任一符号替代
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> test &gt; file.txt 创建包含字符test的file.<span style="color: rgba(0, 0, 0, 1)">txt文件
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> y | <span style="color: rgba(0, 0, 255, 1)">del</span> d:\temp\*.txt 输入y确认删除</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（3）<strong>pause</strong> 暂停并输出“请按任意键继续. . .”</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">pause</span> 等待并提示"请按任意键继续. . ."
+<span style="color: rgba(0, 0, 255, 1)">pause</span> &gt;<span style="color: rgba(0, 0, 0, 1)"> nul 等待但不出现提示语
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> wait a moment.. &amp; <span style="color: rgba(0, 0, 255, 1)">pause</span> &gt; nul 输出指定输出语"wait a moment.."并等待操作</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（4）<strong>errorlevel。</strong>程序执行结果返回码，执行成功返回0，失败返回为1<br></span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（5）<strong>start</strong>&nbsp;启动一个单独的窗口以运行指定的程序或命令，程序继续向下执行。<br></span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">START</span> [<span style="color: rgba(0, 0, 255, 1)">command</span>/program] [parameters]</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（6）<strong>exit</strong>&nbsp;退出CMD.EXE程序或当前批处理脚本</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">EXIT</span> [/<span style="color: rgba(0, 0, 0, 1)">B] [exitCode]
+参数说明：
+</span>/B：指定要退出当前批处理脚本而不是 <span style="color: rgba(0, 0, 255, 1)">CMD</span>.EXE。如果从一个批处理脚本外执行，则会退出 <span style="color: rgba(0, 0, 255, 1)">CMD</span>.<span style="color: rgba(0, 0, 0, 1)">EXE
+exitCode：指定一个数字号码。如果指定了 </span>/B，将 ERRORLEVEL设成那个数字。如果退出 <span style="color: rgba(0, 0, 255, 1)">CMD</span>.EXE，则用那个数字设置过程退出代码</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（7）<strong>cls </strong>清除屏幕内容</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（8）<strong>help</strong>&nbsp;提供 Windows 命令的帮助信息</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 0, 1)">HELP [</span><span style="color: rgba(0, 0, 255, 1)">command</span><span style="color: rgba(0, 0, 0, 1)">]</span></span></pre>
+</div>
+<h1><span style="font-size: 18px; font-family: Microsoft YaHei"><strong>&nbsp;文件操作命令</strong></span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1）copy 文件复制命令</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">copy</span> d:\temp1\file1.txt d:\temp2 将文件file1.<span style="color: rgba(0, 0, 0, 1)">txt复制到temp2目录，有相同文件提示
+</span><span style="color: rgba(0, 0, 255, 1)">copy</span> d:\temp1\file1.txt d:\temp2 /y 将文件file1.txt复制到temp2目录,<span style="color: rgba(0, 0, 0, 1)">有相同文件覆盖原文件，不提示
+</span><span style="color: rgba(0, 0, 255, 1)">copy</span> d:\temp1\* d:\temp2 /y 将temp1目录下的所有文件复制到temp2目录,有相同文件覆盖原文件，不提示</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）xcopy 目录复制命令</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">xcopy</span> temp1 d:\temp2 /<span style="color: rgba(0, 0, 0, 1)">y 将temp1目录下的文件复制到temp2目录，不包括temp1子目录下的文件。
+</span><span style="color: rgba(0, 0, 255, 1)">xcopy</span> temp1 d:\temp2 /s /e /y 将temp1目录下的文件复制到temp2目录，包括temp1子目录下的文件</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（3）type 显示文件内容命令</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">type</span> file1.<span style="color: rgba(0, 0, 0, 1)">txt 查看file1文件内容
+</span><span style="color: rgba(0, 0, 255, 1)">type</span> file1.txt file2.txt  #<span style="color: rgba(0, 0, 0, 1)">查看file1和file2文件内容
+</span><span style="color: rgba(0, 0, 255, 1)">type</span> file1.txt &gt; file2.txt  #将file1.txt文件内容重定向到file2.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">type</span> nul &gt; file1.txt #创建文件</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（4）ren 重命名文件命令</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">ren</span> d:\temp1\file1.txt file2.txt 修改temp目录下的file1.txt文件名为file2.txt</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（5）del 删除文件命令</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">del</span> d:\temp1\file1.txt 删除temp目录下的file1.<span style="color: rgba(0, 0, 0, 1)">txt文件
+</span><span style="color: rgba(0, 0, 255, 1)">del</span> d:\temp\*.txt  删除temp目录下的后缀为.txt的文件</span></pre>
+</div>
+<h1><span style="font-size: 18px; font-family: Microsoft YaHei"><strong>目录操作命令&nbsp;</strong></span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1） cd 显示当前目录或切换目录</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">cd</span> d:\<span style="color: rgba(0, 0, 0, 1)">temp1 切换到temp1目录，当前目录是d盘
+</span><span style="color: rgba(0, 0, 255, 1)">cd</span> /d d:\<span style="color: rgba(0, 0, 0, 1)">temp1 切换到temp1目录，当前目录非d盘
+</span><span style="color: rgba(0, 0, 255, 1)">cd</span> .. 切换到上一级目录</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）mkdir 创建目录</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">mkdir</span><span style="color: rgba(0, 0, 0, 1)"> test 在当前目录下创建test目录
+</span><span style="color: rgba(0, 0, 255, 1)">mkdir</span> d:\temp1\test 在temp1目录下创建test目录，如果temp1目录不存在，自动创建</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（3）rmdir 删除目录</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">rmdir</span> d:\<span style="color: rgba(0, 0, 0, 1)">temp1 删除空目录temp1，非空则删除失败
+</span><span style="color: rgba(0, 0, 255, 1)">rmdir</span> d:\temp1 /s /q 删除temp1目录，包括子目录(/s)，并且删除时不提示(/q)</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（4）dir 显示目录下的子目录和文件</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">dir</span> d:\<span style="color: rgba(0, 0, 0, 1)">temp1 显示temp1目录下的文件和目录信息，显示信息包含日期、时间、文件类型和文件名
+</span><span style="color: rgba(0, 0, 255, 1)">dir</span> d:\temp1 /a<span style="color: rgba(128, 0, 0, 1)">:a</span> /<span style="color: rgba(0, 0, 0, 1)">b 只显示temp1目录下（不包括子目录）的文件的绝对路径，不显示日期、时间、文件类型和文件名
+</span><span style="color: rgba(0, 0, 255, 1)">dir</span> d:\temp1 /b /s /o<span style="color: rgba(128, 0, 0, 1)">:n</span> /a<span style="color: rgba(128, 0, 0, 1)">:a</span><span style="color: rgba(0, 0, 0, 1)">  显示temp1路径下（包括子目录）的所有文件的绝对路径。输出文件按照文件名数字顺序排序
+</span><span style="color: rgba(0, 0, 255, 1)">dir</span> d:\temp1\*.txt /a<span style="color: rgba(128, 0, 0, 1)">:a</span> /b /o<span style="color: rgba(128, 0, 0, 1)">:n</span> 显示.txt后缀文件，并且按照文件名顺序排序(/<span style="color: rgba(0, 0, 255, 1)">on</span>),其他排序方法查看help <span style="color: rgba(0, 0, 255, 1)">dir</span></span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp;说明：</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; （1）/b表示去除摘要信息，仅显示完整路径、/s表示循环列举文件夹中的内容、/o:n 表示根据文件名排序、/a:a 表示只枚举文件而不枚举其他。</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; （2）单独dir /b与dir /s 都不会显示完整路径，只有这两个组合才会显示完整路径。&nbsp;&nbsp;</span></p>
+<h1><span style="font-family: Microsoft YaHei; font-size: 18px">if/else判断句使用</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; &nbsp; if/else条件语句，用来判定是否符合规定的条件，从而决定执行不同的命令。 在CMD下使用“IF /?”打开 IF 的系统帮助,IF有3种基本的用法,如下</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">IF</span> [<span style="color: rgba(0, 0, 255, 1)">NOT</span>] <span style="color: rgba(0, 0, 255, 1)">ERRORLEVEL</span> number <span style="color: rgba(0, 0, 255, 1)">command</span>
+<span style="color: rgba(0, 0, 255, 1)">IF</span> [<span style="color: rgba(0, 0, 255, 1)">NOT</span>] string1==string2 <span style="color: rgba(0, 0, 255, 1)">command</span>
+<span style="color: rgba(0, 0, 255, 1)">IF</span> [<span style="color: rgba(0, 0, 255, 1)">NOT</span>] <span style="color: rgba(0, 0, 255, 1)">EXIST</span> filename <span style="color: rgba(0, 0, 255, 1)">command</span></span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp;说明：</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">  <span style="color: rgba(0, 0, 255, 1)">NOT</span><span style="color: rgba(0, 0, 0, 1)">：指定只有条件为 false 的情况下，Windows 才应该执行该命令。
+  </span><span style="color: rgba(0, 0, 255, 1)">ERRORLEVEL</span><span style="color: rgba(0, 0, 0, 1)"> number：如果最后运行的程序返回一个等于或大于指定数字的退出代码，指定条件为 true。
+  string1</span>==<span style="color: rgba(0, 0, 0, 1)">string2：如果指定的文字字符串匹配，指定条件为 true。
+  </span><span style="color: rgba(0, 0, 255, 1)">EXIST</span><span style="color: rgba(0, 0, 0, 1)"> filename：如果指定的文件名存在，指定条件为 true。
+  </span><span style="color: rgba(0, 0, 255, 1)">command</span>：如果符合条件，指定要执行的命令。如果指定的条件为 FALSE，命令后可跟 <span style="color: rgba(0, 0, 255, 1)">ELSE</span> 命令，该命令将在 <span style="color: rgba(0, 0, 255, 1)">ELSE</span> 关键字之后执行该命令。</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; &nbsp;ELSE 子句必须出现在同一行上的 IF 之后。例如:</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">    <span style="color: rgba(0, 0, 255, 1)">IF</span> <span style="color: rgba(0, 0, 255, 1)">EXIST</span> filename. (
+        <span style="color: rgba(0, 0, 255, 1)">del</span> filename.
+    ) <span style="color: rgba(0, 0, 255, 1)">ELSE</span> (
+            <span style="color: rgba(0, 0, 255, 1)">echo</span> filename. missing.
+    )</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp;或者如果都放在同一行上，以下子句有效:</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">IF</span> <span style="color: rgba(0, 0, 255, 1)">EXIST</span> filename. (<span style="color: rgba(0, 0, 255, 1)">del</span> filename.) <span style="color: rgba(0, 0, 255, 1)">ELSE</span> <span style="color: rgba(0, 0, 255, 1)">echo</span> filename. missing</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 如果命令扩展被启用，IF 会如下改变:</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">IF</span> [/I] string1 compare-op string2 <span style="color: rgba(0, 0, 255, 1)">command</span>
+<span style="color: rgba(0, 0, 255, 1)">IF</span> CMDEXTVERSION number <span style="color: rgba(0, 0, 255, 1)">command</span>
+<span style="color: rgba(0, 0, 255, 1)">IF</span> DEFINED variable <span style="color: rgba(0, 0, 255, 1)">command</span></span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 其中， compare-op 可以是:</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: rgba(0, 0, 0, 1); font-family: Microsoft YaHei; font-size: 16px">EQU - 等于
+NEQ - 不等于
+LSS - 小于
+LEQ - 小于或等于
+GTR - 大于
+GEQ - 大于或等于</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; &nbsp; 而 /I 开关(如果指定)说明要进行的字符串比较不分大小写。/I 开关可以用于 IF 的 string1==string2 的形式上。这些比较都是通用的；原因是，如果 string1 和 string2 都是由数字组成的，字符串会被</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">转换成数字，进行数字比较。</span></p>
+<h1><span style="font-family: Microsoft YaHei; font-size: 18px">for语句使用</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp;&nbsp;cmd命令行窗口下，输入help for 或者 for /? 查看for语句的使用方法。for语句基本格式如下：</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; FOR %variable IN (set) DO command [command-parameters]</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 参数说明：</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">%<span style="color: rgba(0, 0, 0, 1)">variable  指定一个单一字母可替换的参数。注意：批处理脚本中使用%%variable
+(set)  指定一个或一组文件。可以使用通配符。
+command  指定对每个文件执行的命令。
+command</span>-parameters 为特定命令指定参数或命令行开关。</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; for语句还有4个参数，分别是 /d /r /l /f ，下面分别介绍这4个参数对应的for语句命令。</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1）/D参数的fro语句格式</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">FOR</span> /D %variable IN (<span style="color: rgba(0, 0, 255, 1)">set</span>) <span style="color: rgba(0, 0, 255, 1)">DO</span> <span style="color: rgba(0, 0, 255, 1)">command</span> [<span style="color: rgba(0, 0, 255, 1)">command</span>-parameters]</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp;说明：如果（set）集中包含通配符，则指定与目录名匹配，而不与文件名匹配。</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp;实例：打印C盘根目录下的目录名</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span>
+<span style="color: rgba(0, 0, 255, 1)">for</span> /d %%i in (c:/*) <span style="color: rgba(0, 0, 255, 1)">do</span> (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> %%i
+</span>)
+<span style="color: rgba(0, 0, 255, 1)">pause</span></span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）/R参数的fro语句格式</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">FOR</span> /R [[drive:]<span style="color: rgba(0, 0, 255, 1)">path</span>] %variable IN (<span style="color: rgba(0, 0, 255, 1)">set</span>) <span style="color: rgba(0, 0, 255, 1)">DO</span> <span style="color: rgba(0, 0, 255, 1)">command</span> [<span style="color: rgba(0, 0, 255, 1)">command</span>-parameters] </span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 说明：递归查询指定目录下的匹配文件。默认使用当前目录。</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 实例：打印D盘目录及子目录下的后缀为.txt和.py的文件</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span>
+<span style="color: rgba(0, 0, 255, 1)">for</span> /r d:/temp %%i in ( *.txt *.py ) <span style="color: rgba(0, 0, 255, 1)">do</span> (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> %%i
+</span>)
+<span style="color: rgba(0, 0, 255, 1)">pause</span></span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（3）/L参数的fro语句格式</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">FOR</span> /L %variable IN (<span style="color: rgba(0, 0, 255, 1)">start</span>,step,<span style="color: rgba(0, 0, 255, 1)">end</span>) <span style="color: rgba(0, 0, 255, 1)">DO</span> <span style="color: rgba(0, 0, 255, 1)">command</span> [<span style="color: rgba(0, 0, 255, 1)">command</span>-parameters]</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp;&nbsp;该集表示以增量形式从开始到结束的一个数字序列。因此，(1,1,5)将产生序列1 2 3 4 5，(5,-1,1)将产生序列(5 4 3 2 1)</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">实例：打印10以内的奇数</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span>
+<span style="color: rgba(0, 0, 255, 1)">for</span> /l %%i in (1,2,10) <span style="color: rgba(0, 0, 255, 1)">do</span> (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> %%i
+</span>)
+<span style="color: rgba(0, 0, 255, 1)">pause</span></span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（4）FOR语句的/F参数包含如下3种命令格式：</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">  <span style="color: rgba(0, 0, 255, 1)">FOR</span> /F ["options"] %variable IN (file-<span style="color: rgba(0, 0, 255, 1)">set</span>) <span style="color: rgba(0, 0, 255, 1)">DO</span> <span style="color: rgba(0, 0, 255, 1)">command</span> [<span style="color: rgba(0, 0, 255, 1)">command</span><span style="color: rgba(0, 0, 0, 1)">-parameters]
+  </span><span style="color: rgba(0, 0, 255, 1)">FOR</span> /F ["options"] %variable IN ("string") <span style="color: rgba(0, 0, 255, 1)">DO</span> <span style="color: rgba(0, 0, 255, 1)">command</span> [<span style="color: rgba(0, 0, 255, 1)">command</span><span style="color: rgba(0, 0, 0, 1)">-parameters]
+  </span><span style="color: rgba(0, 0, 255, 1)">FOR</span> /F ["options"] %variable IN ('<span style="color: rgba(0, 0, 255, 1)">command</span>') <span style="color: rgba(0, 0, 255, 1)">DO</span> <span style="color: rgba(0, 0, 255, 1)">command</span> [<span style="color: rgba(0, 0, 255, 1)">command</span>-parameters]</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 说明：包含/F的参数可以处理文件内容（file-set）、字符串("string")以及执行指定命令('command')返回回的值。可以通过设置["options"]值实现相关需求。["options"]值包含关键字说明如下：</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">eol=<span style="color: rgba(0, 0, 0, 1)">c 处理时跳过起始为c字符的行，通常用于跳过注释行。
+skip</span>=<span style="color: rgba(0, 0, 0, 1)">n  跳过文件开始的n行
+delims</span>=<span style="color: rgba(0, 0, 0, 1)">xxx  指定分隔符集。这个替换了空格和制表符的默认分隔符集。
+tokens</span>=x,y,<span style="color: rgba(0, 0, 0, 1)">m-n  被分隔各字段的处理。
+usebackq   需使用双引号包含文件名时考虑，具体使用执行help for查看</span></span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 上面的描述有些地方可能不好裂解，学习并执行完如下几个实例观察输出结果，再去理解效果会更快。</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 实例：操作temp.txt文件内容。</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span>
+
+<span style="color: rgba(0, 0, 255, 1)">type</span> nul &gt; temp.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> ;Test <span style="color: rgba(0, 0, 255, 1)">for</span> /f parameter &gt;&gt; temp.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> line1 1 2 3 &gt;&gt; temp.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> line2 1 2 3 &gt;&gt; temp.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> line3 1 2 3 &gt;&gt; temp.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> 11 12 13 14 15 16 &gt;&gt; temp.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> 21,22,23,24,25,26 &gt;&gt; temp.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> 31-32-33-34-35-36 &gt;&gt; temp.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">for</span> /F "skip=4 eol=;  tokens=1,3* delims=,- " %%i in (temp.txt) <span style="color: rgba(0, 0, 255, 1)">do</span> (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span>  i=%%i, j=%%j, k=<span style="color: rgba(0, 0, 0, 1)">%%k
+</span>)
+<span style="color: rgba(0, 0, 255, 1)">pause</span>
+<span style="color: rgba(0, 0, 255, 1)">del</span> temp.txt</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp;输出结果如下：</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"> i=11 , j=13 ,k=14 15 16<span style="color: rgba(0, 0, 0, 1)">
+ i</span>=21 , j=23 ,k=24,25,26<span style="color: rgba(0, 0, 0, 1)">
+ i</span>=31 , j=33 ,k=34-35-36</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; 程序关键代码简单说明：</span></p>
+<div class="cnblogs_code">
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px">skip=4<span style="color: rgba(128, 0, 0, 1)">:跳过temp</span>.<span style="color: rgba(0, 0, 0, 1)">txt文件的前4行。
+eol</span>=;<span style="color: rgba(0, 0, 0, 1)">: 忽略冒号打头的行，直接跳过不处理
+delims</span>=,- ：指定分隔符为逗号（,）、减号(-)、和空格,<span style="color: rgba(0, 0, 0, 1)">空格必须放在最后
+tokens</span>=1,3*<span style="color: rgba(128, 0, 0, 1)">:将按照指定分隔符号分隔到的第1个字段赋给变量i</span>,第二个字段赋值给变量j，剩余字段赋值给变量k。注意：变量i在 <span style="color: rgba(0, 0, 255, 1)">for</span> 语句中显式声明，变量j和变量k是通过tokens= 选项隐式声明的。</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp;建议：如果还是不太理解的可以将上述skip、eol、delims、tokens进行修改并执行观察输出，</span></p>
+<h1><span style="font-family: Microsoft YaHei; font-size: 18px">bat脚本常用实例</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1）根据输入选项操作</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span>
+
+<span style="color: rgba(0, 0, 255, 1)">set</span> /p var="Please input the number(1,2,3):"
+
+<span style="color: rgba(0, 0, 255, 1)">if</span> %var% == 1 (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span> "the number equal to 1"
+) <span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> %var% == 2 (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span> "the number equal to 2"
+) <span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> %var% == 3 (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span> "the number equal to 3"
+) <span style="color: rgba(0, 0, 255, 1)">else</span> (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span> "input wrong number,exit program."
+)
+
+<span style="color: rgba(0, 0, 255, 1)">pause</span></span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）文件和目录相关操作</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span>
+
+<span style="color: rgba(0, 128, 0, 1)">rem</span><span style="color: rgba(0, 128, 0, 1)"> "About operate directory&amp;file bat script"</span>
+<span style="color: rgba(0, 0, 0, 1)">
+title Test bat
+
+</span><span style="color: rgba(0, 0, 255, 1)">set</span> CURRENTDIR=D:\workt<span style="color: rgba(0, 0, 255, 1)">set</span> TEMPDIR=%CURRENTDIR%\<span style="color: rgba(0, 0, 0, 1)">temp
+</span><span style="color: rgba(0, 0, 255, 1)">set</span> TEMPFILE=%TEMPDIR%\temp.<span style="color: rgba(0, 0, 0, 1)">txt
+
+</span><span style="color: rgba(0, 0, 255, 1)">if</span> <span style="color: rgba(0, 0, 255, 1)">not</span> <span style="color: rgba(0, 0, 255, 1)">exist</span> %TEMPDIR% (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span> "Create temp directory"
+  <span style="color: rgba(0, 0, 255, 1)">mkdir</span><span style="color: rgba(0, 0, 0, 1)"> %TEMPDIR%
+</span>) <span style="color: rgba(0, 0, 255, 1)">else</span> (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span> The directory of %TEMPDIR% existed,<span style="color: rgba(0, 0, 0, 1)">recreate directory
+</span>)
+
+
+<span style="color: rgba(0, 0, 255, 1)">if</span> <span style="color: rgba(0, 0, 255, 1)">not</span> <span style="color: rgba(0, 0, 255, 1)">exist</span> %TEMPFILE% (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> Create temp file
+  </span><span style="color: rgba(0, 0, 255, 1)">type</span> nul &gt;<span style="color: rgba(0, 0, 0, 1)"> %TEMPFILE%
+</span>) <span style="color: rgba(0, 0, 255, 1)">else</span> (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span> 
+  <span style="color: rgba(0, 0, 255, 1)">echo</span> "=========%DATE% %TIME%================" &gt;&gt;<span style="color: rgba(0, 0, 0, 1)"> %TEMPFILE%
+</span>)
+
+<span style="color: rgba(0, 0, 255, 1)">echo</span> Happy New Year! &gt;&gt;<span style="color: rgba(0, 0, 0, 1)"> %TEMPFILE%
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> Congratulate to everyone &gt;&gt;<span style="color: rgba(0, 0, 0, 1)"> %TEMPFILE%
+
+</span><span style="color: rgba(0, 128, 0, 1)">rem</span><span style="color: rgba(0, 128, 0, 1)"> copy file and directory</span>
+
+<span style="color: rgba(0, 0, 255, 1)">set</span> TEMPDIR2=%CURRENTDIR%\<span style="color: rgba(0, 0, 0, 1)">temp2
+
+</span><span style="color: rgba(0, 0, 255, 1)">md</span><span style="color: rgba(0, 0, 0, 1)"> %TEMPDIR2%
+</span><span style="color: rgba(0, 0, 255, 1)">xcopy</span> /s /<span style="color: rgba(0, 0, 0, 1)">y %TEMPDIR% %TEMPDIR2%
+
+</span><span style="color: rgba(0, 0, 255, 1)">type</span> %TEMPDIR2%\temp.<span style="color: rgba(0, 0, 0, 1)">txt
+
+</span><span style="color: rgba(0, 0, 255, 1)">pause</span></span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（3）将指定目录下的文件输出并移动到指定目录下</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span>
+
+<span style="color: rgba(0, 128, 0, 1)">rem</span><span style="color: rgba(0, 128, 0, 1)"> 如果路径中包含空格，变量值需带双引号<br>rem WORK_DIR表示要操作的文件夹，DEST_DIR表示文件要保存的目标文件夹</span>
+<span style="color: rgba(0, 0, 255, 1)">SET</span> WORK_DIR="c:\Program Files"
+<span style="color: rgba(0, 0, 255, 1)">SET</span> DEST_DIR="D:\<span style="color: rgba(0, 0, 0, 1)">temp"
+
+</span><span style="color: rgba(0, 0, 255, 1)">if</span> <span style="color: rgba(0, 0, 255, 1)">not</span> <span style="color: rgba(0, 0, 255, 1)">exist</span> %DEST_DIR% (
+  <span style="color: rgba(0, 0, 255, 1)">mkdir</span><span style="color: rgba(0, 0, 0, 1)"> %DEST_DIR%
+</span>)
+<span style="color: rgba(0, 0, 255, 1)">for</span> /f "delims=" %%i in ('<span style="color: rgba(0, 0, 255, 1)">dir</span> /b /s /o<span style="color: rgba(128, 0, 0, 1)">:n</span> /a<span style="color: rgba(128, 0, 0, 1)">:a</span> %WORK_DIR%') <span style="color: rgba(0, 0, 255, 1)">do</span> (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> %%i
+  </span><span style="color: rgba(0, 0, 255, 1)">copy</span> "%%i"<span style="color: rgba(0, 0, 0, 1)"> %DEST_DIR%
+</span>) </span><br><span style="color: rgba(0, 0, 255, 1); font-family: Microsoft YaHei; font-size: 16px">
+pause</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（4）将指定目录下的文件按照文件名排序输出。</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">@echo</span> <span style="color: rgba(0, 0, 255, 1)">off</span>
+
+<span style="color: rgba(0, 0, 255, 1)">SET</span> WORK_DIR=D:\temp\work</span><br><span style="font-family: Microsoft YaHei; font-size: 16px">
+<span style="color: rgba(0, 0, 255, 1)">for</span> /f "delims=" %%i in ('<span style="color: rgba(0, 0, 255, 1)">dir</span> /a /b /<span style="color: rgba(0, 0, 255, 1)">on</span> %WORK_DIR%\*.txt') <span style="color: rgba(0, 0, 255, 1)">do</span> (
+  <span style="color: rgba(0, 0, 255, 1)">echo</span><span style="color: rgba(0, 0, 0, 1)"> %%i
+</span>) </span><br><span style="color: rgba(0, 0, 255, 1); font-family: Microsoft YaHei; font-size: 16px">
+pause</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<h1><span style="font-family: Microsoft YaHei; font-size: 16px">FAQ</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">1、DOS命令下如何实现自动交互？</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">&nbsp; &nbsp;利用重定向方式可以实现自动交互输入。假设需要交互的脚本为A.exe，脚本需要依次输入12、13、15。则可以采用如下形式：</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-family: Microsoft YaHei; font-size: 16px"><span style="color: rgba(0, 0, 255, 1)">del</span> c.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> 12 &gt; c.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> 13 &gt;&gt; c.<span style="color: rgba(0, 0, 0, 1)">txt
+</span><span style="color: rgba(0, 0, 255, 1)">echo</span> 15 &gt;&gt; c.<span style="color: rgba(0, 0, 0, 1)">txt
+A</span>.exe &lt; c.txt</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./bat脚本基础教程_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<h1><span style="font-family: Microsoft YaHei; font-size: 18px">参考资料</span><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h1>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（1）<a href="http://www.jb51.net/article/107286.htm" target="_blank" rel="noopener">cmd详解 目录类命令</a></span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px">（2）<a href="http://wxphp.com/wxd_6bpii99ord371qy5cni9_1.html" target="_blank" rel="noopener">cmd下文件类操作命令</a></span></p>
+</div>
+<div class="clear"></div>
+<div id="blog_post_info_block" role="contentinfo">
+
+
+<div id="BlogPostCategory">
+    分类: 
+            <a href="https://www.cnblogs.com/linyfeng/category/1576189.html" target="_blank">BAT入门教程</a>
+</div>
+<div id="EntryTag">
+    标签: 
+            <a href="https://www.cnblogs.com/linyfeng/tag/Python/">Python</a>
+,             <a href="https://www.cnblogs.com/linyfeng/tag/bat/">bat</a>
+,             <a href="https://www.cnblogs.com/linyfeng/tag/%E6%89%B9%E5%A4%84%E7%90%86/">批处理</a>
+,             <a href="https://www.cnblogs.com/linyfeng/tag/%E8%84%9A%E6%9C%AC/">脚本</a>
+,             <a href="https://www.cnblogs.com/linyfeng/tag/%E6%95%99%E7%A8%8B/">教程</a>
+,             <a href="https://www.cnblogs.com/linyfeng/tag/%E8%AF%AD%E6%B3%95/">语法</a>
+,             <a href="https://www.cnblogs.com/linyfeng/tag/%E5%AE%9E%E4%BE%8B/">实例</a>
+,             <a href="https://www.cnblogs.com/linyfeng/tag/DOS/">DOS</a>
+,             <a href="https://www.cnblogs.com/linyfeng/tag/Windows/">Windows</a>
+</div>
+    <div id="blog_post_info">
+<div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(8072002,cb_blogId,1);green_channel_success(this,&#39;谢谢推荐！&#39;);">好文要顶</a>
+        <a id="green_channel_follow" onclick="follow(&#39;6e9dd725-2712-e511-b908-9dcfd8948a71&#39;);" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareManager.wechatShare()"><img src="./bat脚本基础教程_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/linyfeng/" target="_blank"><img src="./bat脚本基础教程_files/20190326070341.png" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/linyfeng/">锅边糊</a>
+            <br>
+            <a href="https://home.cnblogs.com/u/linyfeng/followers/">粉丝 - <span class="follower-count">225</span></a>
+            <a href="https://home.cnblogs.com/u/linyfeng/followees/">关注 - <span class="following-count">5</span></a><br>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow" class="follow-tip">
+                <a href="javascript:void(0);" onclick="follow(&#39;6e9dd725-2712-e511-b908-9dcfd8948a71&#39;);return false;">+加关注</a>
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(8072002,&#39;Digg&#39;)">
+        <span class="diggnum" id="digg_count">3</span>
+    </div>
+    <div class="buryit" onclick="votePost(8072002,&#39;Bury&#39;)">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+        <div id="vip_tip"><a class="tip" href="https://cnblogs.vip/" target="_blank">升级成为会员</a></div>
+</div>
+
+<script type="text/javascript">
+    currentDiggType = 0;
+</script>
+</div>
+    <div class="clear"></div>
+    <div id="post_next_prev">
+
+    <a href="https://www.cnblogs.com/linyfeng/p/8025331.html" class="p_n_p_prefix">« </a> 上一篇：    <a href="https://www.cnblogs.com/linyfeng/p/8025331.html" data-featured-image="" title="发布于 2017-12-11 22:21">vi编辑器常用命令</a>
+    <br>
+    <a href="https://www.cnblogs.com/linyfeng/p/8082806.html" class="p_n_p_prefix">» </a> 下一篇：    <a href="https://www.cnblogs.com/linyfeng/p/8082806.html" data-featured-image="" title="发布于 2017-12-21 22:40">‘操作无法完成 ,因为其中的文件夹或文件已在另一程序中打开’问题解决</a>
+
+</div>
+</div>
+		<p class="postfoot">
+			posted on 
+<span id="post-date" data-last-update-days="1428.6010713108737" data-date-created="BlogServer.Application.Dto.BlogPost.BlogPostDto" data-date-updated="2019-10-26 07:15" aria-expanded="false">2017-12-20 08:33</span>&nbsp;
+<a href="https://www.cnblogs.com/linyfeng/">锅边糊</a>&nbsp;
+阅读(<span id="post_view_count">39330</span>)&nbsp;
+评论(<span id="post_comment_count">0</span>)&nbsp;
+<a href="https://i.cnblogs.com/EditPosts.aspx?postid=8072002" rel="nofollow">编辑</a>&nbsp;
+<a href="javascript:void(0)" onclick="AddToWz(8072002);return false;">收藏</a>&nbsp;
+<a href="javascript:void(0)" onclick="reportManager.report({ currentUserId: &#39;&#39;, targetType: &#39;blogPost&#39;, targetId: &#39;8072002&#39;, targetLink: &#39;https://www.cnblogs.com/linyfeng/p/8072002.html&#39;, title: &#39;bat脚本基础教程&#39; })">举报</a>
+
+		</p>
+	</div>
+	
+	
+
+<script>
+    var cb_entryId = 8072002, cb_entryCreatedDate = '2017-12-20 08:33', cb_postType = 1, cb_postTitle = 'bat脚本基础教程';
+    var allowComments = true, cb_blogId = 277319, cb_blogApp = 'linyfeng', cb_blogUserGuid = '6e9dd725-2712-e511-b908-9dcfd8948a71';
+    mermaidRender.render()
+    markdown_highlight()
+    zoomManager.apply("#cnblogs_post_body img:not(.code_img_closed):not(.code_img_opened)");
+    updatePostStats(
+            [cb_entryId],
+            function(id, count) { $("#post_view_count").text(count) },
+            function(id, count) { $("#post_comment_count").text(count) });
+</script>
+<a id="!comments"></a>
+<div id="blog-comments-placeholder"></div>
+<div id="comment_form" class="commentform">
+    <a name="commentform"></a>
+    <div id="divCommentShow"></div>
+    <div id="comment_nav">
+            <a class="comment-nav-left" href="https://www.cnblogs.com/cmt/p/17520031.html" target="_blank">弹尽粮绝，会员救园：会员上线，命悬一线</a>
+        <div class="comment-nav-right">
+            <span id="span_refresh_tips"></span><a href="https://www.cnblogs.com/linyfeng/p/8072002.html#" onclick="return RefreshPage();">刷新页面</a><a href="https://www.cnblogs.com/linyfeng/p/8072002.html#top">返回顶部</a>
+        </div>
+    </div>
+    <div id="comment_form_container" style="visibility: visible;"><div class="login_tips">
+    登录后才能查看或发表评论，立即 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return account.login(&#39;!comments&#39;);">登录</a> 或者
+    <a href="https://www.cnblogs.com/">逛逛</a> 博客园首页
+</div>
+</div>
+    <div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+        <div id="cnblogs_ch"></div>
+    <div id="opt_under_post"></div>
+    <div id="cnblogs_c1" class="under-post-card" style="display: none;">
+            <div id="div-gpt-ad-1592365906576-0" style="width: 300px; height: 250px;"></div>
+    </div>
+    <div id="under_post_card1"><div class="under-post-card">
+<b>编辑推荐：</b>
+<br>
+
+· <a href="https://www.cnblogs.com/InCerry/p/dotnet8-access-private-member-new-method-2.html" target="_blank">［.NET8］访问私有成员新姿势 UnsafeAccessor（下） </a>
+    <br>
+· <a href="https://www.cnblogs.com/jevonsflash/p/17712687.html" target="_blank">[MAUI]实现动态拖拽排序网格 </a>
+    <br>
+· <a href="https://www.cnblogs.com/zzyang/p/17714480.html" target="_blank">我是如何写一篇技术文的？</a>
+    <br>
+· <a href="https://www.cnblogs.com/InCerry/p/dotnet8-access-private-member-new-method-1.html" target="_blank">［.NET8］访问私有成员新姿势 UnsafeAccessor（上）</a>
+    <br>
+· <a href="https://www.cnblogs.com/huangxincheng/p/17710972.html" target="_blank">记一次 .NET 某电力系统 内存暴涨分析</a>
+    <br>
+</div></div>
+    <div id="under_post_card2"><div class="itnews under-post-card">
+    <b>阅读排行：</b>
+    <br>
+ ·          <a href="https://www.cnblogs.com/baibaomen-org/p/17721587.html" target="_blank">2023版：深度比较几种.NET Excel导出库的性能差异</a>
+        <br>
+ ·          <a href="https://www.cnblogs.com/Can-daydayup/p/17723508.html" target="_blank">4款免费且实用的.NET反编译工具</a>
+        <br>
+ ·          <a href="https://www.cnblogs.com/huangxincheng/p/17722077.html" target="_blank">记一次 .NET 某仪器测量系统 CPU爆高分析</a>
+        <br>
+ ·          <a href="https://www.cnblogs.com/Jcloud/p/17721770.html" target="_blank">深入浅出线程池</a>
+        <br>
+ ·          <a href="https://www.cnblogs.com/guoxiaoyu/p/17716038.html" target="_blank">TCP连接的关键之谜：揭秘三次握手的必要性</a>
+        <br>
+</div></div>
+    <div id="HistoryToday" class="under-post-card"></div>
+    <script type="text/javascript">
+        var commentManager = new blogCommentManager();
+        commentManager.renderComments(0);
+        fixPostBody();
+        window.footnoteTipManager.generateFootnoteTips();
+
+            window.tocManager.displayDisableTocTips = false;
+            window.tocManager.generateToc();
+            
+                setTimeout(function() { countViews(cb_blogId, cb_entryId); }, 50);
+            
+            deliverT2();
+            deliverC1C2();
+            loadNewsAndKb();
+            
+                LoadPostCategoriesTags(cb_blogId, cb_entryId);
+            
+            LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+            GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+            loadOptUnderPost();
+            GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);
+                </script>
+</div>
+
+</div>
+
+
+</div>
+<p id="footer">
+	Powered by: 
+	<br>
+	
+	<a href="https://www.cnblogs.com/" id="footer_site_link">博客园</a>
+	<br>
+	Copyright © 2023 锅边糊
+<br><span id="poweredby">Powered by .NET 7.0 on Kubernetes</span>
+
+</p>
+
+
+
+
+
+    
+
+    <input type="hidden" id="antiforgery_token" value="CfDJ8Eg9kra6YURKsOjJwROiT4tBL-Cbkro4MEWVvTxbGGLir_0twpaX3dpG2_Lx2D4i9DmQRTEw7BolQTJJQbwhQt0WQTCIiHEaYk22doXm1txqZgJZL9YLtVxyI3M1vPSamlwqLG5qHzVLGA11RvBilcE">
+    <script async="" src="./bat脚本基础教程_files/js"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-M95P3TTWJZ');
+</script>
+<script defer="" src="./bat脚本基础教程_files/hm.js.下载"></script>
+
+
+<div style="z-index: 998; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; flex-direction: column; align-items: center; justify-content: center">
+<div style="background: #fff;padding: 30px; margin: 30px; border-radius: 16px;">
+  <div style="width: 200px; height: 200px; background: rgba(255, 255, 255, 0.8); position: absolute; top: -100px; right: -100px; border-radius: 100px"></div>
+  <div style="text-align: center; font-size: 18px; margin-bottom: 10px;">点击右上角即可分享</div>
+  <img src="./bat脚本基础教程_files/35695-20230906145857937-1471873834.gif" alt="微信分享提示">
+</div>   
+    </div></body></html>
