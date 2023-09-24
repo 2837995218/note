@@ -1,0 +1,60 @@
+@echo off 
+
+setlocal enabledelayedexpansion
+
+REM [bat脚本]
+
+echo %DATA%
+echo 0-32767=%RANDOM%
+:: 获取上一行执行结果码，成功返回0
+echo errorlevel=%errorlevel%
+
+set str=Hello, world!
+:: set /a 计算值：set /a i = 10+20
+:: set /p 输入值：set /p j = 请输入：
+echo str:~3=%str:~3%
+set tmp=%str:world=java%
+echo tmp=%tmp%
+
+pause
+cls
+
+:: start 启动一个单独的窗口以运行指定的程序或命令，程序继续向下执行。
+:: start echo Hello, world!
+
+:: 等待，但不出现提示语
+pause > nul
+cls
+
+aaaaecho Hello, world!
+if %errorlevel% == 0 echo success
+if not %errorlevel% == 0 echo fail
+
+pause
+cls
+
+if exist *.log (del *.log) else echo log missing
+
+pause
+cls
+:: 循环
+for /d %%i in (c:/*) do echo %%i
+
+pause > nul
+:: for /r F:/ %%j in (*.mp4) do (echo %%j)
+
+pause
+for /l %%k in (1, 2, 10) do echo %%k
+
+pause
+cls
+type nul > abc.txt
+echo abc >> abc.txt
+type abc.txt > a.txt
+
+pause
+ren abc.txt file.tmp
+ren a.txt a.tmp
+
+pause
+del *.tmp
