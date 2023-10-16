@@ -48,6 +48,23 @@ for /l %%k in (1, 2, 10) do echo %%k
 
 pause
 cls
+
+
+
+@echo off
+setlocal enabledelayedexpansion
+set a=1
+:start
+echo !a!
+set /a a=!a!+1
+if !a!==10 goto end
+if not !a!==10 goto start
+:end
+pause > nul
+cls
+
+
+
 type nul > abc.txt
 echo abc >> abc.txt
 type abc.txt > a.txt
