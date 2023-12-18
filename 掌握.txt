@@ -8,6 +8,6 @@
 8.springcloud（分布式事务、多级缓存、canal、缓存同步）
 9.容器（docker、k8s）
 10.Nginx，openResty
-11.多项前端技术（html、css、js、bootstrap、ajax、vue）
+11.多项前端技术（html、css、js、bootstrap、ajax、vue、canvas）
 12.大数据相关技术（scala、Hadoop、Hive）
 
