@@ -1989,6 +1989,17 @@ public record User(Long userId, String name) {}
 
 #### 享元模式
 
+- 使用框架
+
+  - Integer 中 -128到127共用一个对象
+
+    ```java
+    System.out.println(Integer.valueOf(1) == Integer.valueOf(1)); // true
+    System.out.println(Integer.valueOf(128) == Integer.valueOf(128)); // false
+    ```
+
+    
+
 - uml图
   - ![享元模式](D:\picture\typora\java\uml\享元模式.png)
 
@@ -2028,6 +2039,10 @@ public record User(Long userId, String name) {}
 
 
 #### 访问者模式
+
+- 使用框架
+  - easyexcel 的 ReadListener
+  - `java.nio.file.Files.walkFileTree(Path对象, FileVisitor实现类对象)`
 
 - uml图
 
