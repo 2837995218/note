@@ -3,7 +3,7 @@
 3.JUC（线程池、CAS、Monitor、JMM、AQS）
 4.Netty（BIO、NIO、Netty、协议、RPC）
 5.了解多种数据结构与算法，掌握23种设计模式
-6.spring、SpringMVC、mybatis、mybatisplus、springboot
+6.spring、SpringMVC、mybatis、mybatisplus、springboot使用、starter基础开发
 7.微服务基础（eureka、nacos、openfeign、gateway、hystrix、sentinel、rabbitmq、es）
 8.springcloud（分布式事务、多级缓存、canal、缓存同步）
 9.容器（docker、k8s）

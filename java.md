@@ -490,16 +490,38 @@ public ThreadPoolExecutor(int corePollSize, // 核心线程数
       - max(Comparator c)：返回流中的最大值
       - min(Comparator c)：返回流中的最小值
       - forEach(Consumer c)：内部迭代
-
-    - 规约
-
-      - reduce(T identity, BinaryOperator b)：可以将流中的元素反复结合起来，得到一个值
+  - 规约
+    
+    - reduce(T identity, BinaryOperator b)：可以将流中的元素反复结合起来，得到一个值
       - reduce(BinaryOperator b)
-
     - 收集
 
       - collect(Collector c)
-        - Collectors的toList，toMap和toCollection方法可以获得一个Collector对象
+      - Collectors的toList，toMap和toCollection方法可以获得一个Collector对象
+  
+- 串行流与并行流
+
+  - 串行流：`.sequential()`
+
+  - 并行流：`.parallel()`
+
+    - 默认使用的线程池：ForkJoinPool.commonPoll
+
+      - 默认使用的线程数是当前CPU线程个数
+
+      - 修改默认的线程数
+
+        ```java
+        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "20");
+        ```
+
+    - 指定线程池（测试的时候注意：ForkJoinPool使用的是守护线程）
+
+      ```java
+      ForkJoinPool pool = new ForkJoinPool(20);
+      pool.submit(() -> InStream.range(1, 100).parallel());
+      ```
+
 
 
 
@@ -516,6 +538,129 @@ public ThreadPoolExecutor(int corePollSize, // 核心线程数
 
 
 ### jdk9
+
+#### FlowAPI
+
+- Flow 是一个 `final class` ，类内定义了几个接口
+
+  - `Publisher<T>`：发布者
+    - `void subscribe(Subscriber<? super T> subscriber)`：绑定订阅者
+  - `Subscriber<T>`：订阅者
+    - `void onSubscribe(Subscription subscription)`：绑定订阅关系
+    - `void onNext(T item)`：处理数据
+    - `void onError(Throwable throwable)`：处理数据时出现异常，会调用此方法
+    - `void onComplete()`：**发布者**关闭时调用
+  - `Subscription`：订阅关系：是一种合同，订阅者通过此向发布者按需索取数据
+    - `void request(long n)`：索取数据
+    - `void cancel()`：不再接收数据
+  - `Processor<T, R>`：处理器
+    - 该接口 `extends Subscriber<T>, Publisher<R>`：既是发布者又是订阅者，用于接收发布者的发布的数据（订阅者），又将数据发布给订阅者（发布者）
+    - T：接收数据类型
+    - R：发布数据类型
+
+- 实例
+
+  - 订阅者
+
+    ```java
+    public class IntegerSubscriber implements Flow.Subscriber<Integer> {
+        private Flow.Subscription subscription;
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
+            this.subscription = subscription;
+            // 请求一个数据
+            this.subscription.request(1);
+        }
+    
+        @Override
+        public void onNext(Integer item) {
+            System.out.printf("接收器接收到数据【%s】，并处理\n", item);
+            // 数据处理完后
+            this.subscription.request(1); // 再请求一个数据
+            //this.subscription.cancel(); // 已经达到目标，不再接收数据
+        }
+    
+        @Override
+        public void onError(Throwable throwable) {
+            System.out.println("处理数据时出现异常");
+            // 不再接收数据
+            this.subscription.cancel();
+        }
+    
+        @Override
+        public void onComplete() {
+            System.out.println("订阅者处理完成");
+        }
+    }
+    ```
+
+  - 处理器
+
+    ```java
+    public class IntegerProcessor extends SubmissionPublisher<Integer> implements Flow.Processor<Integer, Integer> {
+        private Flow.Subscription subscription;
+        private Predicate<Integer> predicate;
+    
+        public IntegerProcessor addPredicate(Predicate<Integer> predicate) {
+            this.predicate = predicate;
+            return this;
+        }
+    
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
+            this.subscription = subscription;
+            this.subscription.request(1);
+        }
+    
+        @Override
+        public void onNext(Integer item) {
+            System.out.printf("处理器得到数据数据【%s】\n", item);
+            if (predicate == null || predicate.test(item)) this.submit(item);
+            else System.out.printf("拦截数据【%s】\n", item);
+            this.subscription.request(1);
+        }
+    
+        @Override
+        public void onError(Throwable throwable) {
+            System.out.println("处理数据时出现异常");
+            this.subscription.cancel();
+        }
+    
+        @Override
+        public void onComplete() {
+            System.out.println("处理器处理完成");
+        }
+    }
+    ```
+
+  - 测试
+
+    ```java
+    Random random = new Random();
+    SubmissionPublisher<Integer> publisher = new SubmissionPublisher<>();
+    IntegerProcessor processor = new IntegerProcessor().addPredicate(integer -> integer > 5);
+    Flow.Subscriber<Integer> subscriber = new IntegerSubscriber();
+    
+    publisher.subscribe(processor);
+    processor.subscribe(subscriber);
+    for (int i = 0; i < 10; i++) {
+        publisher.submit(random.nextInt(10));
+    }
+    publisher.close();
+    Thread.currentThread().join(1000);
+    ```
+
+- 订阅者如何调节发布者生产数据的
+
+  ```java
+  for (int i = 0; i < 10; i++) {
+      // submit 是一个阻塞方法。
+      // 一旦订阅关系中存储的数据达到阈值（256），该方法就会阻塞，就无法继续生产数据
+      publisher.submit(random.nextInt(10));
+  }
+  ```
+
+
 
 #### 模块化系统
 
