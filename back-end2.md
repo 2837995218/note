@@ -802,13 +802,9 @@
                   new Thread(this, name).start();
                   isRun = true;
               }
-              //TimeUnit.SECONDS.sleep(1);
               
-              selector.wakeup();
               // 为什么不在warkup方法后注册事件，而是放在队列，直到下面run方法的循环中执行？
                  // 因为唤醒后，不能保证register一定在唤醒后的下一次循环内执行，而在下下一次循环又会被阻塞
-              // TimeUnit.SECONDS.sleep(1); // 可以这样模拟上述问题
-              // socketChannel.register(selector, SelectionKey.OP_READ);
               runnableQueue.add(() -> {
                   try {
                       socketChannel.register(selector, SelectionKey.OP_READ);
@@ -816,6 +812,9 @@
                       throw new RuntimeException(e);
                   }
               });
+              selector.wakeup();
+              // TimeUnit.SECONDS.sleep(1); // 可以这样模拟上述问题
+              // socketChannel.register(selector, SelectionKey.OP_READ);
           } catch (IOException | InterruptedException e) {
               throw new RuntimeException(e);
           }
@@ -876,8 +875,8 @@
       }
   }
   ```
-
   
+
 
 
 

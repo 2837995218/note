@@ -4387,6 +4387,444 @@ public class JedisConnectionFactory {
 
 
 
+# PostgreSQL
+
+
+
+## 部署
+
+### docker部署
+
+- 拉去镜像
+
+  ```shell
+  docker pull postgres
+  ```
+
+- 创建挂载目录
+
+  ```shell
+  mkdir -p  /var/docker-volume/postgres/data
+  ```
+
+- 构建容器
+
+  ```shell
+  docker run -it \
+  --name postgres \
+  --restart always \
+  -e POSTGRES_PASSWORD='root' \
+  -e ALLOW_IP_RANGE=0.0.0.0/0 \
+  -v /var/docker-volume/postgres/data:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  -d postgres
+  ```
+
+  - `-e ALLOW_IP_RANGE=0.0.0.0/0`：表示允许所有IP访问，如果不加，则非本机IP访问不了
+
+- 进入容器
+
+  ```java
+  docker exec -it postgres bash
+  ```
+
+
+
+### 登录
+
+- 切换用户
+
+  ```shell
+  su postgres
+  ```
+
+- 登录
+
+  ```shell
+  psql -h 服务器 -U 用户名 -d 数据库 -p 端口
+  
+  # 登录到 postgres 用户下的 postgres 数据库
+  psql 
+  ```
+
+  - `-d`：登录后默认进入的数据库。如果不指定数据库，以什么用户登录，就会进入与该用户名相同的数据库，若没有与该用户名相同的数据库，则报错 `FATAL:  database "用户名" does not exist`
+
+- 退出登录
+
+  ```shell
+  \q
+  ```
+
+- 常用命令
+  - `\password`：设置密码
+  - `\q`：退出
+  - `\h`：查看SQL帮助文档
+  - `\?`：查看命令帮助文档
+  - `\l`：列出所有数据库
+  - `\c <database_name>`：连接其他数据库
+  - `\d`：列出当前数据库的所有表格
+  - `\d <table_name>`：列出某一张表格的结构
+  - `\du`：列出所有用户
+
+
+
+### 配置文件
+
+- pg_hba.config：该配置文件用于配置允许访问的ip地址，访问的方式
+
+  ```ini
+  # TYPE  DATABASE        USER          ADDRESS             METHOD
+  
+  # "local" is for Unix domain socket connections only
+  local   all             all                               trust
+  # IPv4 local connections:
+  host    all             all           127.0.0.1/32        trust
+  # IPv6 local connections:
+  host    all             all           ::1/128             trust
+  # Allow replication connections from localhost, by a user with the
+  # replication privilege.
+  local   replication     all                               trust
+  host    replication     all           127.0.0.1/32        trust
+  host    replication     all           ::1/128             trust
+  host    all             all           all                 scram-sha-256
+  ```
+
+  - TYPE
+    - local：本地访问
+    - host：主机访问
+  - DATABASE：访问登录的数据库
+  - USER：访问登录的用户
+  - ADDRESS：访问的ip地址
+  - METHOD：访问的类型
+    - peer：用linux用户验证登录（type是local的那条可能使用）
+    - trust：不需要输入密码
+    - scram-sha-256、md5：需要输入密码（会把密码加密）
+
+
+
+## 基本使用
+
+### 数据库操作
+
+- 数据库操作
+  - 查看所有数据库：`\l`
+  - 查看数据库下所有的表：`\d 数据库`（`\d`：查看当前表）
+  - 创建数据库：`create database 数据库名;`
+  - 切换数据库：`\c 数据库名`
+  - 删除数据库：`drop database 数据库名;`
+
+
+
+### 数据类型
+
+- 数值类型
+
+  | 名       | 存储长度 | 描述       | 范围                                    |
+  | -------- | -------- | ---------- | --------------------------------------- |
+  | smallint | 2byte    | 小范围整数 | -2^15^ 到 2^15^-1（3.2万）              |
+  | interger | 4byte    | 常用整数   | -2^31^ 到 2^31^-1（21.47亿）            |
+  | bigint   | 8byte    | 大范围整数 | -2^61^ 到 2^61^-1（2.3*10^18^）         |
+  | decimal  | 可变长度 |            | 小数点前 2^17^ 位<br/>小数点后 2^14^ 位 |
+  | numeric  | 可变长度 |            | 小数点前 2^17^ 位<br/>小数点后 2^14^ 位 |
+  | real     | 4byte    | 可变精度   | 6 位十进制数字精度                      |
+  | double   | 8byte    | 可变精度   | 15 位十进制数字精度                     |
+  
+- 序列（可用于id）：
+
+  - smallserial：1-2^15^
+  - serial：1-2^31^
+  - bigserial：1-2^63^
+
+- 字符串类型
+
+  - char(size)，character(size)：固定长度字符串，size规定了存储的字符数，由右边的空格补齐
+  - varchar(size)，character varying(size)：可变长度字符串，size规定了需要存储的字符数
+  - text：可变长度字符串
+
+- 日期
+
+  - timestamp：日期和时间
+  - data：日期
+  - time：时间
+
+- 布尔值：boolean（true 或 false）
+
+- 货币数额：money
+
+- 其他：json、集合数据等
+
+
+
+### 表操作
+
+- 实例
+
+  ```sql
+  CREATE TABLE student(
+      id     SERIAL   PRIMARY KEY,
+      name   TEXT     NOT NULL,
+      age    INT      NOT NULL
+  );
+  
+  -- 注意：字段用双引号，字符串值用单引号
+  INSERT INTO student (name, age)
+  VALUES ('张三', 32);
+  
+  SELECT * FROM student;
+  
+  UPDATE student 
+  SET name='李四' 
+  WHERE id = 1; 
+  
+  DELETE FROM student
+  WHERE id = 1;
+  ```
+
+
+
+
+
+### Schema
+
+- 说明：PostgreSQL模式（Schema）可以看做是一个表的集合（又或者说是一个数据库下的文件夹）。一个模式可以包含视图、索引、数据类型、函数和操作符等。
+
+  相同的对象名可以被用于不同的模式中而不会出现冲突，例如在数据库mydb下创建了schema1和schema2两个模式，两个模式中，都可以创建mytable的表
+
+- 创建表时，不指定schema，默认在 public 这个模式中
+
+- 实例
+
+  ```sql
+  -- 创建schema
+  create schema myschema;
+  
+  -- 在schema下创建表
+  create table myschema.student (
+      id serial primary key,
+      name varchar(30) not null
+  );
+  
+  -- 删除schema
+  drop schema myschema;
+  
+  -- 删除一个模式，及其里面所有对象（表、视图、函数等）
+  drop schema myschema cascade;
+  ```
+
+
+
+
+
+### 备份数据
+
+- 单数据库
+
+  - PostgreSQL提供了 `pg_dump` 实用程序来简化备份单个数据库的过程。必须对要备份数据库具有读取权限的用户才能运行此命令
+
+  - 流程
+
+    - 以 postgres 用户身份登录
+
+      ```shell
+      su postgres
+      ```
+
+    - 通过运行以下命令将数据库中的内容转储到文件中。
+
+      ```shell
+      pg_dump 数据库名 > 数据库名.bak
+      ```
+
+    - 生成的备份文件 `数据库名.bak` 可以使用 scp 传输到另一台主机
+
+    - 恢复数据前须先创建一个新的数据库
+
+      ```sql
+      create database 数据库名;
+      ```
+
+    - 使用 `psql` 恢复数据
+
+      ```shell
+      psql test < 数据库名.bak
+      ```
+
+  - 备份数据格式的几种选择
+
+    - `*.bak`：压缩二进制格式
+    - `*.sql`：明文转储
+    - `*.tar`：tarball
+
+  - 注意：**默认情况下，PostgreSQL将忽略备份过程中发生的任何错误。**这可能导致备份不完整。要防止这种情况，可以使用 `-l` 选项运行 `pd_dump` 命令，这会将整个备份过程视为单个事务，这将在发生错误时阻止部分备份。
+
+- 所有数据库
+
+  - 由于 `pg dump` 一次只能备份一个数据库，因此它不会存储有关数据库角色或其他集群范围配置信息。要备份所有数据库，并存储此信息，可以使用 `pg_dumpall`
+
+    ```shell
+    pd_dumpall > pg_backup.bak
+    ```
+
+  - 还原
+
+    ```shell
+    psql -f pg_backup.bak postgres
+    ```
+
+
+
+
+
+### 用户
+
+- 创建用户
+
+  ```sql
+  create user 'username' with password 'password';
+  create user username with password 'password';
+  ```
+
+- 查看所有用户
+
+  ```shell
+  \du  # 查看所有用户
+  
+  # 登录时可使用
+  psql -U username -d 登录后进入的数据库
+  ```
+
+  ```sql
+  select * from pg_user; -- 查看所有的用户
+  #   usename  | usesysid | usecreatedb | usesuper | userepl | usebypassrls | passwd| ...
+  #  ----------+----------+-------------+----------+---------+--------------+-------+-----
+  #   postgres | 10       | t           | t        | t       | t            | ***** | ...
+  #   ......
+  
+  select * from pg_roles; -- 查看所有的角色，也可以查看到用户
+  ```
+
+- 修改用户密码
+
+  ```sql
+  alter user username with password 'password';
+  ```
+
+- 数据库授权
+
+  ```sql
+  -- 授予了对数据库的所有权限，无法操作数据库里原有的表
+     -- ？不知道有哪些权限。不授权，用户也可以连接，创建新表；授权了，用户也不能查看数据库中原有的表
+  grant all privileges on database dbname to username;
+  
+  -- 注意，该SQL语句必须在所要操作的数据库里执行
+  grant all privileges
+  on all tables
+  in schema public -- 默认创建的表都在public中
+  to username;
+  ```
+
+- 移出指定账户指定数据库的权限
+
+  ```sql
+  revoke all privileges
+  on database mydb
+  from username;
+  
+  revoke all privileges
+  on all tables
+  in schema public
+  from username;
+  ```
+
+- 删除用户（删除前可能需要移出该用户所有权限 和 该用户创建的所有的表）
+
+  ```sql
+  drop user username;
+  ```
+
+
+
+### 角色
+
+- 创建角色
+
+  ```sql
+  CREATE ROLE rolename;                  -- 默认不带有登录属性（不能登录）
+  create role eli with login cretedb;    -- 创建带属性的角色，多个权限空格分隔
+  alter role eli with password 'eli';    -- 添加属性
+  drop role eli;                         -- 删除角色
+  
+  CREATE USER username;                  -- 默认带有登录属性
+  ```
+
+- 查看
+
+  ```sql
+  create role eli;
+  
+  \du  # 查看用户及角色（pg并没有过于区分用户和角色）
+  
+  #  Role name |                 List of roles Attributes                   | Member of
+  # -----------+------------------------------------------------------------+----------
+  #   postgres | superuser, Create role, Create DB, Replication, Bypass RLS | {}
+  #   eli      | Cantnot login                                              | {}
+  
+  
+  select * from pg_roles; -- 可以查看到用户，也可以查看到角色
+  ```
+
+- 角色属性
+
+  | 属性            | 说明                                                     |
+  | --------------- | -------------------------------------------------------- |
+  | login           | 只有具有LOGIN属性的角色可以用做数据库连接的初始角色名    |
+  | superuser       | 超级用户                                                 |
+  | createdb        | 创建数据库的权力                                         |
+  | createrole      | 允许其创建和删除其他普通的用户角色（超级用户除外）       |
+  | replication     | 做流复制时用到了一个用户属性，一般单独设定               |
+  | password '密码' | 在登录时要求指定密码才会起作用（登录时需要输密码）       |
+  | iherit          | 用户组对组员的一个继承标志，成员可以继承用户组的权限特性 |
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Hadoop
 
 
