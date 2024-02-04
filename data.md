@@ -6,6 +6,8 @@
 
 ### 部署
 
+> [常见的数据库管理系统排名](https://db-engines.com/en/ranking_trend)
+
 #### 常规部署
 
 - SQLyog连接mysql8报错
@@ -184,7 +186,14 @@
 
 
 
-## 表语法
+## 语法
+
+- SQL分类
+  - **DDL**(Data Definition Language、数据定义语言)：这些语句定义了不同的数据库、表、视图、索引等数据库对象，还可以用来创建、删除、修改数据库和数据表的结构。主要关键词：`CREATE`、`DROP`、`ALTER`、`REANME`、`TRUNCATE`等
+  - **DML**（Data Manipulation Language、数据操作语言）：用于添加、删除、更新和查询数据库记录，并检查数据完整性。主要关键词：`SELECT`、`INSERT`、`DELETE`、`UPDATE`等
+    - DQL（数据查询语言）：主要关键词：`SELECT`等
+  - **DCL**（Data Control Language、数据控制语言）：用于定义数据库、表、字段、用户的访问权限和安全级别。主要关键词：`GRANT`、`REVOKE`、`COMMIT`、`ROLLBACK`、`SAVEPOINT`
+    - TCL（Transaction Control Language、事务控制语言）：主要关键词：`COMMIT`、`ROLLBACK`
 
 ### SELECT
 
@@ -199,13 +208,16 @@
   
   -- 为结果集中的字段取别名
   -- as 可以省略
-  -- 列的别名可用用""引起来，不能用''
+  -- 列的别名可以不用引号引起来，也可以用""，但不能用''
   SELECT [字段] AS [别名] FROM [表名];
   
   -- 结果集去重
-  SELECT DISTINCT [字段] FROM [表名];
+  SELECT DISTINCT [去重字段] FROM [表名]; -- 对一个字段去重
+  SELECT [字段], DISTINCT [去重字段] FROM [表名]; -- 错误
+  SELECT DISTINCT [去重字段1], [去重字段2] FROM [表名]; -- 对整体结果集去重
   
-  -- 着重号 ``
+  
+  -- 着重号 ``（Oracle 不能使用着重号）
   SELECT * FROM `order`;
   
   -- 常数
@@ -278,11 +290,13 @@
 
   ```sql
   -- SELECT 中出现的非聚合函数字段必须声明在GROUP BY中
-  SELECT [查询字段] FROM [表名] GROUP BY [分组字段];
+  SELECT [查询字段] FROM [表名] 
+  WHERE -- ( / HAVING)
+  GROUP BY [分组字段];
   ```
-
-  - 如果==过滤条件==中使用了聚合函数，则必须使用HAVING来替换WHERE
-  - 如果使用HAVING来描述过滤条件，则 滤条件用到的字段是分组字段中声明的 或 过滤条件用到的字段是聚合函数字段 
+  
+  - 如果==过滤条件==中使用了聚合函数（如：sum、avg等），则必须使用HAVING来替换WHERE
+  - 如果使用HAVING来描述过滤条件，则 过滤条件用到的字段是分组字段中声明的 或 过滤条件用到的字段是聚合函数字段 
   - HAVING必须使用在GROUP BY后面
   - WHERE的执行效率更高
 
@@ -291,6 +305,9 @@
 #### 多表查询
 
 ```sql
+-- 如果查询语句中出现了多个表中都存在的字段，则必须指明此字段所在的表
+-- 从sql优化的角度，建议多表查询时，每个字段前都指明其所在的表
+
 -- SQL92
 SELECT [字段1], [表名].[字段2]， [...]
 FROM [表1], [表2], [...]
@@ -300,50 +317,74 @@ WHERE [连接关系1] AND [连接关系2] AND [...]
 SELECT [字段1], [表名].[字段2]， [...]
 FROM [表1] JOIN [表2]
 ON [连接关系1]
-JOIN [表2]
+JOIN [表3]
 ON [连接关系2]
 ...
 
 -- 可以在 FROM 中给表起别名，而在 SELECT 和 WHERE 中能且只能使用别名
+SELECT e.employee_id, d.department_name
+FROM employees e, departments d
+WHERE e.department_id = d.department_id;
 ```
 
-- 多表查询的分类
+- **多表查询的分类**
 
   - 等值连接、非等值连接
+
+    ```sql
+    select e.employee_name "姓名", e.salary "工资", s.salary_level "工资水平"
+    from employees e, salary_level s
+    where e.`salary` between s.`sal_lowest` and s.`sal_highest`;
+    ```
 
   - 自连接、非自连接
 
     - 自连接：当做非自连接使用
 
   - 内连接、外连接
-
-    - 内连接：合并具有同一列的两个以上的表的行，结果集中不包含一个表或另一个表匹配的行
-
-    - 外连接：合并具有同一列的两个以上的表的行，结果集中除了包含一个表与另一个表匹配的行之外，还查询到了左表 或 右表中不匹配的行
-
-      ```sql
-      -- SQL92 外连接 (mysql不支持)
-      SELECT e.employee_id, d.department_name
-      FROM employees e, departments d
-      WHERE e.department_id = d.department_id(+);
-      
-      -- SQL 99 外连接 (mysql不支持满外连接)
-      -- 外连接 OUTER 可以省略，右外连接用 RIGHT，满外连接用 FULL
-      SELECT e.employee_id, d.department_name
-      FROM employees e LEFT OUTER JOIN departments d
-      ON e.department_id = d.department_id;
-      ```
-
+  
+    ```sql
+    -- 内连接
+    SELECT e.employee_id, d.department_name
+    FROM employees e, departments d
+    WHERE e.department_id = d.department_id;
+    
+    SELECT e.employee_id, d.department_name
+    FROM employees e
+    INNER JOIN departments d                 -- INNER 可以省略
+    ON e.department_id = d.department_id;
+    ```
+    
+    - 内连接：以上面sql为例，若公司有100人，有1人尚未分配部门（该职员的部门id为null），则该结果集只能查询到99条数据
+    - 外连接（以employees为左表、departments为右表）
+      - 左外连接：若存在有人尚未分配部门（该职员的部门id为null），使用左外连接，可以查询到所有的职员的部门信息（未分配的那个人的部门信息为null）
+      - 右外连接：若存在有空置的部门，右外连接可以查询到所有部门
+      - 满外连接
+    
+    ```sql
+    -- SQL92 外连接 (mysql不支持)
+    SELECT e.employee_id, d.department_name
+    FROM employees e, departments d
+    WHERE e.department_id = d.department_id(+);
+    
+    -- SQL 99 外连接 (mysql不支持满外连接)
+    -- 外连接 OUTER 可以省略，右外连接用 RIGHT，满外连接用 FULL
+    SELECT e.employee_id, d.department_name
+    FROM employees e LEFT OUTER JOIN departments d  -- OUTER 可以省略
+    ON e.department_id = d.department_id;
+    ```
+    
     ![sqljoin](D:\picture\typora\mysql\sqljoin.jpeg)
 
 
 
-- UNION 合并SELECT结果集
+- UNION 合并多个SELECT结果集
 
   - UNION：会执行去重操作
   - UNION ALL：不会执行去重操作
-  - 结论：如果明确知道合并数据后的结果数据不存在重复数据，或者不需要去除重复数据，则尽量使用UNION ALL语句，以提高效率
-  - 可以使用 UNION 或 UNION ALL 实现mysql的满外连接
+  - 说明
+    - 结论：如果明确知道合并数据后的结果数据不存在重复数据，或者不需要去除重复数据，则**尽量使用UNION ALL语句，以提高效率**
+    - 可以使用 UNION 或 UNION ALL 实现mysql的满外连接（用UNION ALL时，注意两个select查询**正好**互补，即使用上图中左上角和右中的两个select语句）
 
 - SQL 99 特性
 
@@ -368,20 +409,20 @@ ON [连接关系2]
 
 - 数值函数
 
-  | 函数                  | 用法                           |
-  | --------------------- | ------------------------------ |
-  | ABS(X)                | 返回x的绝对值                  |
-  | SIGN(X)               | 返回x的符号，正数为1，负数为-1 |
-  | CEIL(X)               | 向上取整                       |
-  | FLOOR(X)              | 向下取整                       |
-  | LEAST(e1, e2, ...)    | 取最小值                       |
-  | GREATEST(e1, e2, ...) | 取最大值                       |
-  | MOD(x, y)             | 返回x除以y后的余数             |
-  | RAND()                | 返回0-1的随机数                |
-  | RAND(x)               | 返回0-1的随机数，x作为种子值   |
-  | ROUND(x)              | 对x值四舍五入                  |
-  | ROUND(x, y)           | 保留y位小数，四舍五入          |
-  | TRUNCATE(x, y)        | 将x从小数点后y位开始截断       |
+  | 函数                  | 用法                                                         |
+  | --------------------- | ------------------------------------------------------------ |
+  | ABS(X)                | 返回x的绝对值                                                |
+  | SIGN(X)               | 返回x的符号，正数为1，负数为-1                               |
+  | CEIL(X)               | 向上取整                                                     |
+  | FLOOR(X)              | 向下取整                                                     |
+  | LEAST(e1, e2, ...)    | 取最小值                                                     |
+  | GREATEST(e1, e2, ...) | 取最大值                                                     |
+  | MOD(x, y)             | 返回x除以y后的余数                                           |
+  | RAND()                | 返回0-1的随机数                                              |
+  | RAND(x)               | 返回0-1的随机数，x作为种子值<br/>多个rand()使用同一个种子值，获得的随机数相同 |
+  | ROUND(x)              | 对x值四舍五入                                                |
+  | ROUND(x, y)           | 保留y位小数，四舍五入                                        |
+  | TRUNCATE(x, y)        | 将x从小数点后y位开始截断                                     |
 
 - 字符串函数
 
@@ -421,8 +462,37 @@ ON [连接关系2]
   | CASE WHEN 条件1 THEN 结果1<br/>WHEN 条件2 THEN 结果2<br/>...<br/>ELSE 结果n END | 相当于if...else if...else                      |
   | CASE expr WHEN 常量1 THEN 值1<br/>WHEN 常量2 THEN 值2<br/>...<br/>ELSE 值n END | 相当于switch...case...default                  |
 
+  ```sql
+  select emp_name, salary, 
+  if(merit_pay is null , 0, merit_pay)                      "绩效",
+  ifnull(department_id, "其他部门")                          "所在部门",
+  case when salary > 15000 then '高工资'
+       when salary between 6000 and 15000 then '中等工资'
+       else '低工资' end                                     "工资水平"
+  FROM employees;
+  ```
+
 - 加密解密函数
 
+  | 函数                         | 用法                                |
+  | ---------------------------- | ----------------------------------- |
+  | PASSWORD(str)                | 41位长的字符串，mysql8.0弃用        |
+  | MD5(str)                     | 不可逆                              |
+  | SHA(str)                     | 不可逆，sha比md5更安全              |
+  | ENCODE(value, password_seed) | encode("mypw", "123")，mysql8.0弃用 |
+  | DECODE(value, password_seed) | decode("mypw", "123")，mysql8.0弃用 |
+
+- 信息函数
+
+  | 函数                                                       | 说明                                              |
+  | ---------------------------------------------------------- | ------------------------------------------------- |
+  | VERSION()                                                  | 版本                                              |
+  | CONNECTION_ID()                                            | 连接数                                            |
+  | DATABASE(), SCHEMA()                                       | 命令行当前所在数据库                              |
+  | USER(), CURRENT_USER(), <br/>SYSTEM_USER(), SESSION_USER() | 当前连接的用户名<br/>结果格式："用户名@主机名"    |
+  | CHARSET(value)                                             | 返回字符串value自变量的字符集，如："utf8mb3"      |
+  | COLLATION(value)                                           | 返回字符串value的比较规则，如："utf8_general_cli" |
+  
 - 聚合函数
 
   | 函数                 | 用法                                     |
@@ -431,6 +501,17 @@ ON [连接关系2]
   | SUM(字段)            | 求和                                     |
   | MAX(字段)、MIN(字段) | 最大值、最小值（适用于字符串和日期）     |
   | COUNT(字段)          | 指定字段在查询结构中的个数，不计算null值 |
+
+- 其他函数
+
+  | 函数                          | 用法                                                 |
+  | ----------------------------- | ---------------------------------------------------- |
+  | FORMAT(value, n)              | 对数字value，四舍五入保留的小数点后n位               |
+  | CONV(value, from, to)         | 将value的值进行不同进制的转化                        |
+  | INET_ATON(ipvalue)            | 将以点分隔的IP地址转化成一个数字                     |
+  | INET_NTOA(value)              | 将数字形式的IP地址转成以点分隔的IP地址               |
+  | BENCHMARK(n, expr)            | 将表达式expr重复执行n次<br/>可用于测试expr的耗费时间 |
+  | CONVER(value USING char_code) | 将value所使用的字符编码修改位char_code               |
 
   
 
@@ -542,7 +623,7 @@ ON [连接关系2]
 - 创建数据库
 
   ```sql
-  CREATE DATEBASE [数据库名];
+  CREATE DATABASE [数据库名];
   CREATE DATABASE [数据库名] CHARCTER SET '字符集';
   CREATE DATABASE IF NOT EXISTS [数据库名];
   ```
@@ -601,11 +682,11 @@ ON [连接关系2]
   ALTER TABLE [表名] ADD [字段名] [数据类型] FIRST;
   ALTER TABLE [表名] ADD [字段名] [数据类型] AFTER [已存在的字段名];
   -- 修改字段
-  ALERT TABLE [表名] MODIFY [字段] [类型];
-  ALERT TABLE [表名] MODIFY [字段] [类型] [默认值];
-  ALERT TABLE [表名] CHANGE [原字段] [新字段] [类型];
+  ALTER TABLE [表名] MODIFY [字段] [类型];
+  ALTER TABLE [表名] MODIFY [字段] [类型] [默认值];
+  ALTER TABLE [表名] CHANGE [原字段] [新字段] [类型];
   -- 删除字段
-  ALERT TABLE [表名] DROP COLUMN [字段];
+  ALTER TABLE [表名] DROP COLUMN [字段];
   -- 重命名表
   ALTER TABLE [原表名] RENAME TO [新表名];
   RENAME TABLE [原表名] TO [新表名];
@@ -704,7 +785,7 @@ ON [连接关系2]
   | TINYINT     | 1    | -128~127     | 0~2^8-1        |
   | SMALLINT    | 2    | -32768~32767 | 0~2^16-1       |
   | MEDIUMING   | 3    |              | 0~2^24-1       |
-  | INT/INTEGER | 4    |              | 0~2^32-1       |
+  | INT/INTEGER | 4    | -21亿~21亿   | 0~2^32-1       |
   | BIGINT      | 8    |              | 0~2^64-1       |
 
   - INT(M) 与 ZEROFILL
@@ -758,71 +839,85 @@ ON [连接关系2]
 
 - 文本字符串类型
 
-  | 文本字符串类型 | 值的长度 | 长度范围       | 占用的存储空间 |
-  | -------------- | -------- | -------------- | -------------- |
-  | CHAR(M)        | M        | 0<=M<=255      | M个字节        |
-  | VARCHAR(M)     | M        | 0<=M<=65535    | M+1个字节      |
-  | TINYTEXT       | L        | 0<=L<=255      | L+1个字节      |
-  | TEXT           | L        | 0<=L<=65535    | L+2个字节      |
-  | MEDIUMTEXT     | L        | 0<=L<=16777215 | L+3个字节      |
-  | LONGTEXT       | L        | 0<=L<=大约4GB  | L+4个字节      |
+  | 文本字符串类型 | 最大存储字节数                   |
+  | -------------- | -------------------------------- |
+  | CHAR(M)        | 255个字符 * 每个字符占用的字节数 |
+  | VARCHAR(M)     | 64KB                             |
+  | TINYTEXT       | 255                              |
+  | TEXT           | 64KB                             |
+  | MEDIUMTEXT     | 16MB                             |
+  | LONGTEXT       | 大约4GB                          |
 
-  - CHAR(M)：固定长度，若数据的实际长度比声明时的长度小，则会在右侧填充空格以达到指定长度。而检索该数据时，则会去除尾部的空格。适用于存储uuid等固定长度的内容
+  - CHAR(n)
+    - 固定长度字符串，n 表示要存储的最大字符数（不是字节），范围( 0 ~ 255 )
+    - 固定长度，若数据的实际长度比声明时的长度小，则会在右侧填充空格以达到指定长度。而检索该数据时，则会去除尾部的空格。适用于存储uuid等固定长度的内容
+  - varchar (n)
+    - 长度表示位：varchar(255)需要一个字节记录字段的长度 ，256以上需要两个字节记录长度。
+    - VARCHAR的有效最大长度取决于**最大行大小**（65535字节，该行所有值之间共享）和所使用的字符集。
+  - TEXT
+    - mysql不会在服务器内存中缓存text数据，而是从磁盘中读取；
+    - mysql插入或查询时不会的text数据尾部空格进行任何处理
+    - text的存储独立于数据行之前（行内存储了硬盘上真正内容的地址），因此不受**最大行大小**的限制
 
-  - ENUM类型
+- ENUM类型
 
-    - 定义，字母忽略大小写
-
-      ```sql
-      CREATE TABLE test_enum(
-      	season ENUM('春', '夏', '秋', '冬', 'unknow')
-      );
-      INSERT INTO test_enum VALUES ('春'); -- 只能存入设定值中的一个
-      ```
-
-  - SET类型
-
-    - 定义
-
-      ```sql
-      CREATE TABLE test_set(
-      	s SET('A', 'B', 'C')
-      );
-      ```
-
-    - 可以存入多个设定值
-
-    - 插入重复的SET类型成员时，MySQL会自动删除重复的成员 
-
-  - 二进制字符串类型
-
-    - BINARY 与 VARBINARY
-
-      - BINARY(M)：固定长度，0<=M<=255，M个字节
-      - VARBINARY(M)：可变长度，0<=M<=65535，M+1个字节
-
-    - BLOB：可以存储大的二进制对象，如视频、音频和图片等
-
-      | 二进制字符串类型 | 值的长度 | 长度范围   | 占用空间  |
-      | ---------------- | -------- | ---------- | --------- |
-      | TINYBLOB         | L        | 0<=L<=255  | L+1个字节 |
-      | BLOB             | L        | 0<=L<=64KB | L+2个字节 |
-      | MEDIUMBLOB       | L        | 0<=L<=16MB | L+3个字节 |
-      | LONGBLOB         | L        | 0<=L<=4GB  | L+4个字节 |
-
-  - JSON类型
+  - 定义，字母忽略大小写
 
     ```sql
-    CREATE TABLE test_json(
-    	js json
+    CREATE TABLE test_enum(
+    	season ENUM('春', '夏', '秋', '冬', 'unknow')
     );
-    
-    INSERT INTO test_json (js)
-    VALUES ('{"name": "张三", "age": 18, "address": {"province": "安徽", "city": "合肥"}}')
-    
-    SELECT js -> '$.name' AS NAME, js -> "$.address.city" AS city
-    FROM test_json;
+    INSERT INTO test_enum VALUES ('春'); -- 只能存入设定值中的一个
     ```
+    
+  - 底层使用类似于整数索引的格式存储，最多可包含65535个不同的值
+
+- SET类型
+
+  - 定义
+
+    ```sql
+    CREATE TABLE test_set(
+    	s SET('A', 'B', 'C') -- 最多64个
+    );
+    INSERT INTO test_set VALUES (''), ('A'), ('A', 'B')
+    ```
+
+  - 可以存入多个设定值
+
+  - 一个集合中最多只能包含64个不同的成员
+
+  - 插入重复的SET类型成员时，MySQL会自动删除重复的成员 
+
+- 二进制字符串类型
+
+  - BINARY 与 VARBINARY
+
+    - BINARY(M)：固定长度，0<=M<=255，M个字节
+    - VARBINARY(M)：可变长度，0<=M<=65535，M+1个字节
+
+  - BLOB：可以存储大的二进制对象，如视频、音频和图片等（和text类型类似：mysql既不会缓存blob数据，也不受**最大行大小**的限制）
+
+    | 二进制字符串类型 | 值的长度 | 长度范围   | 占用空间  |
+    | ---------------- | -------- | ---------- | --------- |
+    | TINYBLOB         | L        | 0<=L<=255  | L+1个字节 |
+    | BLOB             | L        | 0<=L<=64KB | L+2个字节 |
+    | MEDIUMBLOB       | L        | 0<=L<=16MB | L+3个字节 |
+    | LONGBLOB         | L        | 0<=L<=4GB  | L+4个字节 |
+
+- JSON类型
+
+  ```sql
+  CREATE TABLE test_json(
+  	js json
+  );
+  
+  INSERT INTO test_json (js)
+  VALUES ('{"name": "张三", "age": 18, "address": {"province": "安徽", "city": "合肥"}}')
+  
+  SELECT js -> '$.name' AS NAME, js -> "$.address.city" AS city
+  FROM test_json;
+  ```
 
 - 选择建议
 
@@ -931,9 +1026,8 @@ ON [连接关系2]
     - Set default：父表有变更时，子表将外键列设置为一个默认的值，但Innodb不能识别
     - 对于外键约束，一般使用：ON UPDATE CASCADE ON DELETE RESTRICT
 
-  - 阿里开发规范
+  - 阿里开发规范：为什么**不得使用外键与级联**，一切外键概念必须在应用层解决
 
-    - 不得使用外键与级联，一切外键概念必须在应用层解决
     - 只适用于单机低并发，不适用于分布式、高并发集群
     - 父表改动导致子表改动为级联，级联更新是强阻塞，存在数据库更新风暴的风险
     - 外键影响数据库的插入速度
