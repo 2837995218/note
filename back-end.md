@@ -7906,10 +7906,22 @@ CAP定理指出，对于任何分布式系统，这三个属性不能同时满�
 - 镜像操作
 
   - 镜像拉取：docker pull
+
   - 查看镜像：docker images
+
+  - 查看某一镜像信息：docker image inspect 镜像名:版本
+
+    ```shell
+    # 查看某一镜像lastest版本的真正版本
+    docker image inspect 镜像名:lastest | grep -i version
+    ```
+
   - 删除镜像：docker rmi
+
   - 构建镜像：docker build
+
   - 保存镜像：docker save
+
   - 加载镜像：docker load
 
 - 容器状态
@@ -7958,13 +7970,14 @@ CAP定理指出，对于任何分布式系统，这三个属性不能同时满�
 
     ```shell
     docker run --name mysql_5.7 \
-    	-e MYSQL_ROOT_PASSWORD=root \
+     # --restart always \                # 自动启动
+    	-e MYSQL_ROOT_PASSWORD=root \    # 配置第三方软件参数
     	-p 3306:3306 \
     	-v /var/docker-volume/mysql/conf/hmy.cnf:/etc/mysql/conf.d/hmy.cnf \
     	-v /var/docker-volume/mysql/data:/var/lib/mysql \
     	-d mysql:5.7
     ```
-
+    
     
 
 #### 自定义镜像
@@ -8026,7 +8039,7 @@ CAP定理指出，对于任何分布式系统，这三个属性不能同时满�
 
 #### 运行镜像
 
-- ubuntu：docker run -itd --name ubuntu ubuntu
+- ubuntu：`docker run -itd --name ubuntu ubuntu`
 
 - redis
   

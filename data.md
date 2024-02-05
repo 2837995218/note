@@ -188,6 +188,48 @@
 
 ## 语法
 
+- 练习
+
+  ```sql
+  -- 部门表
+  create table dept(
+  	dept_id int primary key auto_increment, -- 部门编号
+  	dept_name varchar(14) ,	  -- 部门名字
+  	location varchar(13)   -- 地址
+  ) ;
+  -- 员工表
+  create table emp(
+  	emp_id int primary key auto_increment,-- 员工编号
+  	emp_name varchar(10), -- 员工姓名										-
+  	job varchar(9),	-- 岗位
+  	manger_id int,	 -- 直接领导编号
+  	hiredate date, -- 雇佣日期，入职日期
+  	salary int, -- 薪水
+  	comm int,  -- 提成
+  	dept_id int -- 部门编号
+  );
+  insert into dept values(10,'财务部','北京');
+  insert into dept values(20,'研发部','上海');
+  insert into dept values(30,'销售部','广州');
+  insert into dept values(40,'行政部','深圳');
+  insert into emp values(7369,'刘一','职员',7902,'1980-12-17',800,null,20);
+  insert into emp values(7499,'陈二','推销员',7698,'1981-02-20',1600,300,30);
+  insert into emp values(7521,'张三','推销员',7698,'1981-02-22',1250,500,30);
+  insert into emp values(7566,'李四','经理',7839,'1981-04-02',2975,null,20);
+  insert into emp values(7654,'王五','推销员',7698,'1981-09-28',1250,1400,30);
+  insert into emp values(7698,'赵六','经理',7839,'1981-05-01',2850,null,30);
+  insert into emp values(7782,'孙七','经理',7839,'1981-06-09',2450,null,10);
+  insert into emp values(7788,'周八','分析师',7566,'1987-06-13',3000,null,20);
+  insert into emp values(7839,'吴九','总裁',null,'1981-11-17',5000,null,10);
+  insert into emp values(7844,'郑十','推销员',7698,'1981-09-08',1500,0,30);
+  insert into emp values(7876,'郭十一','职员',7788,'1987-06-13',1100,null,20);
+  insert into emp values(7900,'钱多多','职员',7698,'1981-12-03',950,null,30);
+  insert into emp values(7902,'大锦鲤','分析师',7566,'1981-12-03',3000,null,20);
+  insert into emp values(7934,'木有钱','职员',7782,'1983-01-23',1300,null,10);
+  insert into emp values(7941,'挣大钱', null,7788,'1983-01-23',1300,null,null);
+  insert into emp values(7942,'小乌龟','推销员',7782,'1984-01-23',null,null,null);
+  ```
+
 - SQL分类
   - **DDL**(Data Definition Language、数据定义语言)：这些语句定义了不同的数据库、表、视图、索引等数据库对象，还可以用来创建、删除、修改数据库和数据表的结构。主要关键词：`CREATE`、`DROP`、`ALTER`、`REANME`、`TRUNCATE`等
   - **DML**（Data Manipulation Language、数据操作语言）：用于添加、删除、更新和查询数据库记录，并检查数据完整性。主要关键词：`SELECT`、`INSERT`、`DELETE`、`UPDATE`等
@@ -291,13 +333,30 @@
   ```sql
   -- SELECT 中出现的非聚合函数字段必须声明在GROUP BY中
   SELECT [查询字段] FROM [表名] 
-  WHERE -- ( / HAVING)
+  WHERE -- where
   GROUP BY [分组字段];
+  -- Having 在Group后
   ```
   
   - 如果==过滤条件==中使用了聚合函数（如：sum、avg等），则必须使用HAVING来替换WHERE
+  
   - 如果使用HAVING来描述过滤条件，则 过滤条件用到的字段是分组字段中声明的 或 过滤条件用到的字段是聚合函数字段 
+  
+    ```sql
+    -- 查询各个部门中最高工资比10000高的部门信息
+    SELECT d.`dept_id`, d.`dept_name`, AVG(e.`salary`)
+    FROM emp e
+    JOIN dept d
+    ON e.`dept_id` = d.`dept_id` 
+    GROUP BY e.`dept_id`
+    HAVING AVG(e.`salary`) >= 5000;
+    
+    -- empolyees表结构
+    | 员工id | 员工姓名 | 员工工资 | 所在部门id |
+    ```
+  
   - HAVING必须使用在GROUP BY后面
+  
   - WHERE的执行效率更高
 
 
@@ -384,7 +443,7 @@ WHERE e.department_id = d.department_id;
   - UNION ALL：不会执行去重操作
   - 说明
     - 结论：如果明确知道合并数据后的结果数据不存在重复数据，或者不需要去除重复数据，则**尽量使用UNION ALL语句，以提高效率**
-    - 可以使用 UNION 或 UNION ALL 实现mysql的满外连接（用UNION ALL时，注意两个select查询**正好**互补，即使用上图中左上角和右中的两个select语句）
+    - 可以使用 UNION 或 UNION ALL 实现mysql的满外连接（用UNION ALL时，注意两个select查询**正好**互补，如使用上图中左上角和右中的两个select语句）
 
 - SQL 99 特性
 
@@ -576,43 +635,135 @@ WHERE e.department_id = d.department_id;
   ```
 
   - EXISTS：关联子查询存在满足条件的行则返回true
+  
+    ```sql
+    SELECT d.dept_id, d.dept_name, 
+           EXISTS (SELECT emp.`emp_id` 
+                   FROM emp 
+                   WHERE emp.`dept_id` = d.dept_id) 该部门是否有员工
+    FROM dept d;
+    ```
+  
   - NOT EXISTS：
 
 
 
-#### 综合案例
+#### ※ 综合案例
 
-- emp_sal表结构
+```sql
+-- 部门表
+create table dept(
+	dept_id int primary key auto_increment, -- 部门编号
+	dept_name varchar(14) ,	  -- 部门名字
+	location varchar(13)   -- 地址
+) ;
+-- 员工表
+create table emp(
+	emp_id int primary key auto_increment,-- 员工编号
+	emp_name varchar(10), -- 员工姓名										-
+	job varchar(9),	-- 岗位
+	manger_id int,	 -- 直接领导编号
+	hiredate date, -- 雇佣日期，入职日期
+	salary int, -- 薪水
+	comm int,  -- 提成
+	dept_id int -- 部门编号
+);
+insert into dept values(10,'财务部','北京');
+insert into dept values(20,'研发部','上海');
+insert into dept values(30,'销售部','广州');
+insert into dept values(40,'行政部','深圳');
+insert into emp values(7369,'刘一','职员',7902,'1980-12-17',800,null,20);
+insert into emp values(7499,'陈二','推销员',7698,'1981-02-20',1600,300,30);
+insert into emp values(7521,'张三','推销员',7698,'1981-02-22',1250,500,30);
+insert into emp values(7566,'李四','经理',7839,'1981-04-02',2975,null,20);
+insert into emp values(7654,'王五','推销员',7698,'1981-09-28',1250,1400,30);
+insert into emp values(7698,'赵六','经理',7839,'1981-05-01',2850,null,30);
+insert into emp values(7782,'孙七','经理',7839,'1981-06-09',2450,null,10);
+insert into emp values(7788,'周八','分析师',7566,'1987-06-13',3000,null,20);
+insert into emp values(7839,'吴九','总裁',null,'1981-11-17',5000,null,10);
+insert into emp values(7844,'郑十','推销员',7698,'1981-09-08',1500,0,30);
+insert into emp values(7876,'郭十一','职员',7788,'1987-06-13',1100,null,20);
+insert into emp values(7900,'钱多多','职员',7698,'1981-12-03',950,null,30);
+insert into emp values(7902,'大锦鲤','分析师',7566,'1981-12-03',3000,null,20);
+insert into emp values(7934,'木有钱','职员',7782,'1983-01-23',1300,null,10);
+insert into emp values(7941,'挣大钱', null,7788,'1983-01-23',1300,null,null);
+insert into emp values(7942,'小乌龟','推销员',7782,'1984-01-23',null,null,null);
+```
 
-  | id   | name | salary |
-  | ---- | ---- | ------ |
-  | 1    | 张三 | 4000   |
+- 练习1
 
-- emp_occ表结构
+  - 要求
 
-  | id   | name | occupation |
-  | ---- | ---- | ---------- |
-  | 1    | 张三 | 社畜       |
+    - 查询 员工姓名、所在部门、员工工资
+    - 查询 【该员工所在部门的平均工资、】该员工是否达到该部门的平均工资
 
-- 查询员工姓名、职位、工资、工资是否达到该员工对应职位的平均值
+  - 实例
 
-  ```sql
-  SELECT  emp_sal.`name` "姓名", emp_occ.`occupation` "职位", salary "工资", 
-  CASE WHEN salary >= 
-  (SELECT 职业平均工资 FROM 
-  	(SELECT occupation, AVG(salary) "职业平均工资" FROM 
-  		(SELECT emp_sal.name, emp_occ.`occupation`, salary 
-           FROM emp_sal JOIN emp_occ ON emp_sal.name = emp_occ.`name`) tb1
-  	GROUP BY occupation) 
-   tb2 WHERE occupation = 职位)  
-  THEN '是'
-  ELSE '否' END "是否达到该职位平均值"
-  FROM emp_sal
-  JOIN emp_occ
-  ON emp_sal.`name` = emp_occ.`name`
-  ```
+    ```sql
+    SELECT e.`emp_name` 姓名, d.`dept_name` 所在部门, e.`salary` 工资,
+    CASE WHEN e.salary >= (SELECT AVG(emp.`salary`)
+                           FROM emp
+                           WHERE emp.`dept_id` = e.dept_id
+                           GROUP BY emp.`dept_id`) THEN '是'
+    ELSE '否' END 是否达到该部门平均工资
+    FROM emp e
+    LEFT JOIN dept d
+    ON e.`dept_id` = d.`dept_id`;
+    
+    
+    SELECT e.`emp_name` 姓名, d.`dept_name` 所在部门, e.`salary` 工资,
+    t1.avg_salary 部门平均工资,
+    CASE WHEN e.salary >= t1.avg_salary THEN '是'
+    ELSE '否' END 是否达到该部门平均工资
+    FROM emp e
+    LEFT JOIN dept d
+    ON e.`dept_id` = d.`dept_id`
+    LEFT JOIN (SELECT emp.`dept_id` dept_id, AVG(emp.`salary`) avg_salary
+               FROM emp
+               GROUP BY emp.`dept_id`) t1
+    ON e.dept_id = t1.dept_id;
+    ```
 
-  
+- 练习2
+
+  - 要求
+
+    - 查询 员工姓名，所在部门名，个人工资
+    - 查询 该员工所在部门的总工资，全体员工的总工资
+    - 查询 该员工占部门总工资的比率，该员工占全体员工总工资的比率
+    - 注意事项：有些员工虽然没有部门，但可能有工资，也需要查出（有多少员工，就要有多少条数据）
+
+  - 实例
+
+    ```sql
+    SELECT e.`emp_name` 姓名, d.`dept_name` 所在部门, e.`salary` 个人工资,
+    t2.all_salary 每个部门的总工资, t1.all_salary 全体员工的总工资,
+    e.salary/t2.all_salary 每个员工的工资栈部门总工资的比率, 
+    e.`salary`/t1.all_salary 每个员工占总工资的比率
+    FROM emp e
+    JOIN (SELECT SUM(emp.salary) all_salary FROM emp) t1
+    LEFT JOIN (SELECT emp.`dept_id` dept_id, SUM(emp.salary) all_salary 
+               FROM emp 
+               GROUP BY emp.`dept_id`) t2
+    ON t2.dept_id = e.`dept_id`
+    LEFT JOIN dept d
+    ON e.`dept_id` = d.`dept_id`
+    ORDER BY e.`dept_id`;
+    
+    
+        -- 注意区分与使用以下两个sql
+        SELECT emp.`dept_id` dept_id, SUM(emp.salary) all_salary 
+        FROM emp 
+        GROUP BY emp.`dept_id`;
+    
+        SELECT dept.`dept_id` dept_id, SUM(emp.salary) all_salary 
+        FROM emp 
+        RIGHT JOIN dept -- 使用 right 或 left 取决于 group by 中字段所在的表
+        ON emp.`dept_id` = dept.`dept_id` 
+        GROUP BY dept.`dept_id`;
+    ```
+
+    
 
 
 
@@ -1060,7 +1211,7 @@ WHERE e.department_id = d.department_id;
   -- 查看视图的属性信息
   SHOW TABLE STATUS LIKE '视图名称'\G
   -- 查看视图的详细定义信息
-  SHOW CREATE VIEW 视图名称
+  SHOW CREATE VIEW 视图名称;
   ```
 
 - 更新视图数据：更新视图数据会更新原表中的数据
@@ -1074,7 +1225,7 @@ WHERE e.department_id = d.department_id;
   ```sql
   DELIMITER $
   CREATE PROCEDURE 存储过程名(IN | OUT | INOUT 参数名 参数类型, ...)
-  [characterstic] [characterstic] [...]
+  [characterstic1] [characterstic2] [...]
   BEGIN
   	存储过程体; -- 分号
   END $
@@ -1136,7 +1287,7 @@ WHERE e.department_id = d.department_id;
   select @one_salary;
   
   
-  ================示例2================
+  -- ===========================示例2=========================
   CREATE TABLE student(
   stu_id INT PRIMARY KEY AUTO_INCREMENT,
   math DEC(5, 2),
@@ -1209,13 +1360,32 @@ WHERE e.department_id = d.department_id;
   DELIMITER ;
   ```
 
-  
+
+
+
+
+
+### 过程与函数的区别
+
+1. 返回值：函数必须返回一个值，而存储过程不需要。
+2. 调用方式：函数可以在 SQL 语句中被调用，就像调用内置函数一样（例如 SELECT myFunction()）。而存储过程需要使用 CALL 语句来调用（例如 CALL myProcedure()）。
+3. 事务处理：存储过程可以执行事务管理，即可以有 COMMIT 和 ROLLBACK 语句在存储过程中。而函数则不可以。
+4. 复杂性：存储过程通常用于执行复杂的、批量的或需要多步骤的数据库操作。函数通常用于执行简单的计算并返回结果。
+5. 输出：存储过程可以返回多个结果集，但函数只能返回一个单一的值。
+6. SQL 语句：存储过程可以包含 SQL 语句（如 SELECT、INSERT、UPDATE 等），但函数只能包含一个 SELECT 语句。
+7. 使用场景：函数通常用于计算并返回结果，而存储过程则更多地用于执行业务逻辑和复杂的数据库操作
 
 ### 补充
 
 #### 变量
 
 - 系统变量
+
+  - 说明：
+
+    - 由系统定义，而不是由用户定义；在启动mysql服务时，为其赋值
+    - 包括配置文件中的值（如my.ini）和 参数默认值
+    - 系统变量又分为：全局系统变量、会话系统变量
 
   - 查看系统变量
 
@@ -1234,7 +1404,7 @@ WHERE e.department_id = d.department_id;
     -- 查看指定的系统变量的值
     SELECT @@global.变量名;
     
-    -- 查看指定的会话便恋的值
+    -- 查看指定的会话变量的值
     SELECT @@session.变量名;
     SELECT @@变量名;
     ```
@@ -1316,9 +1486,9 @@ WHERE e.department_id = d.department_id;
     - SQLSTATE '字符串错误码'
     - MySQL_error_code
     - 错误名称
-    - SQLWARNING：匹配所有以01开头的SQLSTATE错误代码
-    - NOT FOUND：匹配所有以02开头的SQLSTATE错误代码
-    - SQLEXCEPTION：匹配所有未被SQLWARNING和NOT FOUND捕获的SQLSTATE错误代码
+      - SQLWARNING：匹配所有以01开头的SQLSTATE错误代码
+      - NOT FOUND：匹配所有以02开头的SQLSTATE错误代码
+      - SQLEXCEPTION：匹配所有未被SQLWARNING和NOT FOUND捕获的SQLSTATE错误代码
   - 处理语句
     - 语句可以是`SET 变量 = 值`，也可以是`BEIGN ... END`
 
@@ -1382,26 +1552,28 @@ WHERE e.department_id = d.department_id;
   END REPEAT [repeat_label]
   ```
 
-- LEAVE：表示跳出循环或其他程序体，类似于其他语言的break
+- **LEAVE**：表示跳出循环或其他程序体，类似于其他语言的break
 
-- ITERATE：表示再次循环，类似于其他语言的continue
+- **ITERATE**：表示再次循环，类似于其他语言的continue
 
 
 
 #### 游标
+
+> 游标又称光标。我们在查询时，往往会得到一个结果集，使用游标可以逐一对结果集中的每条数据进行获取
 
 - 第一步，声明游标（游标在存储函数或存储过程中使用，在变量后定义）
 
   - mysql，sql server，db2，mariadb
 
     ```sql
-    DECLARE 游标名 CURSOR FOR select_statement;
+    DECLARE 游标名 CURSOR FOR 查询语句;
     ```
 
   - oracle，postgreSQL
 
     ```sql
-    DECLARE 游标名 CURSOR IS select_statement;
+    DECLARE 游标名 CURSOR IS 查询语句;
     ```
 
 - 第二步，打开游标
@@ -1418,7 +1590,7 @@ WHERE e.department_id = d.department_id;
   FETCH 游标名 INTO var_name [, var_name ...]
   ```
 
-  - var_name 的指代与select查询语句中查询的字段保持一致，因此数量要保持一致
+  - var_name 的指代 与select查询语句中查询的字段对应，因此数量和类型要保持一致
 
 - 第四步，关闭游标
 
@@ -1427,6 +1599,30 @@ WHERE e.department_id = d.department_id;
   ```
 
   - 如果不及时关闭游标，游标会一直保持到存储过程结束，影响系统运行的效率。
+  
+- 实例
+
+  ```sql
+  delimiter //
+  定义存储过程
+  begin
+      declare current_emp_name varchar;
+      declare current_emp_salary double;
+      
+      declare 游标名 cursor for select name, salary from emp; -- 声明游标
+      open 游标名; -- 打开游标
+      
+      repeat
+          -- 读取右表所在的行的值，并下移右表
+          fetch 游标 into current_emp_name, current_emp_salary;
+          -- 一些操作
+          until 跳出循环条件;
+      end repeat;
+      
+      close 游标名; -- 关闭游标
+  end //
+  delimiter ;
+  ```
 
 
 
@@ -1461,6 +1657,7 @@ WHERE e.department_id = d.department_id;
   );
   
   DELIMITER //
+  -- 定义触发器
   CREATE TRIGGER before_insert_test_tri
   BEFORE INSERT ON test_trigger
   FOR EACH ROW
@@ -1504,72 +1701,238 @@ WHERE e.department_id = d.department_id;
 
 ## 其他新特性
 
+### 新特性
+
+- 更简便的NOSQL（NOT ONLY SQL）支持
+
+  NOSQL 泛指非关系型数据库和数据存储。MySQL5.6就开始支持简单的NOSQL存储功能。MYSQL8对这一功能做了优化，以更灵活的方式实现NOSQL功能，不再依赖Schema（模式）
+
+- 更好的索引
+
+  新增了**隐藏索引**和**降序索引**。
+
+  隐藏索引：可以用来测试去掉索引后，对数据查询的影响；
+
+  降序索引：在查询中混合存在多列索引时，使用降序索引可以提高查询的性能
+
+- 更完善的JSON支持
+
+  mysql从5.7开始支持原生JSON数据的存储，mysql8对这一功能做了优化，增加了聚合函数`JSON_ARRAYAGG()`和`JSON_OBJECTAGG()`，将参数聚合为JSON数组或对象，新增了行内操作 `->>` ，是列路径运算符 `->` 的增强，对JSON排序做了提升，并优化了JSON的更新操作
+
+- 安全和账户管理
+
+- InnoDB的变化
+
+  `InnoDB` 是mysql的默认存储引擎，是事务型数据库的首选引擎，支持事务安全表（ACID），支持行锁定和外键。
+
+  在MySQL8版本中，InnoDB在自增、索引、加密、死锁、共享锁等方面做了大量的改进和优化，并支持原子数据定义语言（Automic DDL），提高了数据的安全性和对事务的更好支持
+
+- 数据字典
+
+- 原子数据定义语句（Automic DDL），即原子DDL。
+
+- 资源管理
+
+  mysql8开始支持创建和管理资源组
+
+- 字符集调整：字符集由默认的 `latin1` 更改为了 `utf8mb4`，并首次增加了日语所特定使用的集合
+
+- 优化器增强
+
+- 公用表表达式
+
+- 窗口函数
+
+- 正则表达式
+
+  mysql在8.0.4之后的版本中采用了支持Unicode的国际化组件库实现正则表达式操作，这种方式不仅能提供完全的Unicode支持，而且是多字节安全编码。Mysql新增了`REGEXP_LIKE()`、`REGEXP_INSTR()`、`regexp_replace()`和`regexp_substr()`等函数来提升性能。此外，`regexp_stack_limit`和`regexp_time_limit`系统变量能够通过匹配引擎来控制资源的消耗
+
+- 内部临时表
+
+  TempTable存储引擎取代了Memory存储引擎，成为内部临时表的默认存储引擎
+
+- 日志记录
+
+  Mysql8中错误日志由一系列MySQL组件构成。这些组件的构成由系统变量`log_error_service`来配置，能够实现日志事件的过滤和写入
+
+- 备份锁
+
+- 增强的MySQL复制
+
+  支持对JSON文档部分更新的`二进制日志记录`，该记录使用紧凑的二进制格式，从而节省空间。
+
+
+
+### 移除的功能
+
+- 移除查询缓存
+
+  **查询缓存已被移除**，删除的项有：
+
+  - 语句：`FLUSH QUERY CACHE` 和 `RESET QUERY CACHE`
+  - 系统变量：`query_cache_limit` 等
+  - 状态变量：`Qcache_free_blocks` 等
+  - 线程状态：`checking privileges on cached query` 等
+
+- 加密相关：删除了 `ENCODE()`、`DECODE()` 等
+
+- 空间函数相关：多个空间函数被标记为过时
+
+- \N 和 Null：在SQL语句中，解析器不再将`\N`视为NULL，所以在SQL语句中应使用NULL代替`\N`
+
+- mysql_install_db
+
+- 移除通用分区处理程序
+
+- 移除mysql_plugin工具
+
+
+
 ### 窗口函数
 
-| 函数分类 | 函数               | 函数说明                                |
-| -------- | ------------------ | --------------------------------------- |
-| 序号函数 | ROW_NUMBER()       | 顺序排序                                |
-|          | RANK()             | 并列排序，会跳过重复的序号，比如1、1、3 |
-|          | DENSE_RANK()       | 并列排序，不会跳过重复的序号            |
-| 分布函数 | PERCENT_RANK()     | 等级值百分比                            |
-|          | CUME_DIST()        | 累计分布值                              |
-| 前后函数 | LAG(expr, n)       | 返回当前行的前n行的expr的值             |
-|          | LEAD(expr, n)      | 返回当前行的后n行的expr的值             |
-| 首尾函数 | FIRST_VALUE(expr)  | 返回第一个expr的值                      |
-|          | LAST_VALUE(expr)   | 返回最后一个expr的值                    |
-| 其他函数 | NTH_VALUE(expr, n) | 返回第n个expr的值                       |
-|          | NTILE(n)           | 将分区中的有序数据分为n个桶，记录桶编号 |
+- 引入
+
+  - 查询所有职员信息，查询时同一部门的职员信息放在一起，同一部门内的职员按工资倒序排列，可以用以下sql实现
+
+    ```sql
+    SELECT e.`emp_name` 姓名, e.`salary` 工资, d.`dept_name` 所在部门 
+    FROM emp e
+    LEFT JOIN dept d 
+    ON e.`dept_id` = d.`dept_id`
+    ORDER BY e.`dept_id`, e.`salary` DESC;
+    ```
+
+  - 而使用窗口函数可以这样实现
+
+    ```sql
+    SELECT row_number() -- 窗口函数，这个函数是：返回当前数据行在下面划分的组里的序号
+                        over(PARTITION BY e.`dept_id` -- 表示按部门分组 
+                             ORDER BY e.`salary` DESC -- 在部门分组中，按工资降序排列
+                             ) AS 该员工在其所在部门工资的名次,
+    e.`emp_name` 姓名, e.`salary` 工资, d.`dept_name` 所在部门 
+    FROM emp e
+    LEFT JOIN dept d 
+    ON e.`dept_id` = d.`dept_id`;
+    ```
+
+  - 除满足上述要求外，每个部门只显示工资最高的两个职员，此时用窗口函数比较简单
+
+    ```sql
+    select * from (上面的select语句) t
+    where t.该员工在其所在部门工资的名次 < 3
+    ```
+
+- 窗口函数
+
+  | 函数分类 | 函数               | 函数说明                                  |
+  | -------- | ------------------ | ----------------------------------------- |
+  | 序号函数 | ROW_NUMBER()       | 顺序排序                                  |
+  |          | RANK()             | 并列排序，会跳过重复的序号，比如：1，1，3 |
+  |          | DENSE_RANK()       | 并列排序，不会跳过重复的序号              |
+  | 分布函数 | PERCENT_RANK()     | 等级值百分比                              |
+  |          | CUME_DIST()        | 累计分布值                                |
+  | 前后函数 | LAG(expr, n)       | 返回当前行的前n行的expr的值               |
+  |          | LEAD(expr, n)      | 返回当前行的后n行的expr的值               |
+  | 首尾函数 | FIRST_VALUE(expr)  | 返回第一个expr的值                        |
+  |          | LAST_VALUE(expr)   | 返回最后一个expr的值                      |
+  | 其他函数 | NTH_VALUE(expr, n) | 返回第n个expr的值                         |
+  |          | NTILE(n)           | 将分区中的有序数据分为n个桶，记录桶编号   |
 
 - 表结构
 
-  | id   | category | name | price |
-  | ---- | -------- | ---- | ----- |
-  | 1    | 服装     | 短裤 | 79    |
+  | id   | category | name   | price |
+  | ---- | -------- | ------ | ----- |
+  | 1    | 服装     | 短裤   | 79    |
+  | 2    | 服装     | 袜子   | 9     |
+  | 3    | 户外用品 | 手电筒 | 19    |
+  | 4    | 服装     | 裙子   | 79    |
+  | 5    | 服装     | 卫衣   | 79    |
+  | 6    | 户外用品 | 登山镐 | 229   |
 
 - 序号函数
 
   ```sql
   -- 按商品种类分组，并找出每组中最贵的两件商品
-  SELECT * FROM 
-  (SELECT row_number() OVER(PARTITION BY category ORDER BY price DESC) AS row_num,
-   id, category, NAME, price FROM goods) t
-   WHERE row_num < 3
+  SELECT * 
+  FROM (SELECT {row_number() | rank() | dense_rank()} -- 三者的区别在于排序方式
+                   OVER(PARTITION BY category ORDER BY price DESC) AS row_num,
+               category, `name`, price 
+        FROM goods) t
+  WHERE t.row_num <= 2;
   ```
+
+  - row_number()：若数据如上表，只能查到 `短裤(序号1)`、`裙子(序号2)` ，虽然`卫衣(序号3)`价格相同，但是row_num超出2
+  - rank()：若数据如上表，可以查到 `短裤(序号1)`、`裙子(序号1)`、`卫衣(序号1)`，没有序号2和序号3，袜子的row_num为4
+  - dense_rank()：若数据如上表，可以查到 `短裤(序号1)`、`裙子(序号1)`、`卫衣(序号1)` 和 `袜子(序号2)`
 
 - 分布函数
 
   ```sql
   -- 在同类别（服装）中，比短裤便宜的其他商品占该类别（服装）的比例；即百分之多少同类商品比短裤便宜
   SELECT cume_dist() over(PARTITION BY category ORDER BY price) AS 比例,
-  id, category, NAME, price FROM goods WHERE NAME = '短裤'
+         id, category, NAME, price 
+  FROM goods 
+  WHERE NAME = '短裤';
   ```
 
 - 前后函数
 
   ```sql
   -- 价格与该商品相隔两位，比该商品贵的同类商品的价格
-  SELECT NAME, price, lead(price, 2)over(PARTITION BY category ORDER BY price) AS "相隔的价格" FROM goods
+  SELECT NAME, price, 
+         lead(price, 2) over(PARTITION BY category ORDER BY price) AS "相隔的价格" 
+  FROM goods
   ```
 
 - 首尾函数
 
   ```sql
-  -- 同类最便宜的商品价格
-  SELECT NAME, price, first_value(price) over(PARTITION BY category ORDER BY price) AS "同类最贵" FROM goods
+  -- 同类最贵的商品价格
+  SELECT NAME, price, 
+         first_value(price) over(PARTITION BY category ORDER BY price DESC) AS "同类最贵" 
+  FROM goods
   ```
-
+  
   
 
 ### 公用表表达式
 
 公用表表达式简称为CTE。CTE是一个临时的结果集，作用范围是当前语句。可以理解为一个可以复用的子查询
 
-```sql
-WITH CTE 名称
-AS (子查询)
+- 非递归
 
-SELECT|DELETE|UPDATE 语句;
-```
+  ```sql
+  WITH 名称
+  AS ( select语句 )
+  SELECT|DELETE|UPDATE 语句;
+  
+  -- 使用
+  WITH cte_dept
+  AS (SELECT * FROM dept)
+  SELECT e.emp_name, cte.dept_name
+  FROM emp e
+  LEFT JOIN cte_dept cte
+  ON cte.dept_id = e.dept_id;
+  ```
+
+- 递归
+
+  ```sql
+  WITH RECURSIVE cte -- 递归关键词 recursive
+  AS (SELECT emp_id, emp_name, manager_id, 1 AS n -- n 指第n代
+      FROM emp
+      WHERE emp_id = 7839  -- boss id
+      UNION ALL
+      SELECT e.emp_id, e.emp_name, e.manager_id, n+1
+      FROM emp AS e
+      JOIN cte
+      ON (e.manager_id = cte.emp_id)
+  )
+  SELECT emp_id, emp_name FROM cte WHERE n >= 3; -- 查询公司中所有的下下属
+  -- SELECT emp_id, emp_name FROM cte WHERE n <= 2;
+  ```
+
+  
 
 
 
@@ -4498,20 +4861,19 @@ public class JedisConnectionFactory {
 - 创建挂载目录
 
   ```shell
-  mkdir -p  /var/docker-volume/postgres/data
+  mkdir -p  /var/docker-volume/postgres/pg14/data
   ```
 
 - 构建容器
 
   ```shell
   docker run -it \
-  --name postgres \
-  --restart always \
+  --name postgres14 \
   -e POSTGRES_PASSWORD='root' \
   -e ALLOW_IP_RANGE=0.0.0.0/0 \
-  -v /var/docker-volume/postgres/data:/var/lib/postgresql/data \
+  -v /var/docker-volume/postgres/pg14/data:/var/lib/postgresql/data \
   -p 5432:5432 \
-  -d postgres
+  -d postgres:14.1
   ```
 
   - `-e ALLOW_IP_RANGE=0.0.0.0/0`：表示允许所有IP访问，如果不加，则非本机IP访问不了
