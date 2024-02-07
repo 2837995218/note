@@ -445,7 +445,7 @@ public ThreadPoolExecutor(int corePollSize, // 核心线程数
         Stream.generate(() -> "Hello,world")
         ```
 
-  - 中间操作
+  - **中间操作**
 
     - 筛选与切片
 
@@ -460,42 +460,45 @@ public ThreadPoolExecutor(int corePollSize, // 核心线程数
 
         - 接收一个转化规则函数作为参数，将Stream中的元素按规则转成其他形式
 
-        - ```java
-          Customer customer = new Customer(1, "张三", 28, true);
-          List<Customer> list = Arrays.asList(customer);
-          list.stream().map(Customer::getName).filter((str) -> str.length()<3).forEach(System.out::println);
-          ```
+        ```java
+        Customer customer = new Customer(1, "张三", 28, true);
+        List<Customer> list = Arrays.asList(customer);
+        list.stream()
+            .map(Customer::getName).filter((str) -> str.length()<3)
+            .forEach(System.out::println);
+        ```
 
       - flatMap(Function f)
 
         - 接收一个转化规则作为参数，将Stream中的元素按规则转成Stream，最终形成Stream套Stream
 
     - 排序
-
+  
       - 自然排序：sorted()
         - 按 Stream中元素实现Comparable\<T>接口后重写的compareTo方法 进行排序
       - 规则排序：sorted(Comparator com)
 
-  - 终止操作
+  - **终止操作**
 
     - 匹配与查找
-
+  
       - allMatch(Predicate p)：检查所有元素是否匹配
       - anyMatch(Predicate p)：检查是否有元素匹配
       - noneMatch(Predicate p)：检查是否没有匹配的元素
       - findFirst()：返回第一个元素
       - findAny()：返回当前流中的任意元素
-
+  
       - count()：返回流中元素总数
       - max(Comparator c)：返回流中的最大值
       - min(Comparator c)：返回流中的最小值
       - forEach(Consumer c)：内部迭代
+    
   - 规约
     
     - reduce(T identity, BinaryOperator b)：可以将流中的元素反复结合起来，得到一个值
       - reduce(BinaryOperator b)
     - 收集
-
+  
       - collect(Collector c)
       - Collectors的toList，toMap和toCollection方法可以获得一个Collector对象
   
@@ -521,8 +524,22 @@ public ThreadPoolExecutor(int corePollSize, // 核心线程数
       ForkJoinPool pool = new ForkJoinPool(20);
       pool.submit(() -> InStream.range(1, 100).parallel());
       ```
-
-
+    
+    - 规范：为确保并发安全问题，应保证并行流的所有操作都是无状态的（除非加锁），即数据处理仅在流中对应函数内，不应该溢出函数
+    
+      ```java
+      List<Integer> list = new ArrayList<>(); // list 在函数外
+      
+      Stream.of(1, 2, 3, 4, 5)
+          .parallel()
+          .filter (i -> {
+              // list.add(i); // 不应该有此句
+              return i > 2;
+          })
+          .count();
+      ```
+    
+      
 
 
 #### Option
@@ -650,10 +667,10 @@ public ThreadPoolExecutor(int corePollSize, // 核心线程数
     Thread.currentThread().join(1000);
     ```
 
-- 订阅者如何调节发布者生产数据的
+- **※ 背压**：订阅者如何调节发布者生产数据的
 
   ```java
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 300; i++) {
       // submit 是一个阻塞方法。
       // 一旦订阅关系中存储的数据达到阈值（256），该方法就会阻塞，就无法继续生产数据
       publisher.submit(random.nextInt(10));

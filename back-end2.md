@@ -1857,6 +1857,491 @@
 
 # Webflux
 
+
+
+## Reactor
+
+### Flux、Mono
+
+- 依赖
+
+  ```xml
+  <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-core</artifactId>
+  </dependency>
+  ```
+
+- Mono：0或1个数据，API与Flux类似
+
+- Flux：多个数据
+
+  - 创建
+
+    - Flux.just(T.. t)
+
+    - Flux.range(int start, int count)
+
+    - Flux.fromXXX
+
+      - `Flux.fromStream(Stream<T> stream)`
+
+      - `Flux.fromStream<Supplier<Stream<T>> supplier>`
+
+      - `Flux.fromArray(T[] arr)`
+
+      - `Flux.fromIterable(Iterable<T> iterable)`
+
+    - Flux.concat：连接多个流
+
+      ```java
+      Flux.concat(Flux.fromIterable(List.of(1)), Flux.just(2));
+      ```
+
+    - 编程式创建流
+
+      - Flux.generate
+      - Flux.create
+
+  - 整流：delayElements(Duration.ofSeconds(1))
+
+  - 订阅：subscribe(...)
+
+  - 事件(doOnXXX)
+
+    - `doOnNext`：每个数据（流中的数据）到达的时候触发
+    - `doOnEach`：每个元素（流的数据和信号）到达的时候触发
+    - `doOnRequest`：消费者请求流元素的时候触发
+    - `doOnSubscriber`：流被订阅时触发
+    - `doOnError`：流发生错误时触发
+    - `doOnCancle`：流被取消时触发
+    - `doOnTerminate`：发送取消/异常信号中断流时触发
+    - `doOnDiscard(Class<?> 流中的元素类型, Consumer<?> c)`：流中的元素被忽略(被filter过滤了)时触发
+
+  - onErrorXXX：异常处理
+
+  - 日志：log()
+
+    ```java
+    Flux.range(1, 7)  // stream1
+        .log()        // 记录stream1的日志
+        .filter(integer -> integer > 3)  // stream2
+        .log()                           // 记录stream2的日志
+        .subscribe(System.out::println);
+    ```
+
+  - 缓冲区：buffer(int maxSize)
+
+    ```java
+    Flux.range(1, 7) // Flux<Integer>
+        .buffer(3)   // Flux<List<Integer>>
+        .subscribe(System.out::print); // [1, 2, 3] [4, 5, 6] [7]
+    ```
+
+    - 此处的buffer和jdk9中的Flow API中的buffer（jdk9中buffer是256）不同（reactor和jdk9中都有各自的publisher、subscriber等）
+
+    - 订阅者的request(N)：表示请求N次数据（如 request(1) 表示请求一次数据，**默认缓冲区大小是1**，`.buffer(3)`后缓冲区是3，即请求一次得到三个数据）
+
+    - 缓冲区满后，会触发背压
+
+      ```java
+      Flux.fromStream(Stream.iterate(1, integer -> ++integer))
+          .log()
+          .buffer(2)
+          .subscribe(integer -> {
+              log.info("接收到数据：{}", integer);
+              try {TimeUnit.SECONDS.sleep(2);} catch (Exception ignore) {}
+          });
+      ```
+
+  - limitRate(int n)：限流
+
+    ```java
+    Flux.range(1, 150)
+        .log()
+        .limitRate(40) // 一次性请求40条数据
+        .subscribe();
+    ```
+
+    ```shell
+    20:39:37.546 [main] INFO reactor.Flux.Range.1 -- | onSubscribe([Synchronous Fuseable] FluxRange.RangeSubscription)
+    # 先请求 40 条数据
+    20:39:37.562 [main] INFO reactor.Flux.Range.1 -- | request(40)
+    20:39:37.562 [main] INFO reactor.Flux.Range.1 -- | onNext(1)
+    ......
+    20:39:37.562 [main] INFO reactor.Flux.Range.1 -- | onNext(30)
+    # 75% 预取策略：limitRate(40) 则每处理30条再请求30条
+    20:39:37.562 [main] INFO reactor.Flux.Range.1 -- | request(30)
+    20:39:37.562 [main] INFO reactor.Flux.Range.1 -- | onNext(31)
+    ......
+    20:39:37.580 [main] INFO reactor.Flux.Range.1 -- | onNext(60)
+    20:39:37.580 [main] INFO reactor.Flux.Range.1 -- | request(30)
+    20:39:37.580 [main] INFO reactor.Flux.Range.1 -- | onNext(61)
+    ......
+    20:39:37.591 [main] INFO reactor.Flux.Range.1 -- | onNext(150)
+    20:39:37.591 [main] INFO reactor.Flux.Range.1 -- | request(30)
+    20:39:37.592 [main] INFO reactor.Flux.Range.1 -- | onComplete()
+    ```
+
+  - handle：与map类似
+
+    ```java
+    Flux.range(1, 10) // Flux<Integer>
+        .handle((integer, synchronousSink) -> 
+                synchronousSink.next(integer.toString())) // Flux<Object>
+        .log()
+        .subscribe();
+    ```
+
+
+
+### API补充
+
+- concatWith：连接新**同类型**发布者（该方法与concat方法作用一样，区别在于前者是成员方法，后者是静态方法）
+
+  concatMap：先元素转发布者，再将发布者扁平化并入原流；**保证**元素顺序
+
+  flatMap：先元素转发布者，再将发布者扁平化并入原流；**不保证**元素顺序
+
+  ```java
+  Flux.just(1, 2, 3)
+      .concatWith(Flux.just(4, 5))
+      .map(integer -> integer+"、")
+      .subscribe(System.out::print); // 1、2、3、4、5
+  
+  Flux.just(1, 2, 3)
+      .concatMap(integer -> Flux.just(integer, 4))
+      .map(integer -> integer+"、")
+      .subscribe(System.out::print); // 1、4、2、4、3、4
+  
+  Flux.just(1, 2, 3)
+      .flatMap(integer -> Flux.just(integer, 4))
+      .map(integer -> integer+"、")
+      .subscribe(System.out::print); // 1、4、2、4、3、4
+  ```
+
+- transform：**无状态**转换（原理是无论多少了订阅者订阅，该方法只执行一次）
+
+  transfromDeferred：**有状态**转换（原理是每一个订阅者订阅，该方法都执行）
+
+  ```java
+  AtomicInteger counter = new AtomicInteger(0);
+  Flux<String> stringFlux = Flux
+      .just("a", "b")
+      //.transform(flux -> {
+      .transformDeferred(flux -> {
+          if (counter.getAndIncrement() == 0) 
+              return flux.map(String::toUpperCase);
+          else return flux;
+      })
+      .map(s -> s+" ");
+  
+  // 两个订阅者订阅了这个流
+  // transfrom: A B  transfromDeferred: A B
+  stringFlux.subscribe(System.out::print);
+  // transfrom: A B  transfromDeferred: a b
+  stringFlux.subscribe(System.out::print);
+  ```
+
+- defaultIfEmpty：静态兜底数据
+
+  switchIfEmpty：可使用 动态兜底
+
+  ```java
+  Flux.just(null); // 流中有一个元素，该元素是null
+  Flux.empty(); // 流中没有元素，只有完成信号/结束信号
+  
+  Flux.empty()
+      .defaultIfEmpty("为空")
+      .subscribe(System.out::println);
+  
+  Flux.empty()
+      .switchIfEmpty(Flux.create(fluxSink -> fluxSink.next("为空")))
+      .subscribe(System.out::println);
+  ```
+
+- merge：合并
+
+  concat：连接
+
+  mergeWith：（该方法与merge类似，区别在于前者是成员方法，后者是静态方法）
+
+  mergeSequential：严格遵守流的时间顺序合并（哪个流最先产生数据，哪个流在先）
+
+  ```java
+  //Flux.concat(
+  Flux.merge(
+  //Flux.mergeSequential
+      Flux.just(1, 2).delayElements(Duration.ofSeconds(1)),
+      Flux.just(3, 4).delayElements(Duration.ofMillis(750)))
+      .map(integer -> integer + " ")
+      .subscribe(log::info);
+  
+  System.in.read();
+  ```
+
+  ```text
+  时间线：
+        比例：+-----+ 500ms
+  
+  concat                       1           2        3        4
+                   +-----+-----+-----+-----+-----+-----+-----+-----+
+  merge/mergeWith           3  1     4     2
+  mergeSequential           3        41    2
+  ```
+
+- zip、zipWith
+
+  ```java
+  Flux.just(1, 2, 3)  // Flux<Integer>
+      .delayElements(Duration.ofSeconds(1))
+      .zipWith(Flux.just("Hello", "world"))// Flux<Tuple2<Integer, String>>
+      .subscribe(tuple2 -> 
+                 System.out.printf("键：%d，值：%s\n", tuple2.getT1(), tuple2.getT2()));
+  System.in.read();
+  
+  键：1，值：Hello
+  键：2，值：world
+  ```
+
+
+
+### 异常处理
+
+```java
+Flux.range(1, 4)
+    .map(integer -> {
+        if (integer == 2) throw new RuntimeException("为5");
+        return integer;
+    })
+    .doOnError(throwable -> log.error("before 错误"))
+    .doOnComplete(() -> log.info("before 完成"))
+    
+    //.onErrorMap(err -> 自定义异常) // 常用于统一的异常处理项目中
+    .onErrorComplete()
+    //.onErrorContinue((throwable, o) -> log.error(o))
+    //.onErrorResume(throwable -> Flux.just(6))
+    //.onErrorReturn(Exception.class, 7)
+    
+    .doOnError(throwable -> log.error("after 错误"))
+    .doOnComplete(() -> log.info("after 完成"))
+    .log()
+    .subscribe();
+```
+
+- onErrorMap：由 异常A 转 异常B
+- onErrorComplete
+  - 异常信号转结束：只能接收到数据 1
+  - 打印：before 错误；after 完成
+- onErrorContinue
+  - 能接收到数据 1、 3、 4
+  - 打印：before 完成；after 完成
+- onErrorResume
+  - 能接收到数据 1、 6、 3、 4
+  - 打印：before 错误；after 完成
+- onErrorReturn
+  - 能接收到数据 1、 7
+  - 打印：before 错误；after 完成
+
+
+
+### 编程式创建流
+
+- Flux.generate：编程式创建流，单线程下可使用
+
+  ```java
+  Flux.generate(() -> 0, // 提供初始值，seed，并发下可使用原子变量
+                (integer, synchronousSink) -> {
+                    if (integer < 3) {
+                        // 此方法在订阅者的缓冲区满后"阻塞"（背压）
+                        // "阻塞"：？实际上是订阅者处理完后会回调该方法
+                        synchronousSink.next(integer);
+                    }
+                    else synchronousSink.complete(); // 完成
+                    // sink.error(new RuntimeException(".."));
+                    return integer + 1;
+                })
+      .log()
+      //.buffer(2)  // 默认缓冲区为1，可条件下游缓冲区大小测试
+      .subscribe(integer -> {
+          try {TimeUnit.SECONDS.sleep(2);} catch (Exception ignore) {}
+          log.info("接收到数据：{}", integer);
+      });
+  ```
+
+  ```shell
+  21:22:05.541 [main] INFO reactor.Flux.Generate.1 -- | onSubscribe([Fuseable] FluxGenerate.GenerateSubscription)
+  21:22:05.541 [main] INFO reactor.Flux.Generate.1 -- | request(unbounded)
+  21:22:05.541 [main] INFO reactor.Flux.Generate.1 -- | onNext(0)
+  21:22:05.541 [main] INFO FluxTest -- 接收到数据：0
+  # 触发背压，隔2秒后注入下一个数据
+  21:22:07.555 [main] INFO reactor.Flux.Generate.1 -- | onNext(1)
+  21:22:07.555 [main] INFO FluxTest -- 接收到数据：1
+  # 触发背压
+  21:22:09.560 [main] INFO reactor.Flux.Generate.1 -- | onNext(2)
+  21:22:09.561 [main] INFO FluxTest -- 接收到数据：2
+  21:22:11.576 [main] INFO reactor.Flux.Generate.1 -- | onComplete()
+  ```
+
+- Flux.create：**并发(多线程)向流中添加元素时使用**
+
+  ```java
+  // 单线程添加元素
+  Flux.create(
+      fluxSink -> {
+          for (int i = 0; i < 10; i++) {
+              fluxSink.next(i);
+          }
+      })
+      .log()
+      .subscribe();
+  ```
+
+  ```java
+  // 模拟使用监听器在多线程下添加元素
+  
+  @AllArgsConstructor
+  static class LoginListener {
+      private final FluxSink fluxSink;
+  
+      public void onUserLogin (Integer user_id) {
+          log.info("用户 {} 登录", user_id);
+          fluxSink.next(user_id); // 本质是将fluxSink的作用域扩大
+      }
+  }
+  
+  public static void main(String[] args){
+      AtomicReference<LoginListener> listener = new AtomicReference<>();
+      Random random = new Random();
+  
+      for (int i = 0; i < 3; i++) {
+          new Thread(() -> {
+              while (listener.get() == null) {
+                  try {TimeUnit.MILLISECONDS.sleep(100);} 
+                  catch (Exception ignore) {}
+              }
+              for (int j = 0; j < 10; j++) {
+                  try {TimeUnit.MILLISECONDS.sleep(random.nextInt(1000));} 
+                  catch (Exception ignore) {}
+                  listener.get().
+                      onUserLogin(random.nextInt(1000)); // 模拟触发用户登录
+              }
+          }).start();
+      }
+  
+      // 本质将fluxSink的作用域扩大
+      Flux.create(fluxSink -> listener.set(new LoginListener(fluxSink)))
+          .log()
+          .subscribe();
+  }
+  ```
+
+
+
+### 线程调度
+
+- 使用
+
+  ```java
+  Flux.create(
+      fluxSink -> {
+          for (int i = 0; i < 5; i++) {
+              fluxSink.next(i);
+              log.info("添加数据 {}", i);  // subscribeOn 线程调用
+          }
+      })
+      .subscribeOn(Schedulers.newSingle("subscribeOn", false))
+      .publishOn(Schedulers.newSingle("publishOn", false))
+      .map(o -> {
+          log.info("map方法调用"); // publishOn 线程调用
+          return o.toString();
+      })
+      .log() // publishOn 线程调用
+      .subscribe(log::info); // publishOn 线程调用
+  ```
+
+  ```java
+  fluxSink -> {
+      for (int i = 0; i < 5; i++) {
+          fluxSink.next(i);
+          log.info("添加数据 {}", i); // subscribeOn 线程调用
+      }
+  })
+      .map(o -> {
+          log.info("map方法调用"); // subscribeOn 线程调用
+          return o.toString();
+      })
+      .log() // subscribeOn 线程调用
+      .subscribeOn(Schedulers.newSingle("subscribeOn", false))
+      .publishOn(Schedulers.newSingle("publishOn", false))
+      .subscribe(log::info); // publishOn 线程调用
+  ```
+
+- Schedulers获得线程调度器
+
+  - Schedulers.immediate()：【默认】，当前线程执行所有操作
+  - Schedulers.single()：获得一个单例模式的单线程调度器
+  - Schedulers.newSingle(线程名【, 是否是守护线程】)：新建一个单例模式的单线程调度器
+  - Schedulers.boundedElastic()：单例模式的有限、弹性的线程池调度器（默认：线程数为cpu*10个；任务队列为100K；时间为60s）
+  - Schedulers.newBoundedElastic(...)：新建一个有限、弹性的线程池调度器
+  - Schedulers.fromExecutor(Executor e)：以自己新建的线程池建立调度器
+  - Schedulers.parallel()：单例模式的ForkJoin线程池调度器
+  - Schedulers.newParallel(...)：新建一个ForkJoin线程池调度器
+
+
+
+
+
+### 补充
+
+#### 超时与重试
+
+```java
+Flux.range(1, 3)
+    .delayElements(Duration.ofSeconds(1))
+    .concatWith(Flux.range(1, 2).delayElements(Duration.ofSeconds(3)))
+    .timeout(Duration.ofSeconds(2)) // 设置超时时间为2秒
+    .retry(3) // 重试3次，每次重试从头开始
+    .map(i -> i+" ")
+    .onErrorReturn("error")
+    .subscribe(System.out::print);
+System.in.read();
+
+// 1 2 3 1 2 3 1 2 3 1 2 3 error 
+```
+
+
+
+#### Sinks
+
+```java
+Sinks.many(); // 发送Flux数据
+Sinks.one(); // 发送Mono数据
+
+Sinks.many().unicast(); // 单播：这个管道只能绑定一个订阅者
+Sinks.many().multicast(); // 多播：可以绑定多个订阅者
+Sinks.many().replay(); // 重放：给后来的订阅者从头开始把元素发给它
+
+Sinks.Many<Object> many = Sinks.many().unicast()
+    .onBackPressureBuffer(new LinkBlockingQueue<>(5)); // 背压队列
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 基础
 
 ### 异步Servlet
@@ -1985,8 +2470,6 @@
       textarea.innerHTML = textarea.innerHTML + " " + event.data;
   });
   ```
-
-
 
 
 
