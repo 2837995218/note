@@ -2833,8 +2833,10 @@ public class SpringmvcSupport extends WebMvcConfigurationSupport {
     @Override
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 访问 /page/** 时让他定位到 /page/ 目录
-        registry.addResourceHandler("/page/**").addResourceLocations("/page/");
-        registry.addResourceHandler("/css/**").addResourceLocations("/css/");
+        registry.addResourceHandler("/page/**")
+            .addResourceLocations("/page/");
+        registry.addResourceHandler("/css/**")
+            .addResourceLocations("/css/");
         // ... ...
     }
 
@@ -2844,7 +2846,18 @@ public class SpringmvcSupport extends WebMvcConfigurationSupport {
     // 添加拦截的url
     @Override
     protected void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(projectInterceptor).addPathPatterns("/user","/user/*");
+        registry.addInterceptor(projectInterceptor)
+            .addPathPatterns("/user","/user/*");
+    }
+
+    // 还可以配置跨域等
+    @Override
+    public void addCorsMappings(CorsRegistry registyr) {
+        registry.addMapping("/**")
+            // 配置跨域
+            .allowHeaders("*")
+            .allowedMethods("*")
+            .allowedOrigins("localhost");
     }
 }
 ```
@@ -2861,7 +2874,8 @@ public class SpringMvcConfig implements WebMvcConfigurer{
     
     @Override
     public void addInterceptors (InterceptorRegistry registry){
-       registry.addInterceptor(projectInterceptor).addPathPatterns("/user","/user/*");
+       registry.addInterceptor(projectInterceptor)
+           .addPathPatterns("/user","/user/*");
     }
 }
 ```
@@ -2891,6 +2905,8 @@ public class SpringMvcConfig implements WebMvcConfigurer{
   - 自动配置了数据绑定支持，例如将请求参数绑定到控制器方法的参数。
   - 自动配置了验证和格式化的支持。
   - 自动配置了国际化和本地化的支持。
+  
+- SpringBoot项目中，springboot会使用自动配置类配置一些默认功能。如果在boot项目中，使用@EnbaleWebMvc表示开启自定义配置，会**禁用boot的自动配置**，导致网页不会自动映射路径等。
 
 
 

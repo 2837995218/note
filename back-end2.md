@@ -1855,11 +1855,83 @@
 
 
 
-# Webflux
+# Reactive
 
 
 
 ## Reactor
+
+### Publisher
+
+```java
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+
+public class MyPublisher implements Publisher<Integer> {
+    @Override
+    public void subscribe(Subscriber<? super Integer> subscriber) {
+        MySubscription subscription = new MySubscription(subscriber);
+        subscriber.onSubscribe(subscription);
+    }
+
+    static class MySubscription implements Subscription {
+        // 订阅者必须是Integer的父类，才能处理Integer
+        private final Subscriber<? super Integer> subscriber;
+        private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+        private final BlockingQueue<Integer> queue = new LinkedBlockingQueue<>();
+        private final int BUFFER_SIZE = 10;
+
+        public MySubscription(Subscriber<? super Integer> subscriber) {
+            this.subscriber = subscriber;
+        }
+
+        @Override
+        public void request(long n) {
+            System.out.printf("生产者收到需要 {} 的请求\n", n);
+            executorService.submit(() -> { // 异步生产数据
+                for (int i = 0; i < n; i++) {
+                    try {
+                        if (queue.size() >= BUFFER_SIZE) {
+                            System.out.println("生产者生产数据过快，队列已满，丢弃数据: " + i);
+                            continue;
+                        }
+                        Thread.sleep(1000);  // 模拟数据生产需要一些时间
+                        int data = i*10; 
+                        System.out.println("生产者生产数据: " + data);
+                        queue.put(data);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
+                    }
+                }
+                // 一般所有数据生产完，在一起传递给订阅者
+                deliver();
+            });
+        }
+
+        private void deliver() {
+            Integer i;
+            while ((i = queue.poll()) != null) {
+                subscriber.onNext(i); // 生产数据并传递给订阅者
+            }
+        }
+
+        @Override
+        public void cancel() {
+            // 取消订阅的逻辑
+            executorService.shutdown();  // 停止生产数据
+        }
+    }
+}
+```
+
+
 
 ### Flux、Mono
 
@@ -1983,8 +2055,18 @@
     20:39:37.592 [main] INFO reactor.Flux.Range.1 -- | onComplete()
     ```
 
-  - handle：与map类似
+  - cache缓存
 
+    ```java
+    Flux.range(1, 10)
+        .delayElements(Duration.ofSeconds(1))
+        .cache(2);
+    
+    // 热序列用于缓存数据
+    ```
+    
+  - handle：与map类似
+  
     ```java
     Flux.range(1, 10) // Flux<Integer>
         .handle((integer, synchronousSink) -> 
@@ -2106,6 +2188,8 @@
 
 
 
+
+
 ### 异常处理
 
 ```java
@@ -2145,6 +2229,158 @@ Flux.range(1, 4)
 
 
 
+
+
+### 冷、热序列
+
+- 在反应式编程中，数据流可以被分类为“热”序列和“冷”序列。
+
+  - **热序列**是指那些**产生数据不依赖于订阅者**的数据流。也就是说，无论是否有订阅者，热序列都会产生数据。所有的订阅者都会获取到他们订阅之后产生的数据，但是他们可能会错过他们订阅之前产生的数据。一个常见的热序列的例子是鼠标移动事件：鼠标移动会产生事件，无论是否有监听器在监听。（Sinks工具类、create方法 生成的是热序列）
+  - 相反，**冷序列**的**数据产生是依赖于订阅者**的。<font color=red>只有当有订阅者订阅时，冷序列才会开始产生数据</font>。所有的订阅者都会获取到完整的数据序列。一个常见的冷序列的例子是文件读取：只有当有读取请求时，数据才会被读取。（generate、just、range、fromIterable、interval等 生成的是冷序列）
+    - 冷序列流的判断依据是，订阅者订阅行为与流数据的产生和发放的关系：即**每个订阅者接收到的是否是一个全新的流**，just等方法生成的流虽然每个订阅者拿到的数据相同，但流却是全新的流
+- 理解热序列和冷序列的概念对于我们编写反应式编程代码非常重要，因为它们决定了数据流的行为和性能特性。
+
+  - **数据产生的时间和方式**：冷序列只有在订阅时才开始产生数据，而热序列则无论是否有订阅者都会产生数据。这意味着，对于冷序列，每个订阅者都会从头开始接收数据，而对于热序列，订阅者可能会错过一些在它订阅之前产生的数据。
+  - **数据共享**：在热序列中，**所有订阅者共享同一份数据流**，这意味着热序列可以支持多个订阅者同时接收数据。而在冷序列中，每个订阅者都会接收到独立的数据流，这可能会导致数据被重复产生，从而影响性能。（例如，如果你有一个Flux，它的数据源是一个数据库查询，那么每次有新的订阅者订阅这个Flux时，都会重新执行这个数据库查询，从而可能导致数据被重复产生。）
+  - **资源管理**：由于冷序列只有在订阅时才开始产生数据，因此它们通常更能有效地管理资源。例如，如果一个冷序列代表一个文件读取操作，那么只有在有订阅者订阅时，文件才会被打开和读取。而对于热序列，即使没有订阅者，相关的资源（如网络连接、数据库连接等）也可能被占用。
+  - **错误处理**：在热序列中，如果在订阅者订阅之前发生了错误，那么订阅者可能无法接收到这个错误。而在冷序列中，由于数据只有在订阅者订阅时才开始产生，因此订阅者总是能够接收到在数据产生过程中发生的所有错误。 
+
+- defer：创建的是一个**冷序列**，每次有新的订阅者订阅时，都会创建一个**新**的 Flux 实例（具有**Lazy**的特性）。这意味着每个订阅者都会看到序列的所有元素，即使他们在不同的时间开始订阅。
+
+  **冷序列的数据生成是懒加载的**，<font color=red>也就是说，只有当有订阅者订阅时，才会**发出**数据，而不是产生数据</font>
+
+  Mono.just()和Flux.range()方法返回的都是冷序列。<font color=red>这些方法在被调用时，会立即计算其参数，但是生成的数据并不会立即发出</font>，而是等到有订阅者订阅时才发出。
+
+  defer(Supplier)方法是在流被订阅时，方法中的Supplier**才**会被调用
+
+  ```java
+  // Mono.just(new Object())会立即创建一个新的Object实例，并将这个实例保存在Mono中。 
+  // 即 Obect 这个对象的发出是在流被订阅时，但是 Object 对象的创建是在该方法调用时
+  Mono.just(new Object()); 
+  Mono.just(1); //会立即计算表达式1，并将结果保存在Mono中。
+  
+  // 一般来说，静态数据没有必要放在 defer 中
+  Flux.defer(() ->  Flux.range(1, 10));
+  
+  // DispatcherHandler 源码
+  Mono.defer(() -> {
+      Exception ex = new ResponseStatusException(HttpStatus.NOT_FOUND);
+      return Mono.error(ex);
+  }
+  ```
+
+- <font color=red>对于冷序列，为什么一会说，数据是在订阅时生成的，一会说数据是在初始化时生成的</font>
+
+  冷序列流的判断依据是，订阅者订阅行为与流数据的产生和发放的关系：即**每个订阅者接收到的是否是一个全新的流**，just等方法生成的流虽然每个订阅者拿到的数据相同，但流却是全新的流
+
+  ```java
+  @Test
+  public void testCold() throws InterruptedException {
+      Mono<Object> mono =
+          // 下面三个方法返回的都是 冷序列 
+          // Mono.just(LocalDateTime.now()); // 结果 true
+          // Mono.defer(() -> Mono.just(LocalDateTime.now())); // 结果 false
+          Mono.fromCallable(LocalDateTime::now); // 结果 false
+  
+      CountDownLatch latch = new CountDownLatch(2);
+  
+      AtomicReference<Object> obj1 = new AtomicReference<>();
+      AtomicReference<Object> obj2 = new AtomicReference<>();
+      mono.subscribe(o -> {
+          System.out.println(o.toString());
+          obj1.set(o);
+          latch.countDown();
+      });
+  
+      TimeUnit.SECONDS.sleep(1);
+  
+      mono.subscribe(o -> {
+          System.out.println(o.toString());
+          obj2.set(o);
+          latch.countDown();
+      });
+  
+      latch.await();
+      System.out.println(obj1.get() == obj2.get());
+  }
+  ```
+
+- 冷热序列的转化
+
+  ```java
+  @Test
+  public void testColdToHot() {
+      Flux<Integer> sourceFlux = Flux.range(1, 10)
+          .delayElements(Duration.ofSeconds(1));  // 创建一个冷序列
+      Flux<Integer> hotFlux = sourceFlux.publish().autoConnect();  // 将冷序列转换为热序列
+      Flux<Integer> coldFlux = hotFlux.replay().autoConnect();  // 将热序列转换为【伪】冷序列
+  
+      //subscribe(hotFlux);
+      subscribe(coldFlux);
+  }
+  
+  @SneakyThrows
+  public void subscribe(Flux<?> flux) {    
+      flux.subscribe(o -> {
+          System.out.println("第一个订阅者收到: " + o);
+      });
+  
+      TimeUnit.SECONDS.sleep(5);
+  
+      flux.subscribe(o -> {
+          System.out.println("第二个订阅者收到: " + o);
+      });
+  
+      System.in.read();
+  }
+  ```
+
+  - publish()方法：会将这个冷序列转换为一个ConnectableFlux，这是一种特殊的Flux，它可以有多个订阅者，但是只有当connect()方法被调用时，才会开始发出数据。 
+  - replay()方法：会将这个热序列转换为一个ConnectableFlux，这是一种特殊的Flux，它可以有多个订阅者，但是只有当connect()方法被调用时，才会开始发出数据。**基于缓存实现的 伪 冷序列**
+  - autoConnect([int n])方法：会自动调用connect()方法，开始发出数据。可接收一个int参数，表示有n个订阅者订阅后开始发送数据，默认为 1
+
+- 第二个订阅者中途订阅**热序列**只获得之后的数据：
+
+  ```java
+  @Test
+  public void testHotSequence() throws InterruptedException {
+      // 创建一个热序列
+      Sinks.Many<Integer> hotSource = Sinks.many().multicast().onBackpressureBuffer();
+      Flux<Integer> hotFlux = hotSource.asFlux();
+  
+      // 创建一个生产者线程，向热序列发送数据
+      new Thread(() -> {
+          for (int i = 0; i < 10; i++) {
+              hotSource.tryEmitNext(i);
+              try {
+                  TimeUnit.SECONDS.sleep(1); // 模拟数据生产速度
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+          }
+          hotSource.tryEmitComplete();
+      }).start();
+  
+      subscribe(hotFlux); // 该方法为两个订阅者错时订阅流
+  }
+  ```
+
+- 第二个订阅者中途订阅**冷序列**获得全部数据：
+
+  ```java
+  @Test
+  public void testColdSequence() throws InterruptedException {
+      // 创建一个冷序列
+      Flux<Integer> coldFlux = Flux.range(0, 10).delayElements(Duration.ofSeconds(1));
+      
+      subscribe(hotFlux); // 该方法为两个订阅者错时订阅流
+  }
+  ```
+
+  
+
+
+
 ### 编程式创建流
 
 - Flux.generate：编程式创建流，单线程下可使用
@@ -2153,37 +2389,27 @@ Flux.range(1, 4)
   Flux.generate(() -> 0, // 提供初始值，seed，并发下可使用原子变量
                 (integer, synchronousSink) -> {
                     if (integer < 3) {
-                        // 此方法在订阅者的缓冲区满后"阻塞"（背压）
-                        // "阻塞"：？实际上是订阅者处理完后会回调该方法
+                        // 热序列，之所以产生输出结果那样“生产一条，消费一条”是因为
+                        // 每次调用 next 方法后会立即调用消费者的 onNext 方法
                         synchronousSink.next(integer);
                     }
                     else synchronousSink.complete(); // 完成
                     // sink.error(new RuntimeException(".."));
                     return integer + 1;
                 })
-      .log()
-      //.buffer(2)  // 默认缓冲区为1，可条件下游缓冲区大小测试
-      .subscribe(integer -> {
-          try {TimeUnit.SECONDS.sleep(2);} catch (Exception ignore) {}
-          log.info("接收到数据：{}", integer);
-      });
+      .subscribe(integer -> System.out.printf("接收到数据：%s \n", integer););
   ```
-
+  
   ```shell
-  21:22:05.541 [main] INFO reactor.Flux.Generate.1 -- | onSubscribe([Fuseable] FluxGenerate.GenerateSubscription)
-  21:22:05.541 [main] INFO reactor.Flux.Generate.1 -- | request(unbounded)
-  21:22:05.541 [main] INFO reactor.Flux.Generate.1 -- | onNext(0)
-  21:22:05.541 [main] INFO FluxTest -- 接收到数据：0
-  # 触发背压，隔2秒后注入下一个数据
-  21:22:07.555 [main] INFO reactor.Flux.Generate.1 -- | onNext(1)
-  21:22:07.555 [main] INFO FluxTest -- 接收到数据：1
-  # 触发背压
-  21:22:09.560 [main] INFO reactor.Flux.Generate.1 -- | onNext(2)
-  21:22:09.561 [main] INFO FluxTest -- 接收到数据：2
-  21:22:11.576 [main] INFO reactor.Flux.Generate.1 -- | onComplete()
+  生产数据：0
+  接收到数据：0 
+  生产数据：1
+  接收到数据：1 
+  生产数据：2
+  接收到数据：2 
   ```
-
-- Flux.create：**并发(多线程)向流中添加元素时使用**
+  
+- Flux.create：热序列，**并发(多线程)向流中添加元素时使用**
 
   ```java
   // 单线程添加元素
@@ -2287,14 +2513,24 @@ Flux.range(1, 4)
   - Schedulers.fromExecutor(Executor e)：以自己新建的线程池建立调度器
   - Schedulers.parallel()：单例模式的ForkJoin线程池调度器
   - Schedulers.newParallel(...)：新建一个ForkJoin线程池调度器
+  
+- runOn
+
+  ```java
+  Flux.range(1, 10)
+      .delayElements(Duration.ofSeconds(1))
+      .parallel(3)
+      .runOn(Schedulers.newParallel("myParallel"))
+      .subscribe(i -> log.info("{}", i));
+  
+  TimeUnit.SECONDS.sleep(12);
+  ```
+
+  
 
 
 
-
-
-### 补充
-
-#### 超时与重试
+### 超时与重试
 
 ```java
 Flux.range(1, 3)
@@ -2312,39 +2548,121 @@ System.in.read();
 
 
 
-#### Sinks
+### Sinks
 
-```java
-Sinks.many(); // 发送Flux数据
-Sinks.one(); // 发送Mono数据
+- 使用
 
-Sinks.many().unicast(); // 单播：这个管道只能绑定一个订阅者
-Sinks.many().multicast(); // 多播：可以绑定多个订阅者
-Sinks.many().replay(); // 重放：给后来的订阅者从头开始把元素发给它
+  ```java
+  Sinks.many(); // 发送Flux数据
+  Sinks.one(); // 发送Mono数据
+  
+  Sinks.many().unicast(); // 单播：这个管道只能绑定一个订阅者
+  Sinks.many().multicast(); // 多播：可以绑定多个订阅者
+  Sinks.many().replay(); // 重放：给后来的订阅者从头开始把元素发给它
+  
+  Sinks.Many<Object> many = Sinks.many().unicast()
+      .onBackPressureBuffer(new LinkBlockingQueue<>(5)); // 背压队列
+  
+  many.tryEmitNext(i);
+  
+  many.asFlux().subscribe(System.out::println);
+  ```
 
-Sinks.Many<Object> many = Sinks.many().unicast()
-    .onBackPressureBuffer(new LinkBlockingQueue<>(5)); // 背压队列
+- 该方法产生的流是**热序列**
+
+  Sinks.many().replay()方法创建的是一个热序列（Hot Sequence），但是它具有“重放”（Replay）的特性。这意味着，即使订阅者在数据产生后才订阅这个序列，它仍然可以接收到所有的数据，包括在它订阅之前产生的数据。
+
+  这是通过内部维护一个缓冲区来实现的。当有数据被发送到Sinks.Many对象时，这些数据会被存储在缓冲区中。然后，当有订阅者订阅这个序列时，它会立即接收到缓冲区中的所有数据。
+
+  这种“重放”特性使得Sinks.many().replay()方法创建的序列**既具有热序列的特性**（即无论是否有订阅者，都会产生数据），**又具有冷序列的特性**（即每个订阅者都可以接收到完整的数据序列）。
+
+  需要注意的是，由于Sinks.many().replay()方法**需要维护一个缓冲区来存储所有的数据，因此它可能会消耗大量的内存**。如果你的数据流包含大量的数据，或者数据的生产速度远大于消费速度，那么你可能需要考虑使用其他的方法，如Sinks.many().unicast().onBackpressureBuffer()，它可以在阻塞队列满时应用背压策略，防止内存溢出。
+
+- 背压队列效果展示
+
+  ```java
+  Sinks.Many<Integer> many = Sinks.many()
+      .unicast()
+      .onBackpressureBuffer(new LinkedBlockingQueue<>(2));
+  
+  // 创建一个生产者线程，尝试向Sinks.Many对象发送大于阻塞队列容量的数据
+  Thread producer = new Thread(() -> {
+      for (int i = 0; i < 5; i++) {
+          Sinks.EmitResult result = many.tryEmitNext(i);
+          System.out.println("Emitting: " + i + ", Result: " + result);
+          try {
+              TimeUnit.MILLISECONDS.sleep(100); // 模拟数据生产速度
+          } catch (InterruptedException e) {
+              e.printStackTrace();
+          }
+      }
+  });
+  producer.start();
+  
+  // 订阅Sinks.Many对象，模拟消费者行为
+  many.asFlux().subscribe(value -> {
+      try {
+          TimeUnit.SECONDS.sleep(2); // 模拟数据消费速度
+      } catch (InterruptedException e) {
+          e.printStackTrace();
+      }
+      System.out.println("Consumed: " + value);
+  });
+  
+  // 等待生产者线程结束
+  producer.join();
+  ```
+
+  ```shell
+  Emitting: 0, Result: OK
+  Emitting: 1, Result: OK
+  Emitting: 2, Result: OK
+  Emitting: 3, Result: FAIL_OVERFLOW  # 丢弃
+  Emitting: 4, Result: FAIL_OVERFLOW  # 丢弃
+  Consumed: 0
+  Consumed: 1
+  Consumed: 2
+  ```
+
+  
 
 
-```
+
+### 收集
+
+- blockXXX
+
+  ```java
+  Integer integer = Flux.range(1, 10)
+      .delayElements(Duration.ofSeconds(1))
+      .blockLast();
+  ```
+
+- collectXXX
+
+  ```java
+  Mono<List<Integer>> listMono = Flux.range(1, 10)
+      .delayElements(Duration.ofSeconds(1))
+      .collectList();
+  ```
+
+  
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-## 基础
+## WebFlux
 
 ### 异步Servlet
+
+- 依赖
+
+  ```xml
+  <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+  </dependency>
+  ```
 
 - 实例
 
@@ -2383,7 +2701,7 @@ Sinks.Many<Object> many = Sinks.many().unicast()
 
 
 
-### Controller
+### 原生请求
 
 - 引入依赖（注意：不要引入spring-boot-starter-web依赖）
 
@@ -2394,7 +2712,81 @@ Sinks.Many<Object> many = Sinks.many().unicast()
   </dependency>
   ```
 
-- `userService.findAll()`：返回的是一个流
+- 原生API
+
+  ```java
+  HttpHandler httpHandler = (ServerHttpRequest serverHttpRequest,
+                             ServerHttpResponse serverHttpResponse) -> {
+  
+      InetSocketAddress address = serverHttpRequest.getRemoteAddress();
+      log.info("请求ip：{}", address);
+      log.info("请求路径：{}", serverHttpRequest.getPath());
+      log.info("请求方法：{}", serverHttpRequest.getMethod());
+  
+      // 返回响应
+      DataBufferFactory factory = serverHttpResponse.bufferFactory();
+      byte[] data = String.format("Hello, %s .", address).getBytes();
+      DataBuffer dataBuffer = factory.wrap(data);
+      serverHttpResponse.writeWith(Mono.just(dataBuffer));
+  
+      // 返回一个空的Mono，表示响应已经结束（结束信号）
+      Mono<Void> complete = serverHttpResponse.setComplete();
+      return complete;
+  };
+  
+  ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(httpHandler);
+  
+  // 创建一个服务器
+  HttpServer.create()
+      .bindAddress(() -> new InetSocketAddress(80))
+      .handle(adapter)
+      .bindNow();
+  log.info("服务启动成功");
+  
+  System.in.read();
+  ```
+
+  
+
+
+
+### @EnableWebFlux
+
+> 与WebMVC中@EnableWebmvc类似
+
+- mvc：@EnableWebmvc，开启mvc的自定义配置
+
+  flux：@EnableWebFlux，开启WebFlux的自定义，添加后会禁用WebFlux的默认配置（默认配置在 WebFluxAutoConfiguration 自动配置类中配置），会造成网页不会自动映射路径等
+
+- WebmvcConfig
+
+  WebFluxConfigurer：可用来修改配置
+
+  ```java
+  @Configuration
+  public MyConfiguration {
+      @Bean 
+      public WebFluxConfigurer webFluxConfigurer() {
+          return new WebFluxConfigurer() {
+              // 可重写路径映射，跨域等方法来修改配置
+              @Override
+              public void addCorsMappings(CorsRegistry registyr) {
+                  registry.addMapping("/**")
+                      // 配置跨域
+                      .allowHeaders("*")
+                      .allowedMethods("*")
+                      .allowedOrigins("localhost");
+              }
+          }
+      }
+  }
+  ```
+
+  
+
+
+
+### Controller
 
 - 返回 `Mono` 对象
 
@@ -2415,9 +2807,73 @@ Sinks.Many<Object> many = Sinks.many().unicast()
   }
   ```
 
+- **请求**：获得请求的参数如下，其中 Request、Response、Session 较mvc有变化，新增 FilePart
+
+  ```java
+  @GetMapping(value = "/{id}")
+  public Mono<User> findById(@PathVariable int id,
+                             @RequestBody String s, // 只是获取请求体
+                             HttpEntity<String> entity, // 包装了 请求头和请求体
+                             @CookieValue(value/name="myCookie") String value,
+                             WebSession webSession, // 自动注入session
+                             HttpMethod method, // 请求方式
+                             MultipartFile file, // 文件上传：multipart/form-data
+                             FilePart file, // 文件上传，非阻塞API，底层使用零拷贝：transferTo方法
+                             @RequestAttribute String attribute, // 转发请求的请求域数据
+                             ServerWebExchange exchange) { // 包装了 请求和响应
+      // 获得Request
+      ServerHttpRequest request = exchange.getRequest();
+      // 获得Response
+      ServerHttpResponse response = exchange.getResponse();
+      
+      return userService.findById(id);
+  }
+  ```
+
+
+
+
+
+### Filter
+
+```java
+@Slf4j
+@Component
+public class MyWebFilter implements WebFilter {
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+        log.info("目标方法处理请求前");
+        Mono<Void> filter = chain.filter(exchange)
+            .doFinally(signalType -> {
+                log.info("目标方法处理请求后！");
+            });
+
+        // 因为webflux是全异步，所以这里的日志打印一般不会在请求处理后
+        log.info("目标方法处理请求后？");
+
+        return filter;
+    }
+}
+```
+
+```java
+[INFO ] 18:27:14:598   reactor-http-nio-2 --->    目标方法处理请求前
+[INFO ] 18:27:14:598   reactor-http-nio-2 --->    目标方法处理请求后？
+[INFO ] 18:27:14:624   reactor-http-nio-2 --->    目标方法执行
+[INFO ] 18:27:14:649   reactor-http-nio-2 --->    目标方法处理请求后！
+```
+
+
+
 
 
 ### SSE
+
+- sse 和 websocket 的两种协议的区别
+  - 通信方式：WebSocket 是全双工的，这意味着服务器和客户端可以同时发送和接收信息。而 SSE 是单向的，只能由服务器向客户端发送信息。
+  - 协议：WebSocket 是一个独立的协议，它在 TCP 上建立了一个持久的连接。而 SSE 是基于 HTTP 协议的，它通过 HTTP 连接发送事件。
+  - 使用场景：由于 WebSocket 是全双工的，因此它更适合需要双向通信的应用，如聊天应用、多人在线游戏等。而 SSE 由于只能由服务器向客户端发送信息，因此它更适合需要服务器向客户端推送信息的应用，如股票价格更新、新闻更新等。 
 
 - Servlet代码
 
@@ -2430,8 +2886,9 @@ Sinks.Many<Object> many = Sinks.many().unicast()
           resp.setCharacterEncoding("utf-8");
   
           for (int i = 0; i < 10; i++) {
-              // 指定事件标识，格式：event: + 事件名字 + 2个换行
+              // 指定事件标识，格式：event: + 事件名字 + 1个换行
               resp.getWriter().write("event:me\n");
+              // data 上还可以添加 id、retry、注释等
               // 发送数据流，格式：data: + 数据 + 2个换行
               resp.getWriter().write("data: " + i + "\n\n");
               resp.getWriter().flush();
@@ -2448,13 +2905,30 @@ Sinks.Many<Object> many = Sinks.many().unicast()
   }
   ```
 
+- 构建SSE对象
+
+  ```java
+  @GetMapping(value = "/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public Flux<ServerSentEvent<String>> sse() {
+      return Flux.interval(Duration.ofMillis(100))
+          .map(l -> ServerSentEvent
+               .builder(String.format("这是第 %d 条数据", l))
+               .id(String.valueOf(l))
+               .event("message")
+               .comment("这是一条注释")
+               .retry(Duration.ofSeconds(3))
+               .build()
+              );
+  }
+  ```
+  
 - 前端
 
   ```js
   let sse = new EventSource("/servlet_test_war/sse");
   let textarea = document.querySelector(".textarea");
   
-  // 不指定事件标志，会默认使用 message 事件
+  // 不指定事件标志，会默认使用 “message” 事件
   sse.onmessage = function (event) {
       console.log("event: ", event)
       console.log("event.data: ", event.data);
@@ -2470,6 +2944,96 @@ Sinks.Many<Object> many = Sinks.many().unicast()
       textarea.innerHTML = textarea.innerHTML + " " + event.data;
   });
   ```
+
+
+
+### DispatchHandler
+
+> SpringMVC：DispatcherServlet
+>
+> SpringWebFlux：DispatchHandler
+
+- DispatchHandler 中的三个成员变量，存储了处理请求的处理器
+
+  ```java
+  @Nullable
+  private List<HandlerMapping> handlerMappings;
+  @Nullable
+  private List<HandlerAdapter> handlerAdapters;
+  @Nullable
+  private List<HandlerResultHandler> resultHandlers;
+  ```
+
+- 请求处理流程
+
+  - HandllerMapping：请求映射处理器，保存了每个请求由那个方法进行处理
+  - HandlerAdapter：处理器适配器
+  - HandlerResultHandler：[处理器结果]处理器：处理[处理器产生的结果]的处理器
+
+- SpringMVC：DispatcherServlet 有一个 doDispatch() 方法，来处理所有的请求；
+
+  WebFlux：DispatchHandler 有一个 handle() 方法，来处理所有请求
+
+  ```java
+  @Override
+  public Mono<Void> handle(ServerWebExchange exchange) {
+      if (this.handlerMappings == null) {
+          return createNotFoundError(); // 返回 Mono.error(ex)
+      }
+      if (CorsUtils.isPreFlightRequest(exchange.getRequest())) {
+          return handlePreFlight(exchange);
+      }
+      return Flux.fromIterable(this.handlerMappings)
+          .concatMap(mapping -> mapping.getHandler(exchange))
+          .next()
+          .switchIfEmpty(createNotFoundError())
+          .onErrorResume(ex -> handleDispatchError(exchange, ex))
+          .flatMap(handler -> handleRequestWith(exchange, handler));
+  }
+  ```
+
+  1. 请求和响应都封装在 ServerWebExchange 对象中，有 handle 方法进行处理
+
+  2. 首先判断是否存在映射处理器，如果没有任何的映射处理器，直接以 Mono.error 结束流
+
+  3. 再通过跨域工具，判断是否跨域请求
+
+  4. ```java
+         // 以映射处理器集合创建流
+     Flux.fromIterable(this.handlerMappings)
+         // 找到能处理该请求的 映射处理器
+         .concatMap(mapping -> mapping.getHandler(exchange)) // FLux<处理器>
+         // 一旦上游找到处理器，直接获得（获得第一个能处理该请求的映射处理器）
+         .next() // Mono<处理器>
+         // 如果没拿到则转为 Mono.erro
+         .switchIfEmpty(createNotFoundError()) // Mono<处理器 或 异常信号>
+         // 如果上游出现异常信号，从 处理器适配器集合 中找 异常处理器
+         .onErrorResume(ex -> handleDispatchError(exchange, ex)) // Mono<处理 请求或异常 的处理器>
+         // 处理请求或异常
+         .flatMap(handler -> handleRequestWith(exchange, handler));
+     ```
+
+
+
+### 异常处理器
+
+> 和WebMVC的写法相同
+>
+> >  webmvc 的异常处理：依赖于 AOP
+>
+> > webflux 的异常处理：依赖于 Reactor 的错误处理机制。在 WebFlux 中，所有的请求处理都是通过一个反应式流进行的，当在这个流中发生错误时，Reactor 提供了一种错误处理机制，允许你在流的末端捕获并处理错误
+
+```java
+@RestControllerAdvice
+public class GlobalExecptionHandler {
+    @ExeptionHandler(Exception.class)
+    public  error(Exception e) {
+        return Mono.just(e.getMessage());
+    }
+}
+```
+
+
 
 
 

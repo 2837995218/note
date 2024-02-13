@@ -736,19 +736,19 @@ insert into emp values(7942,'小乌龟','推销员',7782,'1984-01-23',null,null,
   - 实例
 
     ```sql
-    SELECT e.`emp_name` 姓名, d.`dept_name` 所在部门, e.`salary` 个人工资,
-    t2.all_salary 每个部门的总工资, t1.all_salary 全体员工的总工资,
-    e.salary/t2.all_salary 每个员工的工资栈部门总工资的比率, 
-    e.`salary`/t1.all_salary 每个员工占总工资的比率
+    SELECT e.`emp_name` 姓名, d.`dept_name` 所在部门, e.`salary` 个人工资, 
+    t1.all_salary 该员工所在部门总工资, e.`salary`/t1.all_salary 员工占所在部门总工资比率,
+    t2.all_salary 公司总工资,e.salary / t2.all_salary 员工占公司总工资比率
     FROM emp e
-    JOIN (SELECT SUM(emp.salary) all_salary FROM emp) t1
-    LEFT JOIN (SELECT emp.`dept_id` dept_id, SUM(emp.salary) all_salary 
-               FROM emp 
-               GROUP BY emp.`dept_id`) t2
-    ON t2.dept_id = e.`dept_id`
     LEFT JOIN dept d
     ON e.`dept_id` = d.`dept_id`
-    ORDER BY e.`dept_id`;
+    LEFT JOIN (SELECT emp.`dept_id` dept_id, SUM(emp.`salary`) all_salary
+               FROM emp
+               GROUP BY emp.`dept_id`) t1
+    ON t1.`dept_id`= e.dept_id
+    JOIN (SELECT SUM(emp.`salary`) all_salary FROM emp) t2 -- 利用笛卡尔积不能使用 left、right
+    -- LEFT JOIN (SELECT SUM(emp.`salary`) all_salary FROM emp) t2 ON TRUE
+    ORDER BY e.dept_id;
     
     
         -- 注意区分与使用以下两个sql
