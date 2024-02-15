@@ -203,7 +203,7 @@
   	emp_name varchar(10), -- 员工姓名										-
   	job varchar(9),	-- 岗位
   	manger_id int,	 -- 直接领导编号
-  	hiredate date, -- 雇佣日期，入职日期
+  	hire_date date, -- 雇佣日期，入职日期
   	salary int, -- 薪水
   	comm int,  -- 提成
   	dept_id int -- 部门编号
@@ -663,7 +663,7 @@ create table emp(
 	emp_name varchar(10), -- 员工姓名										-
 	job varchar(9),	-- 岗位
 	manger_id int,	 -- 直接领导编号
-	hiredate date, -- 雇佣日期，入职日期
+	hire_date date, -- 雇佣日期，入职日期
 	salary int, -- 薪水
 	comm int,  -- 提成
 	dept_id int -- 部门编号

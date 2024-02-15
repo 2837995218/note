@@ -2652,6 +2652,20 @@ System.in.read();
 
 ## WebFlux
 
+| API功能      | servlet-阻塞式web                  | webflux-响应式web                                          |
+| ------------ | ---------------------------------- | ---------------------------------------------------------- |
+| 前端控制器   | DispatcherServlet                  | DispatcherHandler                                          |
+| 处理器       | Controller                         | WebHandler/Controller                                      |
+| 请求、响应   | ServletRequest<br/>ServletResponse | ServerWebExchange:<br>  ServerRequest<br/>  ServerResponse |
+| 过滤器       | Filter(httpFilter)                 | WebFilter                                                  |
+| 异常处理器   | HandlerExceptionResolver           | DispatchExeptionHandler                                    |
+| Web配置      | @EnableWebMvc                      | @EnableWebFlux                                             |
+| 自定义配置   | WebMvcConfigurer                   | WebFluxConfigurer                                          |
+| 返回结果     | 任意                               | Mono、Flux、任意                                           |
+| 发送Rest请求 | RestTemplate                       | WebClient                                                  |
+
+
+
 ### 异步Servlet
 
 - 依赖
@@ -3102,43 +3116,320 @@ public class GlobalExecptionHandler {
 
 ## R2DBC
 
-### 介绍
+### 规范
 
-- R2DBC（Reactive Relational Database Connectivity）是一个非阻塞的数据库连接API，它是由Spring团队开发的，目前主要在Spring WebFlux等反应式编程环境中使用
+- R2DBC规范：r2dbc-spi
 
-- 目前，Jakarta EE（以前的Java EE）还没有包含R2DBC的规范。Jakarta EE的数据访问规范主要是JPA（Java Persistence API）和JDBC（Java Database Connectivity），这两者都是阻塞式的API。
+- R2DBC实现：
 
-- 反应式编程模型是一种编程范式，它的核心思想是以数据流和变化传播为基础。在反应式编程模型中，当一个数据源（如变量、数据结构等）发生变化时，这个变化会自动传播到与这个数据源相关的其他部分。
+  - oracle-r2dbc
+  - r2dbc-h2
+  - r2dbc-mariadb
+  - r2dbc-mssql
+  - r2dbc-mysql
+  - r2dbc-postgresql
 
-  反应式编程模型有几个关键特性：
+- 导入依赖
 
-  1. **响应式流**：反应式编程模型中的数据流是异步的，可以处理零个或多个数据项，还可以处理完成和错误信号。这种数据流模型可以很好地处理异步和非阻塞操作，特别是在处理大量数据或长时间运行的操作时。
+  ```xml
+  <dependency>
+      <groupId>dev.miku</groupId>
+      <artifactId>r2dbc-mysql</artifactId>
+      <version>0.8.2.RELEASE</version>
+  </dependency>
+  ```
 
-  2. **非阻塞**：在反应式编程模型中，所有的操作都是非阻塞的，这意味着在等待数据时，程序不会阻塞当前线程，而是会继续执行其他任务。这可以提高程序的并发处理能力，特别是在处理大量并发请求的场景下。
+- 原生API
 
-  3. **回压**：反应式编程模型支持回压（backpressure），这是一种流控制机制，可以防止在处理大量数据时出现内存溢出。通过回压，消费者可以控制生产者的数据生成速率，以防止生产者生成数据的速度超过消费者处理数据的速度。
+  ```java
+  MySqlConnectionConfiguration configuration =
+      MySqlConnectionConfiguration.builder()
+      .username("root")
+      .password("root")
+      .host("192.168.81.128")
+      .database("test")
+      .build();
+  ConnectionFactory connectionFactory = MySqlConnectionFactory.from(configuration);
+  
+  Mono.from(connectionFactory.create())
+      .flatMapMany(connection ->
+                   connection.createStatement("select * from emp " +
+                                              "where dept_id = ? and salary > ?salary")
+                   .bind(0, 10)
+                   .bind("salary", 2000)
+                   .execute())
+      .flatMap(result ->
+               result.map(readable -> {
+                   Emp emp = new Emp();
+                   emp.setEmp_id(readable.get("emp_id", Integer.class));
+                   emp.setEmp_name(readable.get("emp_name", String.class));
+                   emp.setSalary(readable.get("salary", BigDecimal.class));
+                   return emp;}))
+      .take(5)
+      .doOnNext(System.out::println)
+      .subscribe();
+  TimeUnit.SECONDS.sleep(2);
+  ```
 
-  反应式编程模型在处理大量并发请求、实时数据流、微服务通信等场景下有很大的优势。例如，Spring WebFlux就是一个基于反应式编程模型的Web框架，它可以提供高并发、低延迟的Web服务。
-
-- 编程范式是一种编程语言的分类方式，它描述了编程语言的特性和风格。以下是一些常见的编程范式：
-
-  1. **命令式编程**：这是最常见的编程范式，它描述了"如何做"。在命令式编程中，程序员会写出一系列的命令或语句来改变程序的状态。大多数常见的编程语言，如C、Java、Python等，都支持命令式编程。
-  2. **声明式编程**：与命令式编程相对，声明式编程描述了"要做什么"，而不是"如何做"。在声明式编程中，程序员只需要描述他们想要的结果，而不需要关心如何达到这个结果。SQL就是一种声明式编程语言。
-  3. **函数式编程**：函数式编程是一种声明式编程的子范式，它把计算视为函数的求值。在函数式编程中，函数是第一类对象，可以作为参数传递，也可以作为结果返回。函数式编程强调无副作用和引用透明性。Haskell和Scala是两种常见的函数式编程语言。
-  4. **面向对象编程**：面向对象编程是一种编程范式，它使用"对象"来设计软件。在面向对象编程中，对象是类的实例，类定义了对象的属性和方法。面向对象编程强调封装、继承和多态。Java和C++是两种常见的面向对象编程语言。
-  5. **逻辑编程**：逻辑编程是一种声明式编程的子范式，它使用逻辑来描述问题和计算。在逻辑编程中，程序是一组逻辑公式，计算是通过逻辑推理进行的。Prolog是一种常见的逻辑编程语言。
-  6. **并发编程**：并发编程是一种编程范式，它用于编写可以同时执行多个任务的程序。在并发编程中，程序员需要处理线程、锁、同步和异步等概念。Java和Go都提供了并发编程的支持。
-  7. **反应式编程**：反应式编程是一种编程范式，它用于编写响应事件或变化的程序。在反应式编程中，程序是一组响应事件的函数或方法。反应式编程可以用于创建交互式的用户界面，或处理异步事件。RxJava和Spring WebFlux都支持反应式编程。
 
 
 
 
+### r2dbc-starter
+
+- 自动配置类
+  - R2dbcAutoConfiguration：主要配置连接工厂、连接池
+  - R2dbcDataAutoConfiguration
+    - R2dbcEntityTemplate：数据库的响应式客户端，该对象提供了一些curd api；类似的如：RedisTemplate等
+    - 数据类型、映射关系、转换器、自定义转化器组件 等：作用是将数据库的 int、decimal等 与 java的Integer、BigDecimal等 映射转化
+  - R2dbcRepositoriesAutoConfiguration
+    - 开启Spring Data声明式接口的CRUD
+      - mybatis-plus实现了该接口，提供了BaseMapper、IService等简化开发
+      - Spring Data 本身也提供了基础的CURD实现
+  - R2dbcTransactionMangerAutoConfiguration：事务管理
+
+- 使用
+
+  - 依赖
+
+    ```xml
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-r2dbc</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>dev.miku</groupId>
+        <artifactId>r2dbc-mysql</artifactId>
+        <version>0.8.2.RELEASE</version>
+    </dependency>
+    ```
+
+  - 配置文件
+
+    ```yml
+    spring:
+      r2dbc:
+        username: root
+        password: root
+        url: r2dbc:mysql://192.168.81.128:3306/test
+    ```
+
+  - pojo
+
+    ```java
+    @Table("emp")
+    public class Emp {
+        @Id
+        @Column("emp_id")
+        private Integer id;
+        private Integer deptId; // deptId 不需要使用 @Column("dept_id")
+        private LocalDate hireDate; // 日期的映射不能使用 Date，只能用 LocalXXX、Instant
+        private Integer deptId;
+        @Transient // 表示临时字段，并不是数据库表中的一个字段
+        //private String deptName; // 错误写法
+        private Dept dept;
+        // ...
+    }
+    ```
+
+  - 持久层
+
+    ```java
+    @Repository
+    public interface EmpDao extends ReactiveCrudRepository<Emp, Integer> {
+        // 利用IDE提示功能 和 R2DBC根据方法名自动生成查询功能 编写单表查询方法
+        Flux<Emp> findEmpsBySalaryGreaterThanEqualAndDeptIdIn(BigDecimal salary, Collection<Integer> deptId);
+        // findAllXXX  => select *
+        // findEmpsXXX => select emp.emp_id emp.emp_name ...
+        
+        
+        @Query("""
+        select e.emp_id, e.emp_name, d.dept_name
+        /* 如果实体类Emp中有 deptName 属性上，且该属性上加了@Transient，则不会为该字段赋值
+           如果没加该注解，则在使用上面 findEmpsXXX 时，会将该属性作为字段查询数据库从而报错
+           正确做法是在实体类 Emp 中添加属性 Dept ，并为该属性添加 @Transient */
+        from emp e
+        left join dept d
+        on e.dept_id = d.dept_id
+        where e.emp_id = :id; // 冒号+形参名
+        """)
+        Mono<Emp> customFindById(Integer id);
+    }
+    ```
+
+    - @EnableR2dbcRepositories注解，会自动查找所有的存储库接口，并自动实现它们（上面的findxxx方法）。
+    - 如果类路径下有Spring Data R2DBC的类，Spring Boot会自动启用R2DBC存储库的支持。这意味着，即使你没有在你的主应用类上使用@EnableR2dbcRepositories注解，Spring Boot仍然会自动配置并启用R2DBC存储库。
+    - 如果你需要更细粒度的控制，比如指定存储库接口的位置，或者自定义存储库的实现，那么就需要使用@EnableR2dbcRepositories注解。
+
+  - 业务层
+
+    ```java
+    @Service
+    public class EmpService {
+        @Autowired
+        private EmpDao empDao;
+        @Autowired
+        @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+        private R2dbcEntityTemplate template; // 一般用于单表查询
+        @Autowired
+        @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+        private DatabaseClient databaseClient; // 更底层的查询api，适用于多表查询（join）
+    
+        public Flux<Emp> getAllEmps() {
+            Criteria criteria = Criteria.empty()
+                .and("dept_id")
+                .in(10, 20)
+                .and("salary")
+                .greaterThanOrEquals(2000);
+            Query query = Query.query(criteria); // QBC(Query by Criteria) 查询，还有QBE(Example)
+            return template.select(query, Emp.class); // 使用Template
+        }
+    
+        public Mono<Emp> saveEmp(Emp emp) {
+            return empDao
+                .findAllBySalaryGreaterThanEqualAndDeptIdIn(
+                BigDecimal.valueOf(2000), List.of(10, 20)); // 使用Dao
+        }
+    
+        public Flux<Map<String, Object>> queryDeptName(Integer id) {
+            String sql = """
+                select e.emp_id as 员工id, e.emp_name 员工姓名, d.dept_name as 所在部门 
+                from emp e
+                left join dept d
+                on e.dept_id = d.dept_id 
+                where e.emp_id = ?id;
+            """;
+                return databaseClient.sql(sql) // 使用databaseClient
+                .bind("id", id)
+                .fetch() // FetchSpec<Map<String, Object>> ：map是一行数据，key是字段名，value是字段值
+                .first(); // first、all、one(结果有多条会报错)  Mono<Map<String, Object>>
+        }
+    }
+    ```
 
 
 
 
 
 
+### 映射与转换
+
+> 1对1 or 1对多 都需要自定义封装逻辑
+>
+> > r2dbc 中可使用 自定义转换器、DatabaseClient
+> >
+> > mybatis 中可使用 ResultMap 标签来封装
+
+- pojo
+
+  ```java
+  public class Emp {
+      private Integer empId;
+      private String empName;
+      private Integer deptId;
+      @Transient
+      private Dept dept; // 员工所在部门
+  }
+  ```
+
+  ```java
+  public class Dept {
+      private Integer deptId;
+      private String deptName;
+      @Transient
+      private List<Emp> emps; // 该部门所有员工
+  }
+  ```
+
+- dao
+
+  ```java
+  @Query("""
+        select e.emp_id, e.emp_name, e.dept_id, d.dept_name
+        from emp e
+        left join dept d
+        on e.dept_id = d.dept_id
+        where e.emp_id = :id;
+        """)
+  // 查询指定id用户的及其所在部门：1对1
+  Mono<Emp> customFindById(Integer id);
+  ```
+
+- **1对1** 问题：上述查询虽然会为emp对象添加 empId、empName、deptName 属性值，但不会为属性 dept 创建对象并赋值
+
+- 方法1（建议）：使用DatabaseClient
+
+  ```java
+  @Autowired
+  private DatabaseClient databaseClient; // 更底层的查询api，适用于多表查询（join）
+  ```
+
+- 方法2：自定义转换器
+
+  - 自定义转换器
+
+    ```java
+    @ReadingConverter
+    public class EmpConverter implements Converter<Row, Emp> {
+        @Override
+        public Emp convert(Row source) {
+            Integer id = source.get("emp_id", Integer.class);
+            Integer deptId = source.get("dept_id", Integer.class);
+            String name = source.get("emp_name", String.class);
+            String deptName = "relax公司："+source.get("dept_name", String.class);
+            return new Emp(id, name, new Dept(deptId, deptName, null));
+        }
+    }
+    ```
+
+  - 添加Converter
+
+    ```java
+    @Bean
+    public R2dbcCustomConversions conversions() {
+        return R2dbcCustomConversions.of(MySqlDialect.INSTANCE, new EmpConverter());
+    }
+    ```
+
+  - **问题**：一旦使用自定义转换器（如实现Converter<Row, Emp>），所有返回值为Emp的curd都会使用该转换器，从而会产生非常繁杂的问题
+
+    - 解决方法1：创建一个类专门用于自定义转换
+    - 解决方法2：在Converter中添加一些判断逻辑，让Converter兼容更多的表结构
+
+- **一对多** 问题：查询出各个部门及各自所有员工
+
+  ```java
+  String sql = """
+      select d.dept_id, d.dept_name, e.emp_id, e.emp_name
+      from dept d
+      left join emp e
+      on d.dept_id = e.dept_id
+      order by d.dept_id /* ※ */
+      """;
+  databaseClient.sql(sql)
+      .fetch()
+      .all()
+      .bufferUntilChanged(rowMap -> Integer.parseInt(rowMap.get("dept_id").toString())) // ※
+      .map(empMapList -> {
+          Map<String, Object> map = empMapList.get(0);
+          int deptId = Integer.parseInt(map.get("dept_id").toString());
+          String deptName = map.get("dept_name").toString();
+          List<Emp> emps = empMapList.stream()
+              .map(empMap -> {
+                  Object empIdObj = empMap.get("emp_id");
+                  if (empIdObj == null) return null;
+                  int empId = Integer.parseInt(empIdObj.toString());
+                  String empName = empMap.get("emp_name").toString();
+                  return new Emp(empId, empName, null);
+              })
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList());
+          return new Dept(deptId, deptName, emps);
+      })
+      .doOnNext(System.out::println)
+      .subscribe();
+  TimeUnit.SECONDS.sleep(3);
+  ```
 
 
 

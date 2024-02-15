@@ -288,14 +288,14 @@ conn.close();
 
 
 
-## 其他问题
+## 字段映射等问题
 
 - 数据库的字段名称 和 实体类的属性名称 不一样时，不能自动封装。三种解决方法：
 
   - 方法1：查询时取别名：对不一样的列名取别名，让别名与实体类属性名一致
 
     ```xml
-    <select id="selectAll" resultTyep="User">
+    <select id="selectAll" resultType="User">
     	select id, user_name(数据库字段名称) as userName(别名) from user(表);
     </select>
     ```
@@ -305,28 +305,37 @@ conn.close();
     ```xml
     <sql id="sql_01">id, user_name as userName</sql>
     
-    <select id="selectAll" resultTyep="User">
+    <select id="selectAll" resultType="User">
     	select
         	<include regid="sql_01"/>
         from user(表);
     </select>
     ```
 
-  - 方法3：映射
+  - **方法3：映射**
+    
     - id：唯一标识
     - type：放回的值的类型，也支持别名
     - 子标签
       - id：完成主键字段的映射
-      - column：完成一般字段的映射
+      - result：完成一般字段或主键的映射
+      - association：完成引用属性的映射
     
     ```xml
-    <resultMap id="resultMap_01" type="user">
-    	<result column="列名称" property="实体类的属性名"/>
-        <result id="列名称" property="实体类的属性名"/>
+    <resultMap id="empWithDept" type="emp">
+        <id column="emp_id" property="id"/> <!-- 映射主键 -->
+        <result column="emp_name" property="name"/> <!-- 映射普通字段 -->
+        <association property="dept" javaType="dept"> <!-- 映射到引用属性 -->
+            <id column="dept_id" property="id"/>
+            <result column="dept_name" property="name"/>
+        </association>
     </resultMap>
     
-    <select id="selectAll" resultType="reusltMap_01">
-    	select 字段 from user(表)
+    <select id="selectAllWithDept" resultMap="empWithDept">
+        select e.emp_id, e.emp_name, d.dept_id, d.dept_name
+        from emp e
+        left join dept d
+        on d.dept_id = e.dept_id;
     </select>
     ```
 
@@ -3720,6 +3729,8 @@ public void testUpdate(){
 
 ## 代码生成器
 
+> mybatis 3.5 版本可用以下代码生成
+
 ### 坐标
 
 ```xml
@@ -4876,6 +4887,10 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
 
   - mybatis-spring-boot-starter 或 mybatis-plus-boot-starter
   - mysql-connector-java
+  - springboot3 需要 
+    - 使用 mybatis-plus-boot-starter 3.5.3及以上版本
+    - 除此之外，部分操作，可能还需要导入 mybatis-plus 依赖
+    - 若使用 xml mapper 映射 java mapper，须在启动类是使用 `@Mapper(" java mapper 包路径")`
 
 - 配置连接
 
@@ -4909,13 +4924,80 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
     - 配置时区：jdbc:mysql://localhost:3306/ssm?serverTimezone=UTC
     - 修改mysql数据库配置
   - 驱动类过时：driver-class-name: com.mysql.cj.jdbc.Driver
-  
-- mybatis plus 开启日志
+
+- mybatis plus 其他配置
 
   ```yaml
   mybatis-plus:
+    # 更多配置查看 mybatis starter 配置属性类 MybatisPlusProperties
+    mapper-locations: classpath*:/space/relax/mapper/*.xml # 用于配置xml mapper文件位置
+    type-aliases-package: space.relax.domain 
+    config-location: ... # mybatis 核心配置文件（一般不需要新建该文件）
     configuration:
       log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 日志打印到控制台上
+  ```
+
+- 常见异常：
+
+
+  - 问题：使用 xml mapper ，pojo类中的部分注解失效
+
+    ```java
+    // select dept_name from dept; // 不会映射到 name 属性上
+    // select dept_name as name from dept;
+    
+    @TableFeild("dept_name")
+    private String name;
+    ```
+
+  - `org.springframework.core.NestedIOException`
+
+    ```xml
+    <!-- 部分 操作 可能还需要导入下面依赖 -->
+    <dependency>
+        <groupId>com.baomidou</groupId>
+        <artifactId>mybatis-plus</artifactId>
+        <version>与starter版本保持一致</version>
+    </dependency>
+    ```
+
+  - `org.apache.ibatis.binding.BindingException: Invalid bound statement (not found): space.relax.mapper.DeptMapper.customSelectAll`
+
+
+    - 产生原因1：java mapper 与 xml mapper 在打包时并未打包到一起
+    
+      - 方法1：保证两个在打包后处于同一文件夹
+      - 方法2：使用上面yml中的 `mapper-locations` 配置xml mapper位置
+    
+    - 产生原因2：xml mapper 放在 src/main/java 目录中，导致xml没有被打包
+    
+      - 解决方法：如下
+
+- 实用功能
+
+  我们在编写 xml mapper时，会一般将其放到如 src/main/resource/space/relax/mapper 目录下，而java mapper会放到 src/main/java/space/relax/mapper 目录下，项目在打包时，resource 中文件会自动放到根目录，java目录中**仅java文件**会由打包软件放到根目录中对应目录下。
+
+  若将 xml mapper 放到 src/main/java/space/relax/mapper 与 java mapper 放在一起，打包软件不会将 src/main/java目录下的 非java文件 打包，从而导致产生异常
+
+  ```xml
+  <build>
+      <plugins>
+          <plugin>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-maven-plugin</artifactId>
+          </plugin>
+      </plugins>
+      <resources>
+          <resource>
+              <directory>src/main/resources</directory>
+          </resource>
+          <resource>
+              <directory>src/main/java</directory>
+              <includes><include>**/*.xml</include></includes>
+              <!-- maven可以将mapper.xml进行打包处理，否则仅对java文件处理 -->
+          </resource>
+      </resources>
+  </build>
   ```
 
   
