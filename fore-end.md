@@ -149,24 +149,156 @@
   - 没有语义的标签：
     - \<div>：独占一行
     - \<span>：一行显示多个
-
   - 有语义的标签：
     - \<header>：网页头部
     - \<nav>：网页导航
     - \<footer>：网页底部
     - \<aside>：网页侧边栏
-    - \<section>：网页区块
     - \<article>：网页文章
+    - \<section>：网页文章中的段落
 
 
 
+### H5标签
 
-### 其他内容
+- IE 8 兼容 Html5
 
-- 字符实体
-  - ' '：\&nbsp;
-  - '&'：\&amp;
-  - '©'：\&copy;
+  html5shiv.js 是谷歌编写的，可解决 ie8 兼容 html5 **部分问题**的 js 脚本
+
+  ```html
+  <!-- 让 IE 浏览器处于一个最优的渲染模式 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  <!-- 针对一些国产的 双核 浏览器，让浏览器优先使用 webkit 内核去渲染网页
+       另一个内核是 ie 的 Trident 内核，进行支付和交易时可能用到 -->
+  <meta name="renderer" content="webkit">
+  
+  <!-- ie 8 可以解析下面注释 -->
+  <!--[if lt ie 9]>
+  <script src="./html5shiv.js"></script>
+  <![endif]-->
+  ```
+
+- 布局标签
+
+  - header：整个页面，或者部分区域的头部
+
+  - footer：整个页面，或者部分区域的底部
+
+  - nav：导航
+
+  - article：文章、帖子、评论、杂志、新闻、博客等
+
+  - section：页面中的某段文字，或者文章中的某段文字（里面通常会包含标题）
+
+  - aside：侧边栏
+
+- 状态标签
+
+  - meter 标签
+
+    ```html
+    <span>模拟手机电量：</span>
+    <meter max="100" min="0" value="80" low="10" height="20" optimum="90"></meter>
+    ```
+
+  - progress 标签
+
+    ```html
+    <span>模拟进度条：</span>
+    <progress max="100" value="20"></progress>
+    ```
+
+- 列表标签
+
+  - datalist
+
+    ```html
+    <input type="text" list="mydata">
+    <datalist id="mydata">
+        <option value="上海">上海</option>
+        <option value="北京">北京</option>
+        <option value="深圳">深圳</option>
+    </datalist>
+    ```
+
+  - details、summary
+
+    ```html
+    <details>
+        <summary>王太太整天唠叨个不停，可她有一个月说话最少，是哪一个月？</summary>
+        <p>二月</p>
+    </details>
+    ```
+
+- 文本标签
+
+  - ruby：可用于拼音 <ruby><span>标</span><rt>biāo</rt></ruby> <ruby><span>注</span><rt>zhù</rt></ruby>
+
+    ```html
+    <ruby>
+        <span>魑</span>
+        <rt>chī</rt>
+    </ruby>
+    ```
+
+  - mark：用于标注一段文字中的<mark>重点</mark>，类似于 \<em>
+
+- 表单中标签相关属性
+
+  - novalidate：表单 form 属性，加上该属性的表单，提交时不进行验证
+
+  ```html
+  <input type="text" placeholder="请输入账号" required autofocus autocomplete="on"
+         pattern="\w{6}">
+  ```
+
+  - placeholder：占位符，可用于提示
+  - required：加了该属性的 input、textarea 必须填写，否则无法提交
+  - autofocus：自动获取焦点
+  - autocomplete：自动提示以前填写过的内容
+  - pattern：文本校验，无法校验 textarea，若无required属性，则即使为空也能提交
+
+- input 新增 type 类型
+
+  - email：进行邮箱格式校验
+  - url：进行网址格式校验
+  - number：进行数据格式校验，可添加属性 step（步长）、max（最大值）、min（最小值）
+  - search：提供清空功能
+  - tel：手机浏览器填写此input，会自动切换到 数字键盘
+  - range：范围选择器，可添加属性 max、min
+  - color：颜色选择器
+  - date：日期选择器，类似的还有：month、week、datetime-local、time 等
+
+- video、audio 标签
+
+  属性有：
+
+  - controls：显示控制模块
+
+  - muted：默认静音
+
+  - autoplay：自动播放（处于静音状态、高媒体参与度的网站、已有交互的网站 的视频/音频才能自动播放）
+
+    媒体参与度查询: chrome://media-engagement
+
+  - loop：循环播放
+
+  - poster="./封面.png"：视频封面，audio标签没有该属性
+
+  - preload="auto"：视频、音频预加载 （auto：自动加载；none：不加载；metadata：只加载视频基本信息，如时长等）
+
+- 全局属性
+
+  | 属性名          | 值         | 功能                                                 |
+  | --------------- | ---------- | ---------------------------------------------------- |
+  | contenteditable | true/false | 元素内容是否可编辑                                   |
+  | draggable       | true/false | 元素是否可被拖动                                     |
+  | hidden          |            | 隐藏元素                                             |
+  | spellcheck      | true/false | 是否对元素进行拼写和语法检查，浏览器需要打开拼写检查 |
+  | contextmenu     |            | 元素的上下文菜单，一般配合js使用                     |
+  | data-*          | 数据值     | 用于存储页面的私有定制数据，一般配合js使用           |
+
 
 
 
@@ -1658,7 +1790,7 @@ function flash(obj, target, callback){
 
 
 
-# 移动端
+# CSS3
 
 
 

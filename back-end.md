@@ -7959,6 +7959,9 @@ CAP定理指出，对于任何分布式系统，这三个属性不能同时满�
 
     ```shell
     yum install -y docker-ce
+    
+    # 安装指定版本的 docker
+    yum install -y docker-ce-20.10.7 docker-ce-cli-20.10.7 containerd.io-1.4.6
     ```
 
 - 启动docker
@@ -7979,6 +7982,9 @@ CAP定理指出，对于任何分布式系统，这三个属性不能同时满�
     
     systemctl stop docker  # 停止docker服务
     
+    # 现在启用docker，并设置为开机自启
+    systemctl enable docker --now
+    
     systemctl restart docker  # 重启docker服务
     ```
 
@@ -7997,7 +8003,8 @@ CAP定理指出，对于任何分布式系统，这三个属性不能同时满�
     sudo systemctl restart docker
     ```
 
-    
+
+
 
 #### 使用
 

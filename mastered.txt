@@ -12,3 +12,21 @@
 12.多项前端技术（html、css、js、bootstrap、ajax、vue、canvas）
 13.大数据相关技术（scala、Hadoop、Hive）
 
+
+
+前端：  1. html5、css3、es11
+        2.
+	    3.
+后端：  1.
+        2.
+	    3.
+数据库：1. mysql（权限、架构、调优、并发、日志、MyCat）
+        2. redis（缓存、分布式锁、集群）
+		3. 时序数据库、非关系型数据库
+语言：  1. jvm
+        2. juc
+		4. jdk17
+		3. scala、jakarta多种规范
+运维：  1. nginx、openresty
+        2. docker、k8s
+
