@@ -195,7 +195,7 @@
 
 - 状态标签
 
-  - meter 标签
+  - meter 标签：三段式状态
 
     ```html
     <span>模拟手机电量：</span>
@@ -255,6 +255,7 @@
 
   - placeholder：占位符，可用于提示
   - required：加了该属性的 input、textarea 必须填写，否则无法提交
+  - disabled：禁用该元素
   - autofocus：自动获取焦点
   - autocomplete：自动提示以前填写过的内容
   - pattern：文本校验，无法校验 textarea，若无required属性，则即使为空也能提交
@@ -376,7 +377,7 @@
   - color、background-color
     - 关键词：red、green、yellow、blue
     - rgb表示法：rgb(r,g,b)：rgb(255,255,255)、rgb(200,0,180)
-    - rgb表示法：rgb(r,g,b,a)：a表示透明度，取值范围0~1
+    - rgba表示法：rgb(r,g,b,a)：a表示透明度，取值范围0~1
     - 十六进制表示法：#000000、#ff0000，简写：#000、#f00
 - 标签水平居中：`margin: 0 auto`
 
@@ -403,6 +404,17 @@
   - `background-image: url(图片的路径)`
   - 背景图片默认是在水平和垂直方向平铺的
   - 背景图片仅仅是指给盒子起到装饰效果，类似于背景颜色，不能撑开盒子
+- 背景原点：background-origin
+  - padding-box：默认值，从padding的左上角开始，平铺图片
+  - content-box
+  - border-box
+  - -webkit-background-origin:text ：为**透明**文字添加背景蒙版
+
+- 背景裁剪：background-clip
+  - border-box：默认值，超过border以外的背景图、背景颜色不呈现
+  - padding-box
+  - content-box
+
 - 背景平铺：background-repeat
   - repeat：（默认值）水平和垂直方向都平铺
   - no-repeat：不平铺
@@ -412,18 +424,16 @@
   - background-size 宽度 高度
     - 数字+px
     - 百分比：相对于盒子
-
   - background-size 值
     - 宽
-    - contain：填充
-    - cover：拉升
-
+    - contain：缩放
+    - cover：覆盖
 - 背景位置：background-position
   - 方位名词
     - 水平方向：left、center、right
     - 垂直方向：top、center、bottom
   - 数字+单位
-- 背景复合属性：`background：color image repeat position`（无序）
+- 背景复合属性：`background：color url  repeat position / size origin clip`（部分有序）
 
 
 
@@ -489,18 +499,6 @@
 
 
 ### 浮动
-
-#### 结构伪类选择器
-
-- E:first-child{}：匹配父元素中第一个子元素，并且是E元素
-- E:last-child{}：匹配父元素中最后一个子元素，并且是E元素
-- E:nth-child(n){}：匹配父元素中第n个子元素，并且是E元素
-- E:nth-last-child(n){}：匹配父元素中倒数第n个子元素，并且是E元素
-- n的注意事项
-  - n：为：1、2、3、4
-  - 公式：2n、even（偶数）、2n+1、odd（奇数）、-n+5（前五个）、n+5（第五个往后）
-
-
 
 #### 伪元素
 
@@ -918,7 +916,7 @@ shopping(...customers) // 接收到数组里的三个对象
 
 - 举例
 
-  ```java
+  ```js
   function handle(data) {
       console.log("根据 "+data+" 执行操作")
   }
@@ -980,7 +978,7 @@ shopping(...customers) // 接收到数组里的三个对象
       .then(value => console.log(value)) //虽然状态为失败，但不对失败进行处理
   
       .then(value => console.log(value), reason => {
-          console.log(reason)// 依旧会打印 “第二步失败”，因为前面为对失败进行处理
+          console.log(reason)// 依旧会打印 “第二步失败”，因为前面未对失败进行处理
           return false;
       })
       .catch(reason => console.log(reason))
@@ -1016,6 +1014,8 @@ shopping(...customers) // 接收到数组里的三个对象
 
 
 #### Set、Map
+
+略
 
 
 
@@ -1143,13 +1143,14 @@ console.log(Math.pow(2, 10))
 
 - async
 
-  - ```js
-    async function fun(data) {
-        let result = await new Promise((resolve, reject) => reject(data))
-            .catch(reason =>  new Promise((resolve, reject) => resolve(data)))
-    }
-    fun('abc').then(value => console.log("success:"+value), reason => console.log("fail:"+reason)) // success:abc
-    ```
+  ```js
+  async function fun(data) {
+      let result = await new Promise((resolve, reject) => reject(data))
+          .catch(reason =>  new Promise((resolve, reject) => resolve(data)))
+  }
+  fun('abc').then(value => console.log("success:"+value), 
+                  reason => console.log("fail:"+reason)) // success:abc
+  ```
 
   - 方法内返回的不是一个Promise对象，则p的状态为成功
 
@@ -1160,53 +1161,50 @@ console.log(Math.pow(2, 10))
 - await
 
   - await 必须写在 async 函数中
-
   - await 右侧的表达式一般为 promise 对象
-
   - await 返回的是 promise 成功的值
-
   - await 的 promise 失败了，就会抛出异常，需要通过 try..catch 捕获处理
 
-  - ```js
-    async function fun(data) {
-        let result = await new Promise((resolve, reject) => resolve(data))
-            .then(value => new Promise((resolve, reject) => reject(value)))
-            .catch(reason =>  new Promise((resolve, reject) => resolve(data)))
-            .then(value => console.log("promise内部处理："+data))//
-    
-        console.log("被await接收："+result)
-    }
-    fun('abc')
-    
-    // 控制台输出
-    promise内部处理：abc
-    被await接收：undefined
-    ```
+  ```js
+  async function fun(data) {
+      let result = await new Promise((resolve, reject) => resolve(data))
+          .then(value => new Promise((resolve, reject) => reject(value)))
+          .catch(reason =>  new Promise((resolve, reject) => resolve(data)))
+          .then(value => console.log("promise内部处理："+data))//
+  
+      console.log("被await接收："+result)
+  }
+  fun('abc')
+  
+  // 控制台输出
+  promise内部处理：abc
+  被await接收：undefined
+  ```
 
-  - 发送Ajax
+- 发送Ajax
 
-    ```js
-    function sendAjax(url) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest()
-            xhr.open("GET", url)
-            xhr.send()
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4) {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        resolve(xhr.response)
-                    }else {
-                        reject(xhr.status)
-                    }
-                }
-            }
-        })
-    }
-    async function main() {
-        let result = await sendAjax("http://39.101.75.72/weather/check?size=2");
-        console.log(result)
-    }
-    ```
+  ```js
+  function sendAjax(url) {
+      return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open("GET", url)
+          xhr.send()
+          xhr.onreadystatechange = () => {
+              if (xhr.readyState === 4) {
+                  if (xhr.status >= 200 && xhr.status < 300) {
+                      resolve(xhr.response)
+                  }else {
+                      reject(xhr.status)
+                  }
+              }
+          }
+      })
+  }
+  async function main() {
+      let result = await sendAjax("http://39.101.75.72/weather/check?size=2");
+      console.log(result)
+  }
+  ```
 
 
 
@@ -1321,7 +1319,8 @@ let p1 = new Promise(resolve => resolve("p1成功"));
 let p2 = new Promise((resolve, reject) => reject("p2失败"));
 let p3 = new Promise((resolve, reject) => reject("p3失败"));
 Promise.allSettled([p3, p2]).then(value => console.log(value))
-Promise.all([p1, p3, p2]).then(value => console.log('成功'+value), reason => console.log("失败"+reason))
+Promise.all([p1, p3, p2]).then(value => console.log('成功'+value), 
+                               reason => console.log("失败"+reason))
 ```
 
 
@@ -1846,64 +1845,17 @@ function flash(obj, target, callback){
 
 
 
-### 平面转换
-
-- 语法
-
-  - transform: translate(水平移动距离【, 垂直移动距离】)
-    - 取值：具体值、百分比（参考自身盒子大小）
-  - transform: translateY(垂直移动距离)
-  - transform: rotate(角度)（单位deg）
-    - 设置转动原点：transform-origin: 原点水平位置 原点垂直位置;
-      - 取值：left、top、right、bottom、center
-  - transform: scale(缩放倍数)（中心缩放）
-
-- 使用
-
-  ```html
-  <html>
-      <head>
-          <title>平面移动</title>
-          <style>
-              .father {
-                  width: 500px;
-                  height: 300px;
-                  border: 1px solid gray;
-              }
-              .son {
-                  width: 100px;
-                  height: 50px;
-                  background-color: aqua;
-                  /* 定义变化的时间 */
-                  transition: all 1s;
-              }
-              .father:hover .son {
-                  /* 定义位移距离 */
-                  transform: translate(200px, 100px);
-                  /* 定义旋转 */
-                  transform: rotate(360deg);
-                  /* 定义多重移动（旋转会改变坐标轴向，位移会受影响） */
-                  transform: translate(200px, 100px) rotate(360deg);
-                  /* 缩放 */
-                  transform: scale(3);
-              }
-          </style>
-      </head>
-      <body>
-          <div class="father">
-              <div class="son"></div>
-          </div>
-      </body>
-  </html>
-  ```
-
-  
-
 ### 渐变
 
 https://pxlab.cn/color/index.html
 
 - 透明度：opacity: 0;
+
+- 类型
+
+  - 线性渐变
+  - 径向渐变
+  - 重复渐变
 
 - 渐变：background-image: linear-gradient(方向, 颜色1, 颜色2, ...)
 
@@ -1939,18 +1891,83 @@ https://pxlab.cn/color/index.html
 
 
 
+### 平面转换
+
+- 变换
+
+  - transform: translate(水平移动距离【, 垂直移动距离】)
+    - 取值：具体值、百分比（参考自身盒子大小）
+  - transform: translateY(垂直移动距离)
+  - transform: rotate(角度)（单位deg）
+    - 设置转动原点：transform-origin: 原点水平位置 原点垂直位置;
+      - 取值：left、top、right、bottom、center
+  - transform: scale(缩放倍数)（中心缩放）
+
+- 变换原点：transform-origin
+
+  对旋转、缩放有影响，对位移无影响
+
+  - 横向：left、center、right、像素等
+  - 纵向：top、center、bottom、像素等
+
+- 使用
+
+  ```html
+  <html>
+      <head>
+          <title>平面移动</title>
+          <style>
+              .father {
+                  width: 500px;
+                  height: 300px;
+                  border: 1px solid gray;
+              }
+              .son {
+                  width: 100px;
+                  height: 50px;
+                  background-color: aqua;
+                  /* 定义变化的时间 */
+                  transition: all 1s;
+              }
+              .father:hover .son {
+                  /* 定义位移距离 */
+                  transform: translate(200px, 100px);
+                  /* 定义旋转 */
+                  transform: rotate(360deg);
+                  /* 定义多重移动（旋转会改变坐标轴向，位移会受影响，所以一般放在最后） */
+                  transform: translate(200px, 100px) rotate(360deg);
+                  /* 缩放 */
+                  transform: scale(3);
+              }
+          </style>
+      </head>
+      <body>
+          <div class="father">
+              <div class="son"></div>
+          </div>
+      </body>
+  </html>
+  ```
+
+
+
 ### 空间转换
 
-- 使用 perspective 属性实现 透视 效果
-
-  - 添加到使用z轴变换的盒子的父级上
-  - 一般取值：800px~1200px
+- 3d 空间与景深
+  - 开启 3d 空间：为 3d 元素的父元素添加属性：`transform-style: preserve-3d`（flat，默认，2d）
+  - 景深：
+    - `perspective：500px`：z=0 平面距观察者的距离
+    - 开启景深后，会产生透视效果
+    - 一般取值：800px~1200px
+- 透视点的位置：perspective-origin: x y （默认在父元素的中心）
 
 - 语法
 
   - transform: translate3d(x, y, z)
   - transform: rotateX(角度)：围绕X轴转动
   - transform: scale3d(x, y, z)：缩放
+
+- 背部隐藏：backface-visibility：hidden
 
 - 立方体盒子
 
@@ -2006,6 +2023,34 @@ https://pxlab.cn/color/index.html
 
 
 
+### 过渡
+
+- transition-
+
+  - property：需要过渡的属性
+
+    常见支持过渡的属性有：颜色、长度值、百分比、z-index、opacity、2D变换属性、3D变换属性、阴影（如 width、height、bgc、box-shadow、rotate 等）
+
+  - duration：过渡时间
+
+  - delay：延时过渡
+
+  - timing-function：过渡方式
+
+    - <mark>ease</mark>：默认值，平滑过渡
+    - <mark>linear</mark>：线性过渡，匀速过渡
+    - ease-in：匀加速
+    - ease-out：匀减速
+    - ease-in-out：先匀减速，再匀减速（平滑过渡效果没有 ease 好）
+    - <mark>steps(n)</mark>：分n步过渡
+    - step-start：不考虑过渡时间，再直接从原点到达终点
+    - step-end：达到过渡时间后，再直接从原点到达终点
+    - <mark>cubic-bezier</mark>：贝塞尔曲线 [https://cubic-bezier.com](https://cubic-bezier.com)
+
+- 复合属性
+
+  transition: duration delay timing-function property1, property2（整体无序，delay需在duration后）
+
 
 ### 动画
 
@@ -2036,23 +2081,36 @@ https://pxlab.cn/color/index.html
     
     /* 不区分顺序（第一个时间表示时长，第二个表示延时时间） */
     animation: 动画名称 动画花费时长 速度曲线 延时时间 重复次数 动画方向 执行完毕时状态;
-    /*
-    	steps(n)：分三次执行
-    	infinite：无限循环
-    	alternate：返回
-    	forwards：动画停留在最终状态 backwards：动画停留在最初状态
-    */
     ```
-
+    
   - 动画属性（配合js）
-
+  
     - animation-name：动画名称
+    
     - animation-duration：动画时长
+    
     - animation-delay：延迟时间
+    
     - animation-fill-mode：动画执行完毕时的状态
+    
+      - forwards：动画结束后停留在最终状态
+      - backwards：动画结束后回到最初状态
+    
     - animation-timing-function：速度曲线
+    
+      与 transation-timing-function 参数一样
+    
     - animation-iteration-count：重复次数
+    
+      - infinite：无限循环
+    
     - animation-direction：动画执行方向
+    
+      - normal：默认，正向
+      - reserve：反向
+      - alternate：先正向、后反向
+      - alternate-reserve：先反向、后正向
+    
     - animation-play-state：动画状态（取值paused为暂停）
 
 
@@ -2064,33 +2122,191 @@ https://pxlab.cn/color/index.html
 ### Flex布局
 
 - 弹性容器
-  - display: flex：设置弹性容器，其直接子盒子为弹性盒子
+  - display: 
+  
+    - flex：设置弹性容器，其直接子盒子为弹性盒子
+    - inline-flex：其直接子元素为行内弹性盒子
+  
   - justify-content：调节元素在主轴的对齐方式
     - flex-start：默认值，起点开始依次排序
-    - flex-ent：终点开始依次排序
+    - flex-end：终点开始依次排序
     - center：沿主轴居中排序
     - space-around：弹性盒子沿主轴均匀排序，空白间距均分在弹性盒子两侧
     - space-between：弹性盒子沿主轴均匀排序，空白间距均分在弹性盒子之间
     - space-evenly：弹性盒子沿主轴均匀排序，弹性盒子与容器之间间距相等
-  - align-items：调节弹性盒子在侧轴的对齐方式
-    - stretch：默认值，在弹性盒子没设置高度时，沿侧轴拉伸弹性盒子至与弹性容器相同
+  
+  - align-items：调节弹性盒子在侧轴的对齐方式（单行）
+    - stretch：默认值，**在所有弹性盒子没设置高度时**，沿侧轴拉伸弹性盒子至与弹性容器相同
     - center：沿侧轴居中排列
     - flex-start：默认值，起点开始依次排列
     - flex-end：终点开始依次排列
-  - flex-direction：改变主轴方向
-    - row：默认值：行，水平
-    - column：列，垂直
-    - row-reverse：行，从右向左
-    - column-reverse：列，从下向上
-  - flex-wrap：换行
-    - nowrap：默认值，不换行
-    - wrap：换行
-  - align-content：flex布局下，行与行间有默认间距
-    - 取值与justify-content属性相似，无space-evenly
-- 弹性盒子
-  - align-self：调节某个弹性盒子在侧轴的对齐方式
-    - 取值与flex-direction属性相同
-  - flex：占用弹性盒子剩余尺寸的分数
+  
+  - align-content：调节弹性盒子在侧轴的对齐方式（多行）
+  
+    - flex-start
+    - flex-end
+    - center
+    - space-around
+    - space-between
+    - stretch：默认值，**在所有弹性盒子没设置高度时**，沿侧轴拉伸弹性盒子至与弹性容器相同
+  
+  - flex-flow
+  
+    复合属性 `flex-flow: direction wrap`
+  
+    - flex-direction：主轴排列方向
+      - row：默认，水平方向，从左往右
+      - row-reserve：水平方向，从右往左
+      - column
+      - column-reserve
+  
+    - flex-wrap：换行
+      - nowrap：默认值，不换行
+      - wrap：换行
+      - wrap-reserve：从左下角开始排列
+  
+- 弹性项
+  
+  - flex：复合属性
+  
+    `flex: grow shrink basis`
+  
+    - flex-basis：
+      - 设置伸缩项在主轴上的基准长度，默认值auto（与width、height一致）
+      - 若主轴横向 width 失效；若主轴纵向 height 失效
+      - 浏览器根据某一轴上所有元素的基准长度和，判断该轴是否有剩余空间
+    - flex-grow：
+      - 占用弹性盒子**剩余空间**的份数，默认0，表示不拉伸
+      - **同长拉伸**：若所有盒子收缩分数相同，拉伸尺寸都相同，与盒子大小无
+    - flex-shrink：
+      - 若某一轴长度不足，该轴上弹性盒子收缩的份数，默认0，表示不压缩
+      - **不同长压缩**：还需考虑各个盒子的基准长度，即若所有盒子收缩分数相同，尺寸大的盒子收缩更多
+      - 收缩的极限是保证盒子内所有的内容都呈现的最小大小
+    - 简写
+      - flex: 0 1 auto  =>  flex: 0 auto （默认值，可以压缩，不能拉伸）
+      - flex: 1 1 0  =>  flex: 1（元素尺寸大小变为相同，同长拉伸，同长压缩）
+      - flex: 1 1 auto  =>  flex: auto（同长拉伸，不同长压缩）
+      - flex: 0 0 auto  =>  flex: none（不可拉伸，不可压缩）
+  
+  - order：排序，默认 0，负数会排在 0 前
+  
+  - align-self
+  
+    - 调节某个弹性盒子在侧轴的对齐方式
+    - 取值与 align-items 属性相同
+    - 默认值 auto，表示继承父元素的 align-items
+
+
+
+### Grid布局 
+
+- 网格容器
+  - display:
+    - grid：父元素为网格容器，其直接子元素为网格盒子（网格项）
+    - inline-grid：其直接子元素为行内网格盒子
+    
+  - grid-template-columns: value1 value2 ...
+  
+    用来设置列，有几个值就有记录，每个值代表相应的宽度
+  
+    - 数值：200px、33%
+    - 分数：1fr、3fr
+    - auto：占满剩余空间
+    - repeat(重复次数, 值1, 值2, ...)
+  
+  - grid-template-rows: value1 value2 ...
+  
+    用来设置行
+  
+  - grid-column-gap: 值
+  
+    设置列间距
+  
+  - grid-row-gap: 值
+  
+    设置行间距
+  
+  - place-items：设置网格项内容的对齐方式
+  
+    `place-items: <align-items> <justify-items>`
+  
+    - justify-items: start|center|end|stretch
+  
+      控制单元格在水平方向上的对齐方式
+  
+      - start：对齐单元格的起始边缘
+  
+      - end：对齐单元格的结束边缘
+  
+      - center：单元格内部居中
+  
+      - stretch：拉伸，占满单元格的整个宽度（默认值）
+  
+    - align-items: start|center|end|stretch
+  
+  - place-content：整个网格项内容在容器中的对齐方式
+  
+    `place-content: <align-content> <justify-content>`
+  
+    - align-content: start|center|end|stretch|space-around|space-between|space-evenly
+    - justify-content: ...
+  
+  - grid-template-areas：区域命名
+  
+    ```css
+    grid-template-areas: 'a a a'
+                         'd e f'
+                         'g h .'
+    ```
+  
+    - 相同的命名，可将多个单元格组合成一块 **区域**（area）
+    - 如果某些区域不需要使用，可以使用 . 来表示
+    
+  - 利用下面四个边框线，控制所有项的位置
+  
+    - template-row-start: 2
+  
+      2：表示该项从 行线2 开始排列
+  
+      a-start：表示从 区域a 的 start 处开始排列
+  
+    - template-row-end
+  
+    - template-column-start
+  
+    - template-column-end
+  
+- 网格项
+
+  - 利用下面四个边框线，控制单个项的位置
+
+    - 四个边框线控制
+
+      - grid-row-start: 2|a-start
+      - grid-column-start
+      - grid-row-end
+      - grid-column-end
+  
+    - 边框线简写
+  
+      grid-row: e-start/e-end => grid-row: e
+  
+      grid-column: e-start/e-end => grid-column: e
+  
+    - 区域简写
+  
+      grid-area: a|b|c
+  
+  - 控制单个网格项内容的纵向对齐方式：align-self
+  
+  - 控制单个网格项内容的横向对齐方式：justify-self
+
+
+
+
+
+
+
 
 
 
@@ -2103,27 +2319,27 @@ https://pxlab.cn/color/index.html
     - 相对单位
     - 1rem = 1HTML字号大小
 
+- 移动适配
 
-    - 移动适配
-    
-      - 媒体查询
-    
-        ```css
-        @media (width:375px（媒体特性）){
-            html {
-                font-size: 30px;
-            }
+  - 媒体查询
+
+    ```css
+    @media (width:375px（媒体特性）){
+        html {
+            font-size: 30px;
         }
-        ```
-    
-      - 引入flexiable.js
+    }
+    ```
+
+  - 引入flexiable.js
 
 
-- vh/vm
+- vh、vw、vmax、vmin
 
-  - vh/vm单位
+  - vh/vw
     - 1vh = 1/100视口高度
     - 1vw = 1/100视口宽度
+  - vmax/vmin：浏览器视口的宽、高谁比较大/小，就基于谁
 
 
 
@@ -2201,6 +2417,12 @@ https://pxlab.cn/color/index.html
   ```html
   <link rel="stylesheet" media="逻辑符 媒体类型 and （媒体特性）" href="xx.h">
   ```
+
+- 常用阈值
+  - width < 768px：超小屏幕
+  - 768px <= width < 992px：中等屏幕
+  - 992px <= width < 1200px：大屏幕
+  - width >= 1200px：超大屏幕
 
 
 
@@ -2366,17 +2588,199 @@ https://pxlab.cn/color/index.html
 
 
 
+## 补充
+
+### 私有前缀
+
+> W3C 标准所提出的某个 css 特性，在被浏览器正式支持前，浏览器厂商会根据浏览器的内核，使用私有前缀测试该 css 特性，在浏览器正式支持该 css 后，就不需要使用该私有前缀
+
+- 查询css3兼容的网站：[https://caniuse.com/](https://caniuse.com/)
+
+- 常用的浏览器前缀
+
+  - Chrome 浏览器： `-webkit-`
+  - Safari 浏览器：`-webkit-`
+  - Firefox ：`-moz-`
+  - Edge：`-webkit-`
+  - <font color=#ccc>旧 Opera 浏览器：`-o-`</font>
+  - <font color=#ccc>旧 IE 浏览器：`-ms-`</font>
+
+  
+
+### 伪类选择器
+
+- 动态伪类
+
+  - link：选中的是链接状态的元素，a 元素特有
+  - visited：选中的是访问过的元素，a 元素特有
+  - hover：选中的是鼠标悬浮上元素
+  - active：选中的是激活状态的元素
+  - focus：选中获得焦点的元素，表单类元素特有
+
+- 结构伪类
+
+  - E1 E2:xx-child：
+
+    匹配 E1 元素下，**任意**父元素中**指定次序**的元素，若该元素不是E2，则不被选中
+
+    - first-child：第一个
+    - last-child：最后一个
+    - nth-child(n)：第n个子元素
+    - nth-last-child(n)：倒数第n个子元素
+    - E:only-child：选中的是没有兄弟的E元素
+
+    公式：2n、even（偶数）、2n+1、odd（奇数）、-n+5（前五个）、n+5（第五个往后）
+
+  - E1 E2:xx-of-type
+
+    匹配 E1 元素下，**任意**父元素中**与E2同类型中**、**指定次序**的元素，若该元素不是E2，则不被选中
+
+    - first-of-type
+    - last-of-type
+    - nth-of-type(n)
+    - nth-last-of-type(n)
+    - E:only-of-type：选中的是没有同类兄弟的E元素
+
+  - :root：选中的是html根元素
+
+  - E:empty：空E元素
+
+- 否定伪类
+
+  - E:not(.fail)
+  - E:not([title^="成绩不合格"])
+  - E:not(:last-of-type)
+
+- UI伪类
+
+  - checked
+  - disabed：选中被禁用的元素
+  - enabled：选中的是可用的元素
+
+- 目标伪类：target：选中的是地址栏 #id 表示的元素
+
+- 语言伪类：lang(zh_CN)：选中含属性 lang="zh_CN" 的元素
+
+- has伪类：`.outer:has(.inner:nth-child(1):hover)`
+
+
+
+### 新增文本属性
+
+- 文本阴影：text-shadow
+
+- 文本换行：white-space
+
+  - pre：按原文显示
+  - pre-wrap：按原文显示；单行超出元素宽度，自动换行
+  - pre-line：按原文显示；单行超出元素宽度，自动换行；单行始末两端空格去除
+  - nowarp：全文不换行
+
+- 文本溢出：text-overflow
+
+  一般与 `overflow: hidden; white-space: nowarp;` 配合使用
+
+  - clip：裁剪
+  - ellipsis：省略号占位
+
+- 文本修饰
+
+  - text-decoration-line：装饰线位置
+  - text-decoration-style：装饰线类型
+  - text-decoration-color：装饰线颜色
+  - 复合属性：`text-decoration: line style color`
+
+- 文本描边
+
+  - -webkit-text-stroke-color：描边颜色
+  - -webkit-text-stroke-width：描边宽度
+
+
+
+### 多列布局
+
+- 多列布局
+
+  - 直接指定列数
+
+    column-count: 5
+
+  - 指定每一列宽度，会自动计算出列数
+
+    column-width: 200px
+
+  - 调整列间距
+
+    column-gap: 20px
+
+  - 列分割线
+
+    column-rule-color: 2px dashed red
+
+  - 跨列（子元素属性）
+
+    column-rule: none/all
+
+- 布局图片
+
+  ```html
+  <style>
+      .outer {
+          column-count: 5;
+      }
+      img {
+          /* 图片宽度设置为 100% 后会自动适应列宽 */
+          width: 100%;
+      }
+  </style>
+  <body>
+      <div class="outer">
+          <img src="./img1.png">
+          <img src="./img2.png">
+          ...
+          <img src="./img100.png">
+      </div>
+  </body>
+  ```
+
+
+
+### BFC
+
+> Block Formatting Context（块级格式化上下文）
+
+- 开启 BFC 后能解决什么问题
+  - 其子元素不会产生 margin 塌陷问题
+  - 自己不会被其他浮动元素所遮挡
+  - 就算其子元素浮动，元素自身高度也不会塌陷
+
+- 开启 BFC
+  - 根元素 html
+  - 浮动元素：`float: left`
+  - 绝对定位、固定定位的元素：`position: absolute`
+  - 行内块元素：`display：inline-block`
+  - 表格元素：table、thead、tbody、tfoot、th、td、tr、caption：`display: table`
+  - overflow 的值不为 visible 的块元素：`overflow: auto`
+  - 伸缩元素：`display: flex`
+  - 多列容器：`column-count: 1`
+  - column-span 为 all 的元素（即使该元素没有包裹在多列容器中）
+  - display 为 flow-root
+
+
+
 
 
 
 
 # Ajax
 
+## XHR
 
 
-## 基础
 
-### Http
+### 基础
+
+#### Http
 
 - HTTP规定了浏览器和万维网服务器之间互相通信的规则。
 - 请求报文
@@ -2406,7 +2810,7 @@ https://pxlab.cn/color/index.html
 
 
 
-### XMLHttpRequest
+#### XMLHttpRequest
 
 - 方法
 
@@ -2436,7 +2840,7 @@ https://pxlab.cn/color/index.html
 
 
 
-### 快速入门
+#### 快速入门
 
 ```js
 let xhr = null
@@ -2487,9 +2891,9 @@ btn.onclick = function(){
 
 
 
-## 拓展
+### 拓展
 
-### 数据解析
+#### 数据解析
 
 - 常用方法
 
@@ -2532,7 +2936,7 @@ btn.onclick = function(){
 
     
 
-### FormData
+#### FormData
 
 - 基本使用
 
@@ -2593,7 +2997,7 @@ btn.onclick = function(){
 
 
 
-### 传输进度
+#### 传输进度
 
 - 上传
 
@@ -2614,7 +3018,7 @@ btn.onclick = function(){
 
 
 
-### Axios
+#### Axios
 
 - axios发送get/post请求
 
@@ -2652,7 +3056,7 @@ btn.onclick = function(){
 
 
 
-### 防抖与节流
+#### 防抖与节流
 
 - 防抖优化ajax请求
 
@@ -2693,9 +3097,9 @@ btn.onclick = function(){
 
 
 
-## 跨域
+### 跨域
 
-### 同源策略
+#### 同源策略
 
 - 同源：协议、域名、端口相同，反之，则是跨域
 - 同源策略：限制两个不同源的网页进行资源交互
@@ -2703,7 +3107,7 @@ btn.onclick = function(){
 
 
 
-### JSONP
+#### JSONP
 
 - 原理：由于浏览器的限制，网页中无法通过Ajax请求非同源的接口数据，但是\<script>标签的src属性不受浏览器的同源策略影响，可以同过src属性，请求非同源的js脚本。因此，JSONP的实现原理，就是同个\<script>标签的src属性，请求跨域的数据接口，并通过函数调用的形式，接收跨域接口响应回来的数据
 
@@ -2742,7 +3146,7 @@ btn.onclick = function(){
 
 
 
-### CORS
+#### CORS
 
 - 服务端设置响应头
 
@@ -2769,6 +3173,135 @@ btn.onclick = function(){
     
   
     
+
+## fetch
+
+> 下一代的 AJAX 技术，内部采用 Promise 方式处理数据
+
+### 发送请求
+
+- 快速入门
+
+  - Promise
+
+    ```js
+    fetch('http://localhost/book/books')
+        // res 是一个 Response 对象，res.json() 是一个 Promise
+        .then(res => res.json())
+        // 此处的 json 是 JSON 数据
+        .then(json => console.log(json))
+        .catch(err => console.log(err))
+    ```
+
+  - async、await 改写 promise
+
+    ```js
+    async function getData() {
+        try {
+            let res = await fetch('http://localhost/book/books')
+            let json = await res.json()
+        } catch(err) {
+            console.log(err)
+        }
+    }
+    getData()
+    ```
+
+- get 请求的参数传递：拼接字符串
+
+  ```js
+  fetch('http://localhost/book/books?id=1')
+  ```
+
+- Response 对象
+
+  - 常用属性
+
+    | 属性           | 说明                               |
+    | -------------- | ---------------------------------- |
+    | res.ok         | 返回一个布尔类型，表示请求是否成功 |
+    | res.status     | 返回一个数字，表示HTTP响应状态码   |
+    | res.statusText | 返回状态的文本信息，如 ok          |
+    | res.url        | 返回请求的url路径                  |
+
+  - 常用方法
+
+    | 方法              | 说明                        |
+    | ----------------- | --------------------------- |
+    | res.json()        | 得到JSON对象                |
+    | res.text()        | 得到文本字符串              |
+    | res.blob()        | 得到二进制Blob对象          |
+    | res.formData()    | 得到 FormData 表单对象      |
+    | res.arrayBuffer() | 得到二进制 ArrayBuffer 对象 |
+
+
+
+### Post请求
+
+- 语法
+
+  fetch(url [, options]) 的第一个参数是 url， 此外，还可以接收第二个参数，作为配置对象
+
+  ```js
+  fetch(url, {
+      method: 'post', // 请求方式，如 delete、put 等
+      headers: {
+          'Content-Type': '请求头数据'
+      },
+      body: '请求体数据'
+  })
+  ```
+
+- 请求体为json
+
+  ```js
+  let aBook = {
+      bookname: '俘获富婆芳心的三百种手段',
+      author: '小刘忙'
+  }
+  fetch("http://localhost/book/book", {
+      method: 'post',
+      headers: {
+          'Content-Type': 'application/json'
+      }
+      body: JSON.stringify(aBook) 
+  })
+      .then(res => res.json())
+      .then(json => console.log(json))
+      .catch(err => console.log(err))
+  ```
+
+- 请求体为 x-www-form-urlencoded 格式
+
+  ```js
+  async function insertBook() {
+      let res = await fetch(url, {
+          method: 'post',
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+          },
+          body: 'bookname=俘获富婆芳心的三百种手段'
+      })
+  }
+  ```
+
+- 请求体为 formData 格式
+
+  ```js
+  let form = document.querySelector('form')
+  fetch(url, {
+      method: 'post',
+      body: new FormData(form)
+  }) 
+  ```
+
+  
+
+
+
+
+
+
 
 
 

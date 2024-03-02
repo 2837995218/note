@@ -5271,6 +5271,989 @@ public class JedisConnectionFactory {
 
 
 
+# ELK
+
+![ELFK](D:\picture\typora\java2\ElasticStack\ELFK.png)
+
+## ElasticSearch
+
+### 概念
+
+#### docker部署
+
+- 还需要部署kibana容器，因此需要先创建一个网络，让es和kibana容器互联。
+
+  ```shell
+  docker network create es-net
+  ```
+
+- 拉去elasticsearch镜像
+
+  ```shell
+  docker pull elasticsearch:7.12.1
+  ```
+
+- 创建挂载目录
+
+  ```shell
+  mkdir -p /var/docker-volume/es
+  ```
+
+- 转移数据
+
+  ```shell
+  docker run -d \
+  	--name es \ 
+  	-e "ES_JAVA_OPTS=-Xms512m -Xmx512m" \
+  	-e "discovery.type=single-node" \
+  	--privileged \
+  	--network es-net \
+  	elasticsearch:7.12.1
+  	
+  docker cp es:/usr/share/elasticsearch/data /var/docker-volume/es
+  docker cp es:/usr/share/elasticsearch/plugins /var/docker-volume/es
+  
+  docker stop es
+  docker rm es
+  ```
+
+- 运行es容器
+
+  ```shell
+  docker run -d \
+  	--name es \
+  	-e "ES_JAVA_OPTS=-Xms512m -Xmx512m" \
+  	-e "discovery.type=single-node" \
+  	-v /var/docker-volume/es/data:/usr/share/elasticsearch/data \
+  	-v /var/docker-volume/es/plugins:/usr/share/elasticsearch/plugins \
+  	--privileged \
+  	--network es-net \
+  	-p 9200:9200 \
+  	-p 9300:9300 \
+  	elasticsearch:7.12.1
+  ```
+
+- 安装运行kibana
+
+  ```shell
+  docker run -d \
+  	--name kibana \
+  	-e ELASTICSEARCH_HOSTS=http://192.168.36.132:9200 \
+  	--network=es-net \
+  	-p 5601:5601 \
+  	kibana:7.12.1
+  ```
+
+
+
+#### ik分词器
+
+- 安装ik分词器
+
+  ```shell
+  # 进入容器内部
+  docker exec -it es /bin/bash
+  # 在线下载并安装
+  ./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.12.1/elasticsearch-analysis-ik-7.12.1.zip
+  # 退出容器
+  exit
+  # 重启容器
+  docker restart es
+  ```
+
+- 拓展词库
+
+  - 修改ik分词器目录下的config目录中的IkAnalyzer.cfg.xml文件
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+    <properties>
+    	<comment>IK Analyzer 扩展配置</comment>
+    	<!--用户可以在这里配置自己的扩展字典 -->
+    	<entry key="ext_dict"></entry>
+    	 <!--用户可以在这里配置自己的扩展停止词字典-->
+    	<entry key="ext_stopwords"></entry>
+        
+    	<!--用户可以在这里配置远程扩展字典 -->
+    	<!-- <entry key="remote_ext_dict">words_location</entry> -->
+    	<!--用户可以在这里配置远程扩展停止词字典-->
+    	<!-- <entry key="remote_ext_stopwords">words_location</entry> -->
+    </properties>
+    ```
+
+
+
+
+
+### CRUD
+
+#### devTool
+
+##### 操作索引库
+
+- mapping
+
+  - mapping是对索引库中文档的约束，常见的mapping属性包括
+    - type：字段数据类型，常用的简单类型有：
+      - 字符串：text（可分次的文本）、keyword（精确值，例如：品牌、国家、ip地址）
+      - 数值：long、integer、short、byte、double、float
+      - 布尔：boolean
+      - 日期：date
+      - 对象：object
+    - index：是否创建倒排索引，默认为true
+    - analyzer：使用哪种分词器
+      - ik插件：ik_smart、ik_max_word
+    - properties：该字段的子属性
+
+- 创建索引库
+
+  - ES中通过Restful请求操作索引库、文档。请求内容用DSL语句来表示
+
+    ```json
+    PUT /索引库名称
+    {
+        "mappings": {
+            "properties": {
+                "字段名1": {
+                    "type": "text",
+                    "analyzer": "ik_smart"
+                },
+                "字段名2": {
+                    "type": "keyword",
+                    "analyzer": "false",
+                    "properties": {
+                        "子字段": {
+                            "type": "keyword"
+                        }
+                    }
+                },
+                // ... 略
+            }
+        }
+    }
+    ```
+
+- 查询索引库
+
+  - GET /索引库名
+
+- 删除索引库
+
+  - DELETE /索引库名
+
+- 修改索引库：只能添加新字段
+
+  ```json
+  PUT /索引库名/_mapping
+  {
+      "properties": {
+          "新字段名": {
+              "type": "integer"
+          }
+      }
+  }
+  ```
+
+
+
+##### 文档操作
+
+- 新增文档
+
+  ```json
+  POST /索引库名/_doc/文档id
+  {
+      "字段1": "值1",
+      "字段2": "值2",
+      "字段3": {
+          "子属性1": "值3",
+          "子属性2": "值4"
+      },
+      // ...
+  }
+  ```
+
+- 查询文档：GET /索引库/_doc/文档id
+
+- 删除文档：DELETE  /索引库/_doc/文档id
+
+- 修改文档：
+
+  - 全文修改，会删除旧文档，添加新文档，使用PUT请求
+
+  - 局部修改
+
+    ```json
+    PUT /索引库名/_update/文档id
+    {
+        "doc": {
+            "字段名": "新的值"
+        }
+    }
+    ```
+
+
+
+
+
+
+#### java
+
+##### 前置配置
+
+- 引入es的 RestHighLevelClient 依赖
+
+  ```xml
+  <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-high-level-client</artifactId>
+  </dependency>
+  ```
+
+- 因为springboot默认配置的es版本是7.6.2，所有需要覆盖默认的es版本
+
+  ```xml
+  <properties>
+      <elasticsearch.version>7.12.1</elasticsearch.version>
+  </properties>
+  ```
+
+- 初始化RestHighLevelClient
+
+  ```java
+  @SpringBootTest
+  public class TestApp {
+      private RestHighLevelClient client;
+  
+      @BeforeEach
+      void setUp() {
+          this.client = new RestHighLevelClient(RestClient.builder(
+              HttpHost.create("http://192.168.36.132:9200")));
+      }
+  
+      @AfterEach
+      void tearDown() throws IOException {
+          this.client.close();
+      }
+  }
+  ```
+
+
+
+##### 操作索引库
+
+- 创建索引库
+
+  ```java
+  CreateIndexRequest request = new CreateIndexRequest("anime");
+  request.source(ESConstant.animeIndex, XContentType.JSON);
+  client.indices().create(request, RequestOptions.DEFAULT);
+  ```
+
+- 删除索引库
+
+  ```java
+  DeleteIndexRequest request = new DeleteIndexRequest("anime");
+  client.indices().delete(request, RequestOptions.DEFAULT );
+  ```
+
+- 判断索引库是否存在
+
+  ```java
+  GetIndexRequest request = new GetIndexRequest("anime");
+  boolean exists = client.indices().exists(request, RequestOptions.DEFAULT);
+  System.out.println(exists);
+  ```
+
+
+
+##### 操作文档
+
+- 新增文档
+
+  ```java
+  @Test
+  public void addDoc() throws IOException {
+      Anime anime = animeService.getById(1);
+      AnimeDoc animeDoc = new AnimeDoc(anime);
+      IndexRequest request = new IndexRequest("anime").id("1");
+      request.source(JSONUtil.toJsonStr(animeDoc), XContentType.JSON);
+      client.index(request, RequestOptions.DEFAULT);
+  }
+  ```
+
+- 查询文档
+
+  ```java
+  GetRequest getRequest = new GetRequest("anime").id("1");
+  GetResponse response = client.get(getRequest, RequestOptions.DEFAULT);
+  AnimeDoc animeDoc = JSONUtil.toBean(response.getSourceAsString(), AnimeDoc.class);
+  System.out.println(animeDoc);
+  ```
+
+- 删除文档
+
+  ```java
+  DeleteRequest request = new DeleteRequest("anime").id("1");
+  client.delete(request, RequestOptions.DEFAULT);
+  ```
+
+- 修改文档
+
+  - 全量更新：与新增文档类似
+
+  - 局部更新
+
+    ```java
+    @Test
+    public void updateDoc() throws IOException {
+        UpdateRequest request = new UpdateRequest("anime", "1");
+        request.doc("state", 10, "type", "日常");
+        client.update(request, RequestOptions.DEFAULT);
+    }
+    ```
+
+- 批量新增
+
+  ```java
+  BulkRequest request = new BulkRequest();
+  List<Anime> list = animeService.list();
+  for (Anime anime : list) {
+      AnimeDoc animeDoc = new AnimeDoc(anime);
+      IndexRequest indexRequest = new IndexRequest("anime")
+          .id(anime.getId()+"")
+          .source(JSONUtil.toJsonStr(animeDoc), XContentType.JSON);
+      request.add(indexRequest);
+  }
+  client.bulk(request, RequestOptions.DEFAULT);
+  ```
+
+
+
+
+
+### DSL
+
+#### devTool
+
+##### 基本语法
+
+- DSL Query基本语法
+
+  ```json
+  GET /索引库名/_search
+  {
+      "query": {
+          "查询类型": {
+              "查询条件": "条件值"
+          }
+      }
+  }
+  ```
+
+- match查询
+
+  ```json
+  GET /索引库名/_search
+  {
+      "query": {
+          "match": {
+              "字段": "内容"
+          }
+      }
+  }
+  ```
+
+- multi_match查询
+
+  ```json
+  GET /索引库名/_search
+  {
+      "query": {
+          "multi_match": {
+              "query": "内容",
+              "field": ["字段1", "字段2"]
+          }
+      }
+  }
+  ```
+
+- 精确查询
+
+  - term：根据词条精确值查询
+
+    ```json
+    GET /索引库名/_search
+    {
+        "query": {
+            "term": {
+                "字段": {
+                    "value": "值"
+                }
+            }
+        }
+    }
+    ```
+
+  - range：根据值的范围查询
+
+    ```json
+    GET /索引库名/_search
+    {
+        "query": {
+            "range": {
+                "字段": {
+                    "gte": 最小值,
+                    "lte": 最大值
+                }
+            }
+        }
+    }
+    ```
+
+  - geo_bounding_box：根据geo_point值落在某个矩形范围的所有文档
+
+    ```json
+    GET /索引库名/_search
+    {
+        "query": {
+            "geo_bounding_box": {
+                "字段": {
+                    "top_left": {
+                        "lat": 31.1,
+                        "lon": 121.5
+                    },
+                    "bottom_right": {
+                        "lat": 30.9,
+                        "lon": 121.7
+                    }
+                }
+            }
+        }
+    }
+    ```
+
+  - geo_distance：根据geo_point搜索附近指定范围内的所有文档
+
+    ```json
+    GET /索引库名/_search
+    {
+        "query": {
+            "geo_distance": {
+                "distance": "15km",
+                "字段": "3"
+            }
+        }
+    }
+    ```
+
+    
+
+##### 复合查询
+
+- 相关性算分
+
+  - TF
+    - TF（词条频率）= 词条出现次数 / 文档中词条总数
+  - TF-IDF：elasticsearch5.0之前，分数会随着词频的增加而越来越大
+    - IDF（逆文档频率）= log(文档总数 / 包含词条的文档总数)
+    - score = ∑^n^~i~ TF  * IDF
+  - BM25：elasticsearch5.0后，分数会随着词频增大而增大，但曲线最终会趋于水平
+
+- Function Score Query
+
+  - 修改文档的相关性算分
+  - 算分函数：functions
+    - filter：定义对哪些文档进行处理
+    - weight：给一个常量值，作为函数结果
+    - field_value_factor：用文档中的某个字段值作为函数结果
+    - random_score：随机生成一个值，作为函数结果
+    - scropt_score：自定义计算公式，公式结果作为函数结果
+  - 加权模式：boost_mode
+    - multiply：function score和query score相乘，默认
+    - replace：用function score 替换 query score
+    - 其他：sum、avg、max、min
+
+  ```json
+  GET /索引库名/_search
+  {
+      "query": {
+          "function_score": {
+              "query": {"match": {"字段": "内容"}},
+              "functions": [
+                  {
+                      "filter": {"term": {"字段": "内容"}},
+                      "weight": 10
+                  }
+              ],
+              "boost_mode": "multiply"
+          }
+      }
+  }
+  ```
+
+- Boolean Query
+
+  - 布尔查询是一个或多个查询子句的组合，子查询的组合方式有：
+    - must：必须匹配每个字符串，参与算分
+    - should：选择性匹配，参与算分
+    - must_not：必须不匹配，不参与算分
+    - filter：必须匹配，不参与算分
+
+  ```json
+  GET /索引库名/_search
+  {
+      "query": {
+          "bool": {
+              "must": [{"term": {"字段": "内容"}}],
+              "should": [{"term": {"字段1": "内容2"}, {"term": {"字段2": "内容2"}],
+              "must_not": [{"range": {"price": {"let": 500}}}],
+              "filter": [
+                  {
+                      "geo_distance": {
+                          "distance": "10km",
+                          "location": {"lat": 31.21, "lon": 121.5}
+                      }
+                  }
+              ]
+          }
+      }
+  }
+  ```
+
+  
+
+##### 结果处理
+
+- 结果排序
+
+  - 默认根据相关度算分来排序，可排序的字段类型有：keyword、数值类型、地理坐标类型、日期类型
+    - asc：升序
+    - desc：降序
+
+  ```json
+  GET /索引库名/_search
+  {
+      "query": {
+          "match_all": {}
+      },
+      "sort": [
+          {"字段": "desc"},
+          {
+              "_geo_distance": {
+                  "location": {"lat": "纬度", "lon": "经度"},
+                  "order": "asc",
+                  "unit": "km"
+              }
+          }
+      ]
+  }
+  ```
+
+- 分页
+
+  - 简单分页
+    - from：分页开始的位置
+    - size：每页文档条数
+    - 优点：支持随机翻页
+    - 缺点：深度分页问题，默认查询上限是10000
+  - after search
+    - 先排序，再记录该页最后条数据，下次查询从该范围查询
+    - 优点：利用多次查询，可查出10000以上数据
+    - 缺点：只能向后查询，不支持随机翻页
+  - scroll：记录快照
+
+- 高亮显示
+
+  - 默认匹配的字段要与需要高亮的字段相同
+
+  ```json
+  GET /索引库名/_search
+  {
+      "query": {
+          "match": {
+              "字段 ": "内容"
+          }
+      },
+      "highlight": {
+          "fields": {
+              "字段": {
+                  //"reuqire_field_match": "false" //字段可以不相同
+                  "pre_tags": "<em>",
+                  "post_tags": "</em>"
+              }
+          }
+      }
+  }
+  ```
+
+  
+
+
+
+#### java
+
+##### 简单查询
+
+```java
+@Test
+public void matchAll() throws IOException {
+    SearchRequest request = new SearchRequest("anime");
+
+    BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+    boolQueryBuilder.must(QueryBuilders.matchQuery("all", "日常搞笑"));
+    boolQueryBuilder.must(QueryBuilders.termQuery("all", "校园"));
+    request.source().query(boolQueryBuilder);
+    request.source().from(0).size(5);
+
+    SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+    SearchHits hits = response.getHits();
+    System.out.println("共搜索到 " + hits.getTotalHits().value + " 条数据");
+    for (SearchHit hit : hits.getHits()) {
+        System.out.println(hit.getSourceAsString());
+        // 获得一个map集合，可用于替换hit中的信息
+        System.out.println(hit.getHighlightFields());
+    }
+}
+```
+
+
+
+##### 组合查询
+
+```java
+FunctionScoreQueryBuilder functionScoreQueryBuilder = QueryBuilders.functionScoreQuery(
+    QueryBuilders.boolQuery()
+    .must(QueryBuilders.matchQuery("all", "日常搞笑"))
+    .must(QueryBuilders.termQuery("all", "校园")),
+    new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
+        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+            QueryBuilders.termQuery("type", "搞笑"),
+            ScoreFunctionBuilders.weightFactorFunction(10))
+    }
+);
+```
+
+
+
+
+
+### 数据聚合
+
+- 聚合的分类
+
+  - Bucket：桶聚合
+  - Metric：度量聚合
+  - Pipeline：管道聚合
+
+- devTool
+
+  ```json
+  GET /索引库名/_search
+  {
+      //"query": {}, // 可加限定条件，指定对部分数据进行聚合，默认对所有文档聚合 
+      "size": 0, // 分页中每页展示数据
+      "aggs": {
+          "自定义聚合名": {
+              "terms": {
+                  "field": "聚合字段",
+                  //"order": {"_count": "asc"}, // 升序排列，默认降序
+                  "size": 10 // 展示数据条数
+              }
+          }
+      }
+  }
+  ```
+
+  ```json
+  GET /索引库名/_search
+  {
+      "size": 0,
+      "aggs": {
+          "自定义聚合名1": {
+              "terms": {"field": "聚合字段", "size": 10},
+              // 聚合的嵌套
+              "order": {"自定义聚合名2.avg": "asc"},
+              "aggs": {
+                  "自定义聚合名2": {
+                      "stats": { // 聚合类型，这里的stats可以计算min、max、avg等
+                          "field": "聚合字段"
+                      }
+                  }
+              }
+          }
+      }
+  }
+  ```
+
+- java
+
+  ```java
+  SearchRequest request = new SearchRequest("anime");
+  request.source().size(0);
+  request.source().aggregation(AggregationBuilders.stats("stateAgg").field("state"));
+  ```
+
+  
+
+
+
+### 自动补全
+
+#### 分词器
+
+- 拼音分词器
+
+- 自定义分词器：在创建索引库的时候设置分词器
+
+  ```json
+  PUT /test
+  {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "my_analyzer": {
+            "tokenizer": "ik_max_word",
+            "filter": "py"
+          }
+        },
+        "filter": {
+          "py": {
+            "type": "pinyin",
+            "keep_full_pinyin": false,
+            "keep_joined_full_pinyin": true,
+            "keep_original": true,
+            "limit_first_letter_length": 16,
+            "remove_duplicated_term": true,
+            "none_chinese_pinyin_tokenize": false
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "overview": {
+          "type": "text",
+          "analyzer": "my_analyzer",
+          "search_analyzer": "ik_smart"
+        }
+      }
+    }
+  }
+  ```
+
+  ```json
+  POST /test/_analyze
+  {
+    "text": "你好世界",
+    "analyzer": "my_analyzer"
+  }
+  ```
+
+  
+
+#### 自动补全
+
+- 自动补全对字段的要求
+
+  - 类型是completion类型
+  - 字段值是多词条的数组
+
+- 查询语法
+
+  ```json
+  GET /索引库名/_search
+  {
+      "suggest": {
+          "自定义名": {
+              "text": "关键字",
+              "completion": {
+                  "field": "字段",
+                  "skip_duplicates": true, // 跳过重复的
+                  "size": 10 // 显示条数
+              }
+          }
+      }
+  }
+  ```
+
+
+
+
+
+### 数据同步
+
+- mysql与es间数据的同步
+
+- 解决
+
+  - 同步调用
+
+  - 异步通知：使用消息中间键
+
+  - 监听binlog
+
+
+
+
+
+### 集群
+
+- 海量数据存储问题：
+  - 将索引库从逻辑上拆分为n个分片，存储到多个节点
+- 单点故障问题：
+  - 将分片数据备份，并放在其他节点上
+- 集群状态的监控
+  - cerebro：https://github.com/lmenezes/cerebro/releases
+
+
+
+#### 创建集群
+
+- docker-compose编排文件
+
+  ```shell
+  version: '2.2'
+  services:
+    es01:
+      image: elasticsearch:7.12.1
+      container_name: es01
+      environment:
+        - node.name=es01
+        - cluster.name=es-docker-cluster # 集群名称相同后，会自动组装为一个集群
+        - discovery.seed_hosts=es02,es03 # 已配置容器互连后，地址简写为容器名
+        - cluster.initial_master_nodes=es01,es02,es03 # 初始化的主节点
+        - bootstrap.memory_lock=true
+        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      ulimits:
+        memlock:
+          soft: -1
+          hard: -1
+      volumes:
+        - ./data/node0:/usr/share/elasticsearch/data
+        - ./logs/node0:/usr/share/elasticsearch/logs
+      ports:
+        - 9200:9200
+      networks:
+        - elastic
+    es02:
+      image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+      container_name: es02
+      environment:
+        - node.name=es02
+        - cluster.name=es-docker-cluster
+        - discovery.seed_hosts=es01,es03
+        - cluster.initial_master_nodes=es01,es02,es03
+        - bootstrap.memory_lock=true
+        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      ulimits:
+        memlock:
+          soft: -1
+          hard: -1
+      volumes:
+        - ./data/node1:/usr/share/elasticsearch/data
+        - ./logs/node1:/usr/share/elasticsearch/logs
+      networks:
+        - elastic
+    es03:
+      image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+      container_name: es03
+      environment:
+        - node.name=es03
+        - cluster.name=es-docker-cluster
+        - discovery.seed_hosts=es01,es02
+        - cluster.initial_master_nodes=es01,es02,es03
+        - bootstrap.memory_lock=true
+        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      ulimits:
+        memlock:
+          soft: -1
+          hard: -1
+      volumes:
+        - ./logs/node2:/usr/share/elasticsearch/data
+        - ./logs/node2:/usr/share/elasticsearch/logs
+      networks:
+        - elastic
+        
+  networks:
+    elastic:
+      driver: bridge
+  ```
+
+- 修改linux的系统权限
+
+  - 编辑文件：vi /etc/sysctl.conf
+  - 添加内容：vm.max_map_count=262144
+  - 让配置生效：sysctl -p
+
+- 设置分片与备份
+
+  ```json
+  PUT /索引库名
+  {
+      "settings": {
+          "number_of_shards": 3, // 分片信息
+          "number_of_replicas": 1 // 副本数量
+      },
+      "mappings": {"properties": { 。。。}}
+  }
+  ```
+
+  
+
+#### 集群职责
+
+| 节点类型        | 配置参数    | 默认值 | 节点职责                                                     |
+| --------------- | ----------- | ------ | ------------------------------------------------------------ |
+| master eligible | node.master | true   | 备选主节点：主节点可以管理和记录集群状态、决定分片<br/>在哪个节点、处理创建和删除索引库的请求 |
+| data            | node.data   | true   | 数据节点：存储数据、搜索、聚合、CRUD                         |
+| ingest          | node.ingest | true   | 数据存储之前的预处理                                         |
+| coordinating    |             |        | 所有es节点：路由请求，合并结果                               |
+
+- 脑裂问题
+  - 解决：成为主节点需要选票超过（eligible节点数 + 1）/ 2 才能当选，因此eligible节点最好为奇数
+- coordinating节点
+  - 新增是，通过算法将请求发送到一个data节点
+  - 查询时，将请求路由到各个data节点，各个节点查完后，汇总到该coordinating节点
+- 故障转移
+  - 集群中的master节点会监控各个节点状态，如果有节点宕机
+    - 启用其他节点上的备份数据
+    - 将宕机节点的分片数据迁移到其他节点，使数据处于健康状态
+  - 健康状态：如果有节点宕机，可利用备份数据进行恢复
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Logstash
+
+## Kibana
+
+
+
+
+
+
+
+
+
+
+
+# InfluxDB
+
+
+
+
+
 
 
 

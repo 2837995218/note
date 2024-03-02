@@ -353,7 +353,17 @@ conn.close();
   
 - 添加语句中的主键返回
 
-  \<insert>标签中useGeneratedKeys属性属性设置为true，keyProperty设置为对象的主键
+  \<insert>标签中useGeneratedKeys属性属性设置为true，keyProperty设置为实体类的主键
+  
+  ```xml
+  <insert id="saveReturnPK1" parameterType="cn.saytime.domain.User" useGeneratedKeys="true" keyProperty="id">
+      INSERT INTO `test`.`tb_user`(`username`, age) VALUES(#{username}, #{age})
+  </insert>
+  ```
+  
+  
+  
+  
 
 
 
@@ -1366,7 +1376,7 @@ public class BookServiceImpl implements BookService {
   - 注解：`@Configuration`
   - 添加外部配置：`@ImportResource("applicationContext.xml")`
   - 组件扫描：`@ComponentScan`
-  - 导入其他配置类：`@Import({jdbcConfig.class,...})`（其他配置类上不用加`@Configuration`）
+  - 导入其他配置类：`@Import({jdbcConfig.class,...})`（被导入的置类上不用加`@Configuration`）
   - 获取容器：`new AnnotationConfigApplicationContext(SpringConfig.class)`
 
 
@@ -1761,7 +1771,7 @@ public class BookServiceImpl implements BookService {
 ### 通知获取数据
 
 - 获取参数
-  - 通知方法中加形参 JoinPoint，调用 JoinPoint 中的方法Object[ ] getArgs()，获得参数
+  - 通知方法中加形参 JoinPoint，调用 JoinPoint 中的方法 `Object[] getArgs()` ，获得参数
   - proceedingJoinPoint 是 JoinPoint 的实现类
   - JoinPoint 必须是形参的第一个
 
@@ -2737,7 +2747,7 @@ public class TestController {
             this.code = code;
         }
         
-        public System.Exception(Integer code, String msg, Throwable cause){
+        public SystemException(Integer code, String msg, Throwable cause){
             super(msg, cause);
             this.code = code;
         }
@@ -3875,7 +3885,7 @@ logger.log(Level.INFO, "姓名：{0} 年龄：{1}", new Object[]{name, age});
 
 - 日志级别
 
-  - SEVERE：错误
+  - SEVERE：严重
   - WARNING：警告
   - INFO：消息（默认）
   - CONFIG：配置
@@ -4793,7 +4803,7 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
    
   tempDir: ${location.baseDir}\temp
   # \t是转义字符，使用引号包裹转义可生效
-  tempDir: "${location.baseDir}\temp" # 此处的 \t hui
+  tempDir: "${location.baseDir}\temp"
   ```
   
   - 自定义对象封装的警告解决方案
@@ -4923,7 +4933,7 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
   - MySQL-8驱动强制要求设置时区
     - 配置时区：jdbc:mysql://localhost:3306/ssm?serverTimezone=UTC
     - 修改mysql数据库配置
-  - 驱动类过时：driver-class-name: com.mysql.cj.jdbc.Driver
+  - 原驱动类过时，新驱动类：driver-class-name: com.mysql.cj.jdbc.Driver
 
 - mybatis plus 其他配置
 
@@ -4937,41 +4947,44 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
       log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 日志打印到控制台上
   ```
 
-- 常见异常：
+- 常见问题：
 
 
-  - 问题：使用 xml mapper ，pojo类中的部分注解失效
-
-    ```java
-    // select dept_name from dept; // 不会映射到 name 属性上
-    // select dept_name as name from dept;
+    - 问题：使用 xml mapper ，pojo类中的部分注解失效
     
-    @TableFeild("dept_name")
-    private String name;
-    ```
-
-  - `org.springframework.core.NestedIOException`
-
-    ```xml
-    <!-- 部分 操作 可能还需要导入下面依赖 -->
-    <dependency>
-        <groupId>com.baomidou</groupId>
-        <artifactId>mybatis-plus</artifactId>
-        <version>与starter版本保持一致</version>
-    </dependency>
-    ```
-
-  - `org.apache.ibatis.binding.BindingException: Invalid bound statement (not found): space.relax.mapper.DeptMapper.customSelectAll`
+      ```java
+      // select dept_name from dept; // 不会映射到 name 属性上
+      // select dept_name as name from dept;
+      
+      @TableFeild("dept_name")
+      private String name;
+      ```
 
 
-    - 产生原因1：java mapper 与 xml mapper 在打包时并未打包到一起
+
+    - `org.springframework.core.NestedIOException`
     
-      - 方法1：保证两个在打包后处于同一文件夹
-      - 方法2：使用上面yml中的 `mapper-locations` 配置xml mapper位置
+      ```xml
+      <!-- 部分 操作 可能还需要导入下面依赖 -->
+      <dependency>
+          <groupId>com.baomidou</groupId>
+          <artifactId>mybatis-plus</artifactId>
+          <version>与starter版本保持一致</version>
+      </dependency>
+      ```
+
+
+
+    - `org.apache.ibatis.binding.BindingException: Invalid bound statement (not found): space.relax.mapper.DeptMapper.customSelectAll`
+      - 产生原因1：java mapper 与 xml mapper 在打包时并未打包到一起
     
-    - 产生原因2：xml mapper 放在 src/main/java 目录中，导致xml没有被打包
+        - 方法1：保证两个在打包后处于同一文件夹
+        - 方法2：使用上面yml中的 `mapper-locations` 配置xml mapper位置
     
-      - 解决方法：如下
+      - 产生原因2：xml mapper 放在 src/main/java 目录中，导致xml没有被打包
+    
+        - 解决方法：如下
+
 
 - 实用功能
 
@@ -6007,7 +6020,7 @@ public class PayEndpoint {
 
 - @Import导入BeanDefinitionRegistryPostProcessor（以下简称BDRPP）实现：（bean定义后处理阶段）
 
-  postProcessBeanDefinitionRegistry（以下简称registry方法） 和 postProcessBeanFactory（以下简称factory）方法 方法区别
+  postProcessBeanDefinitionRegistry（以下简称registry方法） 和 postProcessBeanFactory（以下简称factory方法） 方法区别
 
   - registry方法在该接口中定义，factory方法是该接口继承BeanFactoryPostProcessor（以下简称BFPP）接口获得的。
   - registry侧重点是添加自定义BeanDefinition（也可以修改），factory方法是修改bean定义
@@ -6118,7 +6131,7 @@ public class PayEndpoint {
   public class RedisAutoConfiguration {
       
       @Bean
-      // // 如果没有名叫redisTemplate的bean，且有且只有一个连接工厂对象，才会新注入一个redisTemplate
+      // 如果没有名叫redisTemplate的bean，且有且只有一个连接工厂对象，才会新注入一个redisTemplate
       @ConditionalOnMissingBean(name = {"redisTemplate"})
       @ConditionalOnSingleCandidate(RedisConnectionFactory.class)
       public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
@@ -6552,7 +6565,7 @@ public class PayEndpoint {
     ```java
     @Data
     @ToString
-    // 这个类不需要注册成bean，因此并不需要加上下面注销，但加上该注解，可以在编译时将该类字段添加到json文件中，从而在写yml配置时，ide可以提供提示
+    // 这个类不需要注册成bean，因此并不需要加下面注解，但加上该注解，可以在编译时将该类字段添加到json文件中，从而在写yml配置时，ide可以提供提示
     // 如不需要注册成bean，只需要不使用 @EnableConfigurationProperties、@Import 导入即可
     @ConfigurationProperties(prefix = "counter.ip.executor-properties")
     public class ExecutorProperties {
@@ -6970,7 +6983,7 @@ CAP定理指出，对于任何分布式系统，这三个属性不能同时满�
       NFLoadBalancerRuleClassName: com.alibaba.cloud.nacos.ribbon.NacosRule
     ```
 
-- 权重设置：在nacos的网页控制台配置，一般配置值在区间[0, 1]。在更新维护项目时，可以先将权重设置为0，在停机升级
+- 权重设置：在nacos的网页控制台配置，一般配置值在区间[0, 1]。在更新维护项目时，可以先将权重设置为0，再停机升级
 
 - 环境隔离（dev、test、public等）
 
@@ -7161,7 +7174,7 @@ CAP定理指出，对于任何分布式系统，这三个属性不能同时满�
       }
       ```
       
-    - 方式二：在order-service（服务消费者）的application.yml文件中，添加新的配置
+    - 方式三：在order-service（服务消费者）的application.yml文件中，添加新的配置
     
       ```yml
       userservice:
