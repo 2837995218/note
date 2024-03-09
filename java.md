@@ -1871,60 +1871,62 @@ public record User(Long userId, String name) {}
 
 - 静态代理模式
 
-  - ```java
-    public interface sellTickets {
-        void sell();
-    }
-    ```
+  ```java
+  public interface sellTickets {
+      void sell();
+  }
+  ```
 
-  - ```java
-    public class TrainStation implements sellTickets {
-        public void sell(){
-            System.out.println("火车站卖票");
-        }
-    }
-    ```
+  ```java
+  public class TrainStation implements sellTickets {
+      public void sell(){
+          System.out.println("火车站卖票");
+      }
+  }
+  ```
 
-  - ```java
-    public class ProxyPrint implements sellTickets {
-        // 聚合火车站对象
-        private TrainStation trainStation = new TrainStation();
-        
-        public void sell(){
-            System.out.println("代售点收取一些手续费");
-            trainStation.sell();
-        }
-    }
-    ```
+  ```java
+  public class ProxyPrint implements sellTickets {
+      // 聚合火车站对象
+      private TrainStation trainStation = new TrainStation();
+      
+      public void sell(){
+          System.out.println("代售点收取一些手续费");
+          trainStation.sell();
+      }
+  }
+  ```
 
 - jdk代理
 
-  - ```java
-    public class ProxyFactory {
-        private Object target;
-        
-        public ProxyFactory(Object target) {
-            this.target = target;
-        }
-        
-        public Object getProxyInstance() {
-            Object pi = Proxy.newProxyInstance(
-                // 第一个参数：目标对象的类加载器
-            	target.getclass().getClassLoader(),
-                // 第二个参数：目标对象实现的所有接口
-                target.getclass().getInterfaces(),
-                new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args){
-                        Object result = method.invoke(target, args);
-                        return result;
-                    }
-                }
-            );
-            return pi;
-        }
-    }
-    ```
+  ```java
+  public static class App12306 implements InvocationHandler {
+      private final SellTickets sellTickets;
+  
+      public App12306(SellTickets sellTickets) {
+          this.sellTickets = sellTickets;
+      }
+  
+      @Override
+      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+          System.out.println("卖票前，判断是否有余票");
+          // 执行方法的对象是 目标对象，而不是 proxy
+          Object invoke = method.invoke(sellTickets, args);
+          System.out.println("卖票后，库存减一");
+          return invoke;
+      }
+  
+      public SellTickets getProxyInstance() {
+          Object proxyInstance = Proxy.newProxyInstance(
+              sellTickets.getClass().getClassLoader(),
+              sellTickets.getClass().getInterfaces(),
+              this
+          );
+          if (proxyInstance instanceof SellTickets sellTicketsProxy) return sellTicketsProxy;
+          throw new RuntimeException("创建代理失败");
+      }
+  }
+  ```
 
   - 根据目标对象实现的接口得到目标对象中重写的方法，因此，目标对象中的方法没有对应的接口则不能代理
 
@@ -1963,13 +1965,101 @@ public record User(Long userId, String name) {}
         }
         
         @Override
-        public Object intercept(Object arg0, Method method, Object[] args, MethodProxy arg3) throws Throwable {
-            Object result = method.invoke(target, args);
+        public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+            Object result = 
+                // method.invoke(target, args); // 反射调用
+                //methodProxy.invoke(target, args); // 底层无反射调用
+                methodProxy.invokeSuper(proxy, args); // 结合代理对象使用，无反射
             return result;
         }
     }
     ```
+    
+    - 注意事项
+    
+      - 代理对象所对应的类的修饰符是 public
+    
+      - 代理对象所对应的类不能是 final 类
+    
+      - 在Java 9中，Oracle引入了模块系统，这使得某些内部API（如`java.lang.ClassLoader.defineClass`）默认不再对未命名模块开放。这就是为什么错误消息中有"module java.base does not opens java.lang"。
+    
+        CGLIB库在创建代理对象时，需要使用到`ClassLoader.defineClass`方法，但在Java 9及以上版本中，这个方法默认是不开放的，所以就出现了`InaccessibleObjectException`。
+    
+        解决这个问题的一种方法是在启动JVM时添加一个命令行参数`--add-opens`，来开放`java.lang`模块到CGLIB所在的模块。如果你不确定CGLIB所在的模块名，可以使用`ALL-UNNAMED`，这将会开放`java.lang`模块到所有未命名模块。所以，你可以尝试以下命令来启动你的程序：
+    
+        ```bash
+        --add-opens java.base/java.lang=ALL-UNNAMED
+        ```
+    
+        如果是 maven 项目，还可以这样配置
+    
+        ```xml
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.0</version>
+            <configuration>
+                <compilerArgs>
+                    <arg>--add-opens java.base/java.lang=ALL-UNNAMED</arg>
+                </compilerArgs>
+            </configuration>
+        </plugin>
+        ```
+    
+        如果你的项目是Spring Boot项目，那么你可能需要升级Spring Boot到2.1.0以上版本，因为从2.1.0版本开始，Spring Boot默认使用的是与Java 9及以上版本兼容的CGLIB版本。
+  
+- jdk代理深层
 
+  - 基于接口
+
+  - jdk生成代理类，并没有依次经过 **源码阶段 -> 编译阶段 -> 生成字节码阶段**，而是直接使用 asm 包下的工具在运行期间动态生成代理类字节码。
+
+    生成的代理类，实现了 目标对象实现的接口
+
+  - jdk **方法反射** 的优化处理（jdk代理利用反射，反射性能差）
+
+    ```java
+    Method method = TestMethodInvoke.class.getMethod("oneMethod");
+    for (int i = 1; i <= 17; i++) {
+        System.out.printf("%d: %s\n", i, method);
+        method.invoke(null, i); // 方法反射调用。该方法为静态方法，target 为 null
+    }
+    ```
+
+    ```cmd
+    1: jdk.internal.reflect.NativeMethodAccessorImpl@443b7951
+    ...
+    16: jdk.internal.reflect.NativeMethodAccessorImpl@443b7951
+    17: jdk.internal.reflect.GeneratedMethodAccessor2@324b5362
+    ```
+
+    当方法被多次反射调用时，`method.invoke(target, args)`，invoke 底层：
+
+    - 前 16 次都是真正的方法反射调用
+
+    - 16次之后，会生成一个字节码文件，让反射调用变为正常调用
+
+      ```java
+      public class GeneratedMethodAccessor2 extends MethodAccessorImpl {
+          public Object invoke(Object object, Object[] objectArray) throws InvocationTargetException {
+              ...;
+              try {
+                  TestMethodInvoke.oneMethod(); // 反射变为正常调用
+                  return null;
+              } catch ...;
+          }
+      }
+      ```
+
+- cglib代理深层
+
+  - 基于类继承
+
+  - cglib生成代理类时，也使用 asm 在运行期间动态类生成代理类字节码
+
+    生成的代理类，继承了目标对象的类
+
+  - 
 
 
 
@@ -2045,7 +2135,9 @@ public record User(Long userId, String name) {}
 
 - 代码
 
-  - ```java
+  - 抽象组件
+  
+    ```java
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -2056,8 +2148,10 @@ public record User(Long userId, String name) {}
         public abstract float cost();
     }
     ```
-
-  - ```java
+  
+  - 具体组件
+  
+    ```java
     public class FiredRice extends FastFood{
         public FiredRice() {
             super(10, "炒饭");
@@ -2069,8 +2163,10 @@ public record User(Long userId, String name) {}
         }
     }
     ```
-
-  - ```java
+  
+  - 抽象装饰类
+  
+    ```java
     public abstract class Garnish extends FastFood{
         private FastFood fastFood;
     
@@ -2088,8 +2184,10 @@ public record User(Long userId, String name) {}
         }
     }
     ```
-
-  - ```java
+  
+  - 具体装饰类
+  
+    ```java
     public class Egg extends Garnish {
     
         public Egg(FastFood fastFood) {
@@ -2107,8 +2205,10 @@ public record User(Long userId, String name) {}
         }
     }
     ```
-
-  - ```java
+  
+  - 客户端
+  
+    ```java
     @Test
     public void test() {
         FastFood fastFood = new FiredRice();
@@ -2118,7 +2218,9 @@ public record User(Long userId, String name) {}
         System.out.println(doubleEgg.getDesc()+"   price："+doubleEgg.cost());
     }
     ```
-
+  
+    
+  
     
 
 
@@ -2126,11 +2228,12 @@ public record User(Long userId, String name) {}
 #### 组合模式
 
 - 透明组合模式
-  - ![组合模式](D:\picture\typora\java\uml\组合模式.png)
-
+  
+  ![组合模式](D:\picture\typora\java\uml\组合模式.png)
+  
 - 安全组合模式
 
-  - ![组合模式-安全性](D:\picture\typora\java\uml\组合模式-安全性.png)
+  ![组合模式-安全性](D:\picture\typora\java\uml\组合模式-安全性.png)
 
   - 将方法从remove、add等方法从父类中移走，在Menu类中添加
     - 优点：MenuItem无法调用其本身不应该调用的方法，因此不会出现异常
@@ -2143,9 +2246,38 @@ public record User(Long userId, String name) {}
 #### 外观模式
 
 - uml图
-  - ![外观模式](D:\picture\typora\java\uml\外观模式.png)
+  
+  ![外观模式](D:\picture\typora\java\uml\外观模式.png)
 
+- 耦合性问题
 
+  - 外观模式的目的是为了简化**客户端**与复杂**子系统**的交互，提供一个统一的接口，使得子系统更容易使用。这种模式确实会导致客户端与子系统之间的耦合性增加，因为客户端的操作都会通过外观类来进行。
+  - 然而，这种耦合性是有控制的。外观模式并不会增加子系统内部的耦合性，它只是**将客户端的请求转发给适当的子系统对象**。此外，如果子系统需要改变，只需要修改外观类即可，客户端代码不需要改变。
+
+- 框架实例
+
+  - JDBC
+
+    ```java
+    DriverManagerDataSource dataSource = new DriverManagerDataSource();
+    dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+    dataSource.setUrl("jdbc:mysql://localhost:3306/test");
+    dataSource.setUsername("root");
+    dataSource.setPassword("password");
+    
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    
+    String sql = "SELECT COUNT(*) FROM users";
+    int count = jdbcTemplate.queryForObject(sql, Integer.class);
+    
+    System.out.println("Number of users: " + count);
+    ```
+
+  - HttpRequestFacade是一个外观模式的例子。
+
+    在Servlet API中，HttpRequestFacade类提供了一个简化的接口来处理HTTP请求，隐藏了底层的复杂性。
+
+    当你在编写Servlet时，你并不直接与HttpRequest对象交互，而是通过HttpRequestFacade对象。这个外观对象提供了一组简化的方法，如getParameter、getAttribute等，使得你可以方便地获取请求参数、属性等信息，而不需要了解底层的HTTP协议细节。
 
 
 
@@ -2160,10 +2292,9 @@ public record User(Long userId, String name) {}
     System.out.println(Integer.valueOf(128) == Integer.valueOf(128)); // false
     ```
 
-    
-
 - uml图
-  - ![享元模式](D:\picture\typora\java\uml\享元模式.png)
+  
+  ![享元模式](D:\picture\typora\java\uml\享元模式.png)
 
 
 
@@ -2190,11 +2321,18 @@ public record User(Long userId, String name) {}
 #### 命令模式
 
 - uml图
-  - ![命令模式](D:\picture\typora\java\uml\命令模式.png)
+  
+  ![命令模式](D:\picture\typora\java\uml\命令模式.png)
+  
+- **命令模式是一种数据驱动的设计模式，它的核心在于将请求封装成对象，从而实现调用者和执行者的解耦合**。以下是命令模式的一些关键点：
 
-- 特点
-  - 请求调用者和请求接受者解耦
-  - 支持命令的撤销与恢复
+  - **意图**：命令模式的主要目的是将一个请求封装为一个对象，这样可以使用不同的请求对客户进行参数化，同时支持撤销操作和日志记录等功能。
+  - **角色**：在命令模式中，通常涉及四种角色：命令（Command）角色定义了执行操作的接口；具体命令（ConcreteCommand）角色实现了命令角色定义的接口；调用者（Invoker）角色持有命令对象，并在某个时间点调用命令对象的执行方法；接收者（Receiver）角色是实际执行与请求相关操作的对象。
+  - **使用场景**：命令模式适用于需要将发起操作的对象和执行操作的对象解耦的场景，或者需要支持撤销操作的情况。例如，实现事务的原子性、设计线程池、订餐系统等都可以使用命令模式。
+  - **优缺点**：命令模式的优点在于它可以简化系统的设计，使调用者和执行者之间的依赖关系更加灵活。同时，它也可以很容易地支持撤销操作和日志记录。缺点可能包括增加系统的复杂性和对象数量，以及可能影响执行效率。
+  - **实现方式**：在实际编程中，可以通过定义命令接口和具体命令类来实现命令模式。调用者类负责调用命令对象的方法，而接收者类则负责执行具体的操作。
+
+  通过上述介绍，可以看出命令模式是一种强大的设计模式，它通过封装请求来提供更大的灵活性和控制能力。
 
 
 
@@ -2312,7 +2450,8 @@ public record User(Long userId, String name) {}
 #### 中介者模式
 
 - uml图
-  - ![中介者模式](D:\picture\typora\java\uml\中介者模式.png)
+  
+  ![中介者模式](D:\picture\typora\java\uml\中介者模式.png)
 
 
 
@@ -2322,7 +2461,8 @@ public record User(Long userId, String name) {}
 
 - 白盒备忘录
 
-  - ![白箱备忘录模式](D:\picture\typora\java\uml\白箱备忘录模式.png)
+  ![白箱备忘录模式](D:\picture\typora\java\uml\白箱备忘录模式.png)
+
   - RoleStateCaretaker 作为管理 RoleStateMemento（存储数据类）的类，也可以对存储的数据进行修改
 
 - 黑盒备忘录
@@ -2341,19 +2481,34 @@ public record User(Long userId, String name) {}
 #### 解释器模式
 
 - uml图
-  - ![解释器模式](D:\picture\typora\java\uml\解释器模式.png)
+  
+  ![解释器模式](D:\picture\typora\java\uml\解释器模式.png)
 
+- 解释器模型是一种设计模式，用于解决特定类型的问题。它通过定义一种语言的语法和语义来描述该语言中的各种表达式和语句，然后使用解释器来解释这些表达式和语句，从而实现对语言的解释执行。
 
+  在解释器模型中，通常包括以下几个部分：
+
+  1. 抽象语法树（AST）：表示程序代码的抽象语法结构的树形结构。
+
+  2. 终结符和非终结符：AST中的节点可以分为终结符和非终结符两种类型。终结符表示程序代码中的最小单位，如变量、常量等；非终结符表示程序代码中的复合结构，如表达式、语句等。
+
+  3. 解释器：负责解释AST并执行相应的操作。解释器通常会遍历AST，根据节点的类型和属性进行相应的处理。
+
+  4. 上下文环境：用于存储程序运行时的状态信息，如变量的值、函数的定义等。
+
+  解释器模型的优点是可以方便地扩展语言的功能，因为只需要添加新的终结符和非终结符即可。但是，由于需要遍历整个AST，解释器的执行效率通常较低。
 
 
 
 #### 状态模式
 
 - 简单模式
-  - ![状态模式前](D:\picture\typora\java\uml\状态模式前.png)
-
+  
+  ![状态模式前](D:\picture\typora\java\uml\状态模式前.png)
+  
 - 状态模式
-  - ![状态模式](D:\picture\typora\java\uml\状态模式.png)
+  
+  ![状态模式](D:\picture\typora\java\uml\状态模式.png)
 
 
 
@@ -5794,27 +5949,27 @@ public class MyDao {
 
 
     - 年轻代-Parallel Scavenge：是jdk8默认的年轻代垃圾回收器，多线程并行回收，<font color=red>关注的是系统的吞吐量</font>。具备<font color=red>自动调整堆内存大小</font>的特点。
-
+    
       - 算法：复制算法
-
+    
       - 优点：吞吐量高，而且手动可控。为了提高吞吐量，虚拟机会动态调整堆的参数。
-
+    
         - -XX:MaxGCPauseMillis=n：设置每次垃圾回收的最大停顿毫秒数
         - -XX:GCTimeRatio=n：默认99，设置吞吐量为n（用户线程执行时间=n/(n+1)）
-
+    
         > 上面两个参数的设定值应根据多次测试得出。
         >
         > <font color=red>提高吞吐量，可能会让JVM减小年轻代的可用空间</font>
-
+    
         - -XX:+UseAdaptiveSizePolicy：默认开启，设置让垃圾回收根据吞吐量和最大停顿的毫秒数自动调整内存大小
-
+    
       - 缺点：不能保证单次的停顿时间
-
+    
       - 适用场景：后台任务，不需要与用户交互（不用着重关注用户体验），并且容易产生大量的对象。如：大数据的处理，大文件的导出
 
 
     - 老年代-Parallel Old：与 PS 组合，利用多线程进行垃圾回收
-
+    
       - 算法：标记-整理算法
       - 优点：并发收集，在多核CPU下效率最高
       - 缺点：不能保证单次的停顿时间

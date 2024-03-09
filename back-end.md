@@ -1629,7 +1629,7 @@ public class BookServiceImpl implements BookService {
       <version>5.2.10.RELEASE</version>
   </dependency>
   <!--
-  AspectJ：是AOP思想的一种实现。本质是静态代理，将代理逻辑“织入”被代理的目标类编译得到的字节码文件，所以最终效果是动态的。weaver就是织入器。
+  AspectJ：是AOP思想的一种实现。本质是静态代理，将代理逻辑“织入”被代理的目标类编译得到的字节码文件（类似于lombok），所以最终效果是动态的。weaver就是织入器。
   Spring 只是借用了AspectJ中的注解
   -->
   <dependency>
@@ -4950,40 +4950,37 @@ log4j.appender.logDB.sql = INSERT INTO tbl_log(id,name,createTime,level,category
 - 常见问题：
 
 
-    - 问题：使用 xml mapper ，pojo类中的部分注解失效
+  - 问题：使用 xml mapper ，pojo类中的部分注解失效
+
+    ```java
+    // select dept_name from dept; // 不会映射到 name 属性上
+    // select dept_name as name from dept;
     
-      ```java
-      // select dept_name from dept; // 不会映射到 name 属性上
-      // select dept_name as name from dept;
-      
-      @TableFeild("dept_name")
-      private String name;
-      ```
+    @TableFeild("dept_name")
+    private String name;
+    ```
 
+  - `org.springframework.core.NestedIOException` 异常
 
+    ```xml
+    <!-- 部分 操作 可能还需要导入下面依赖 -->
+    <dependency>
+        <groupId>com.baomidou</groupId>
+        <artifactId>mybatis-plus</artifactId>
+        <version>与starter版本保持一致</version>
+    </dependency>
+    ```
 
-    - `org.springframework.core.NestedIOException`
+  - `org.apache.ibatis.binding.BindingException: Invalid bound statement (not found): space.relax.mapper.DeptMapper.customSelectAll` 异常
     
-      ```xml
-      <!-- 部分 操作 可能还需要导入下面依赖 -->
-      <dependency>
-          <groupId>com.baomidou</groupId>
-          <artifactId>mybatis-plus</artifactId>
-          <version>与starter版本保持一致</version>
-      </dependency>
-      ```
-
-
-
-    - `org.apache.ibatis.binding.BindingException: Invalid bound statement (not found): space.relax.mapper.DeptMapper.customSelectAll`
-      - 产生原因1：java mapper 与 xml mapper 在打包时并未打包到一起
+    - 产生原因1：java mapper 与 xml mapper 在打包时并未打包到一起
     
-        - 方法1：保证两个在打包后处于同一文件夹
-        - 方法2：使用上面yml中的 `mapper-locations` 配置xml mapper位置
+      - 方法1：保证两个在打包后处于同一文件夹
+      - 方法2：使用上面yml中的 `mapper-locations` 配置xml mapper位置
     
-      - 产生原因2：xml mapper 放在 src/main/java 目录中，导致xml没有被打包
+    - 产生原因2：xml mapper 放在 src/main/java 目录中，导致xml没有被打包
     
-        - 解决方法：如下
+      - 解决方法：如下
 
 
 - 实用功能

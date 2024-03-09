@@ -27,6 +27,8 @@
         2. juc
 		4. jdk17
 		3. scala、jakarta多种规范
-运维：  1. nginx、openresty
+云原生：1. nginx、openresty
         2. docker、k8s
+		3. 四层负载均衡、八层负载均衡
+		4. istio
 
