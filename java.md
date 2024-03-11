@@ -2059,7 +2059,39 @@ public record User(Long userId, String name) {}
 
     生成的代理类，继承了目标对象的类
 
-  - 
+    ```java
+    @AllArgsConstructor
+    public class CglibTargetProxy extends Target {
+        private final MethodInterceptor methodInterceptor;
+    
+        private static final Method oneMethod;
+        private static final MethodProxy oneMethodProxy;
+        static {
+            try {
+                oneMethod = Target.class.getDeclaredMethod("oneMethod", int.class);
+                // 建立 target 被代理方法 和 代理类非反射方法 的连接关系，封装成 MethodProxy
+                oneMethodProxy = MethodProxy.create(Target.class, CglibTargetProxy.class, "(I)I", "oneMethod", "oneMethodSuper");
+            } catch (NoSuchMethodException e) {
+                throw new NoSuchMethodError(e.getMessage());
+            }
+        }
+    
+        // 此方法不需要反射，但 target 调用被代理方法时，代理类不知道调用此方法
+        public int oneMethodSuper(int arg) {
+            return super.oneMethod(arg);
+        }
+    
+        @SneakyThrows
+        @Override
+        public int oneMethod(int arg) {
+            // 将 oneMethod（反射） 和 oneMethodProxy（非反射）两个方法对象传出去
+            return (int) methodInterceptor
+                .intercept(this, oneMethod, new Object[]{arg}, oneMethodProxy);
+        }
+    }
+    ```
+  
+- **总结**：总的来说，jdk和cglib代理都有方法反射调用到方法正常调用的优化，区别在于，jdk需要16次反射后，才会变成正常调用，而cglib一开始就可以选择正常调用
 
 
 

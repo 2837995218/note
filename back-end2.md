@@ -4113,6 +4113,389 @@ context.refresh(); // 执行处理器
 
 ## AOP
 
+### Spring选择代理
+
+- SpringAOP 在代理增强时，既可以使用jdk代理，也能使用cglib代理
+
+  ```java
+  // 备好切点，org.springframework.aop.Pointcut 的子类
+  AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+  pointcut.setExpression("execution(* one*())");
+  // 备好通知，org.aopalliance.intercept.MethodInterceptor
+  MethodInterceptor advice = invocation -> {
+      System.out.println("before....");
+      Object proceed = invocation.proceed();
+      System.out.println("after....");
+      return proceed;
+  };
+  // 备好切面配置，Advisor就像是切面的配置说明书，它告诉Spring框架在哪些情况下需要执行切面中的代码
+  DefaultPointcutAdvisor advisor = new DefaultPointcutAdvisor(pointcut, advice);
+  // 创建代理
+  ProxyFactory factory = new ProxyFactory();
+  Target1 target1 = new Target1();
+  factory.setTarget(target1);
+  factory.setInterfaces(target1.getClass().getInterfaces());
+  factory.addAdvisor(advisor);
+  factory.setProxyTargetClass(false);
+  ITarget proxy = (ITarget) factory.getProxy();
+  // 调用代理方法
+  System.out.println(proxy.getClass());
+  proxy.anotherMethod();
+  proxy.oneMethod();
+  ```
+
+- 选择代理
+
+  ProxyFactory 中存在 boolean proxyTarget 和 List<Class<?>> interfaces 的属性（父类继承获得）
+
+  - 属性 proxyTargetClass == false && interfaces 中有接口，使用 jdk 代理
+  - 属性 proxyTargetClass == false && interfaces 中没有接口，使用 cglib 代理
+  - 属性 proxyTargetClass == true，总是使用 cglib 代理
+
+
+
+### 切点
+
+- org.springframework.aop.Pointcut 是一个接口，其下有很多子类
+
+  - AnnotationMatchingPointcut
+
+    ```java
+    var pointcut = new AnnotationMatchingPointcut(Deprecated.class);
+    MethodMatcher methodMatcher = pointcut.getMethodMatcher();
+    boolean match = methodMatcher.matches(Target2.class.getMethod("oneMethod"), Target2.class);
+    System.out.println(match);
+    ```
+
+  - AspectJExpressionPointcut ：实现了 MethodMatch 接口，本身自带 matches 方法
+
+    ```java
+    AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+    //pointcut.setExpression("execution(* oneMethod())");
+    pointcut.setExpression("@annotation(java.lang.Deprecated)");
+    System.out.println(pointcut.matches(Target2.class.getMethod("oneMethod"), Target2.class));
+    ```
+
+- 编写切点：@Transactional 的事务增强
+
+  - @Transactional 使用
+
+    - 加在方法上，表示对该方法进行事务增强
+    - 加载类上，表示对该类中所有方法进行事务增强
+    - 加载接口上，表示实现该接口的类中，所有重写该接口方法的方法进行事务增强
+
+  - 对加了 @Transactional 注解的 方法、类、接口 进行增强
+
+    ```java
+    var pointcut = new StaticMethodMatcherPointcut() {
+        @Override
+        public boolean matches(Method method, Class<?> targetClass) {
+            return method.isAnnotationPresent(Deprecated.class)
+                || targetClass.isAnnotationPresent(Deprecated.class)
+                || 判断该类继承树上是否有该注解;
+        }
+    };
+    
+    log.info(pointcut.matches(Target1.class.getMethod("oneMethod"), Target1.class));
+    ```
+
+
+
+
+
+### @Aspect、Advisor
+
+#### 准备阶段
+
+- 两个目标类
+
+  ```scala
+  static class Target1 {
+      public void oneMethod() {System.out.println("oneMethod");}
+  }
+  static class Target2 {
+      public void anotherMethod() {System.out.println("anotherMethod");}
+  }
+  ```
+
+- @Aspect：高级切面
+
+  ```java
+  @Aspect
+  static class Aspect1 {
+      @Before("execution(* oneMethod())")
+      public void before() {
+          System.out.println("aspect1 before...");
+      }
+  
+      @After("execution(* anotherMethod())")
+      public void after() {
+          System.out.println("aspect1 after...");
+      }
+  }
+  ```
+
+- Advisor：低级切面
+
+  ```java
+  @Configuration
+  static class Config {
+      @Bean
+      public MethodInterceptor methodInterceptor() {
+          return invocation -> {
+              System.out.println("before...");
+              Object proceed = invocation.proceed();
+              System.out.println("after...");
+              return proceed;
+          };
+      }
+  
+      @Bean
+      public Advisor advisor(MethodInterceptor methodInterceptor) {
+          var advisor = new AspectJExpressionPointcutAdvisor();
+          advisor.setExpression("execution(* oneMethod())");
+          advisor.setAdvice(methodInterceptor);
+          return advisor;
+      }
+  }
+  ```
+
+- 测试
+
+  ```java
+  public static void main(String[] args) {
+      // 一个不带后处理的 ApplicationContext
+      var context = new GenericApplicationContext();
+      context.registerBean("aspect1", Aspect1.class);
+      context.registerBean("config", Config.class);
+      context.registerBean(ConfigurationClassPostProcessor.class);
+      context.refresh();
+      Arrays.stream(context.getBeanDefinitionNames())
+          .forEach(System.out::println);
+  }
+  ```
+
+  
+
+
+
+#### AnnotationAwareAspectJAutoProxyCreator
+
+> 是一个 BeanPostProcessor ，主要处理 SpringAOP 相关的内容（解析@Aspect、产生代理）
+>
+> 从 bean 生命周期中的两个拓展点中的 **选** 一个，创建代理对象，使 Spring 实现 AOP 功能，两个拓展点分别是：
+>
+> > **创建 -> (\*) 依赖注入 -> 初始化 (\*)** （ \* 表示拓展点位置）
+
+- 使用
+
+  在 `context.refresh()` 调用之前，注册这个后处理器，即可让容器具有 aop 功能
+
+  ```java
+  context.getBean(AnnotationAwareAspectJAutoProxyCreator.class);
+  context.refresh();
+  ```
+
+- 两个重要方法
+
+  - 准备：由于方法被 protected 修饰，无法直接调用，通过继承间接调用
+
+    ```java
+    static class ProxyCreator extends AnnotationAwareAspectJAutoProxyCreator {
+        @Override
+        protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
+            return super.findEligibleAdvisors(beanClass, beanName);
+        }
+    
+        @Override
+        protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) {
+            return super.wrapIfNecessary(bean, beanName, cacheKey);
+        }
+    }
+    ```
+
+  - findEligibleAdvisors：找到有资格的 Advisors
+
+    - 有资格的 Advisor 一部分是低级的
+    - 有资格的 Advisor 一部分是高级的
+
+  - wrapIfNecessary：
+
+    判断是否需要代理（内部调用 findEligibleAdvisors，判断返回的集合释放为空）
+
+    - 若需要，则 创建并返回 代理对象；
+    - 若不需要，则返回目标对象
+
+  - 测试
+
+    ```java
+    context.registerBean(ProxyCreator.class);
+    context.refresh();
+    ProxyCreator creator = context.getBean(ProxyCreator.class);
+    // 获得有资格代理 Target1 类的 Advisors。此处非spring内部，不需要填 beanName
+    System.out.println(creator.findEligibleAdvisors(Target1.class, "beanName"));
+    // 创建 new Target1() 对象的代理 （spring 框架内，会填入 bean 实例，此处 new 对象模拟）
+    Object o = creator.wrapIfNecessary(new Target1(), "beanName", "cacheKey");
+    System.out.println(o.getClass());
+    ```
+
+- **代理对象的创建时机**：两个拓展点中选哪一个拓展点，创建代理对象（**创建 -> (\*) 依赖注入 -> 初始化 (\*)**）
+
+  - 单项依赖：选取 (Bean1) 初始化后，创建代理对象
+
+    ```java
+    static class Bean1 {
+        public void method() {sout("被代理方法");} // 该方法是被代理方法
+        public Bean1() {sout("Bean1 构造方法");}
+        @PostConstruct public void init() {sout("Bean1 注入 Bean2");}
+    }
+    static class Bean2 {
+        public Bean2() {sout("Bean2 构造方法");}
+        @Autowired public void setBean1(Bean1 bean1) {sout("Bean2 注入 Bean1");}
+        @PostConstruct public void init() {sout("Bean2 初始化方法");}
+    }
+    ```
+
+    ```cmd
+    Bean1 构造方法
+    Bean1 初始化方法
+    [TRACE] 创建 Bean1 代理对象
+    Bean2 构造方法
+    Bean2 注入 Bean1
+    Bean2 初始化方法
+    ```
+
+  - 循环依赖：选取 (Bean1) 依赖注入前，创建代理对象
+
+    ```java
+    static class Bean1 {
+        public void method() {sout("被代理方法");} // 该方法是被代理方法
+        public Bean1() {sout("Bean1 构造方法");}
+        @Autowired public void setBean2(Bean2 bean2) {sout("Bean1 注入 Bean2");}
+        @PostConstruct public void init() {sout("Bean1 初始化方法");}
+    }
+    static class Bean2 {
+        public Bean2() {sout("Bean2 构造方法");}
+        @Autowired public void setBean1(Bean1 bean1) {sout("Bean2 注入 Bean1");}
+        @PostConstruct public void init() {sout("Bean2 初始化方法");}
+    }
+    ```
+
+    ```cmd
+    Bean1 构造方法
+    Bean2 构造方法
+    [TRACE] 创建 Bean2 代理对象
+    Bean2 注入 Bean1
+    Bean2 初始化方法
+    Bean1 注入 Bean2
+    Bean1 初始化方法
+    ```
+
+  - 总结
+
+    - 代理的创建时机
+      - 初始化之后（无循环依赖时）
+      - 实例创建后，依赖注入前（有循环依赖时），并暂存于二级缓存
+    - 依赖注入和初始化不会被增强
+
+
+
+#### 顺序控制
+
+- 对于高级切面，可以在类上使用 `@Order(n)` 来指定顺序
+
+- 对于低级切面，AbstractPointcutAdvisor 实现了 Ordered 接口，据此可指定顺序
+
+  ```java
+  @Bean
+  public MethodInterceptor methodInterceptor() {
+      return invocation -> {
+          System.out.println("before...");
+          Object proceed = invocation.proceed();
+          System.out.println("after...");
+          return proceed;
+      };
+  }
+  
+  @Bean
+  @Order(1) // 在此处设置的 order 不生效
+  public Advisor advisor(MethodInterceptor methodInterceptor) {
+      var advisor = new AspectJExpressionPointcutAdvisor();
+      advisor.setExpression("execution(* oneMethod())");
+      advisor.setAdvice(methodInterceptor);
+      advisor.setOrder(2); // 可在此处指定顺序
+      return advisor;
+  }
+  ```
+
+- Order
+
+  - 数值越小，优先级越高
+  - 顺序范围：Integer.MIN_VALUE(-2^31^) ~ Integer.MAX_VALUE(2^31^-1)
+  - 不指定，默认 Integer.MAX_VALUE
+
+
+
+#### 高级切面解析
+
+- 高级切面：以 @Before 注解为例
+
+  ```java
+  @Aspect
+  static class MyAspect {
+      @Before("execution(* oneMethod())")
+      public void before1() {
+          System.out.println("before1....");
+      }
+  
+      @Before("execution(* oneMethod())")
+      public void before2() {
+          System.out.println("before2....");
+      }
+  }
+  ```
+
+- 高级切面 解析成 低级切面
+
+  ```java
+  AspectInstanceFactory factory = new SingletonAspectInstanceFactory(new MyAspect());
+  List<Advisor> advisors = new ArrayList<>(); // 低级切面集合
+  
+  for (Method method : MyAspect.class.getDeclaredMethods()) {
+      if (method.isAnnotationPresent(Before.class)) {
+          // 新增切点
+          String expression = method.getAnnotation(Before.class).value();
+          // pointcut 定义了 advice 在何处应用
+          AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+          pointcut.setExpression(expression);
+          // 通知（Advice 是行为的一个定义，定义了在方法返回前等位置需要执行的代码）
+              // advice 中也会聚合 pointcut，因为定义行为的时候，也可能用到 pointcut 的表达式
+              // factory 是AspectInstanceFactory的实例，作用就是在运行时创建切面实例，并将这个实例与目标对象进行绑定。这样，当目标对象的方法被调用时，就可以触发切面中的增强逻辑。
+          var advice = new AspectJMethodBeforeAdvice(method, pointcut, factory);
+          // 切面配置（是advice和pointcut的组合）
+          Advisor advisor = new DefaultPointcutAdvisor(pointcut, advice);
+          advisors.add(advisor);
+      }
+  }
+  advisors.forEach(System.out::println);
+  ```
+
+- 其他注解 与 Advice 对应关系
+
+  - @Before -> AspectJBeforeAdvice
+  - @After -> AspectJAfterAdvice
+  - @Around -> AspectJAroundAdvice
+  - @AfterReturning -> AspectJAfterReturningAdvice
+  - @AfterThrowing -> AspectJAfterThrowingAdvice
+
+
+
+
+
+### 通知的调用
+
+- 
+
 
 
 
