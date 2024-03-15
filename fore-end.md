@@ -1674,11 +1674,25 @@ Element[] querySelectorAll('选择器');
 
 
 
+
+### WebStorage
+
+- localStorage：永久保存数据
+- sessionStorage：持久保存数据，浏览器关闭时清除
+- api调用
+  - 添加数据：`xxxStorage.setItem(String key, String value)`
+  - 获取数据：`xxxStorage.getItem(String key)`
+  - 移除数据：`xxxStorage.removeItem(String key)`
+  - 清空数据：`xxxStorage.clear`
+
+
+
+
 ### 元素
 
 - offset
 
-  - 获得元素距离带有定位父元素的位置
+  - 获得元素距离带有定位**父元素**的位置
   - 常用属性：
     - offsetParent：返回作为该元素带有定位的父级元素，如果父级元素都没有定位，返回body
     - offsetTop、offsetLeft：返回元素相对带有定位父元素上方（左方）的偏移
@@ -1701,47 +1715,23 @@ Element[] querySelectorAll('选择器');
     - scrollTop、scrollLeft：返回被卷去的上侧（左侧）距离
     - scrollWidth、scrollHeight：返回自身实际宽度（高度），不包含边框
 
-  - 补：
+  - 补充：
 
-    ```javascript
-    网页可见区域宽： document.body.clientWidth;
-    网页可见区域高： document.body.clientHeight;
-    网页可见区域宽： document.body.offsetWidth    (包括边线的宽);
-    网页可见区域高： document.body.offsetHeight   (包括边线的宽);
-    网页正文全文宽： document.body.scrollWidth;
-    网页正文全文高： document.body.scrollHeight;
-    网页被卷去的高： document.body.scrollTop;
-    网页被卷去的左： document.body.scrollLeft;
-    网页正文部分上： window.screenTop;
-    网页正文部分左： window.screenLeft;
-    屏幕分辨率的高： window.screen.height;
-    屏幕分辨率的宽： window.screen.width;
-    屏幕可用工作区高度： window.screen.availHeight;
-    屏幕可用工作区宽度：window.screen.availWidth;
+    - 网页可见区域宽： document.body.clientWidth;
+    - 网页可见区域高： document.body.clientHeight;
+    - 网页可见区域宽： document.body.offsetWidth    (包括边线的宽);
+    - 网页可见区域高： document.body.offsetHeight   (包括边线的宽);
+    - 网页正文全文宽： document.body.scrollWidth;
+    - 网页正文全文高： document.body.scrollHeight;
+    - 网页被卷去的高： document.body.scrollTop;
+    - 网页被卷去的左： document.body.scrollLeft;
+    - 网页正文部分上： window.screenTop;
+    - 网页正文部分左： window.screenLeft;
+    - 屏幕分辨率的高： window.screen.height;
+    - 屏幕分辨率的宽： window.screen.width;
+    - 屏幕可用工作区高度： window.screen.availHeight;
+    - 屏幕可用工作区宽度：window.screen.availWidth;
     
-    
-    scrollHeight: 获取对象的滚动高度。  
-    scrollLeft:设置或获取位于对象左边界和窗口中目前可见内容的最左端之间的距离
-    scrollTop:设置或获取位于对象最顶端和窗口中可见内容的最顶端之间的距离
-    scrollWidth:获取对象的滚动宽度
-    offsetHeight:获取对象相对于版面或由父坐标 offsetParent 属性指定的父坐标的高度
-    offsetLeft:获取对象相对于版面或由 offsetParent 属性指定的父坐标的计算左侧位置
-    offsetTop:获取对象相对于版面或由 offsetTop 属性指定的父坐标的计算顶端位置  
-    event.clientX 相对文档的水平座标
-    event.clientY 相对文档的垂直座标
-    
-    event.offsetX 相对容器的水平坐标
-    event.offsetY 相对容器的垂直坐标  
-    document.documentElement.scrollTop 垂直方向滚动的值
-    event.clientX+document.documentElement.scrollTop 相对文档的水平座标+垂直方向滚动的量
-    
-    要获取当前页面的滚动条纵坐标位置，用：
-    document.documentElement.scrollTop;
-    而不是：
-    document.body.scrollTop;
-    documentElement 对应的是 html 标签，而 body 对应的是 body 标签
-    ```
-
     
 
 
@@ -3315,7 +3305,7 @@ btn.onclick = function(){
 
 ## Vue2
 
-### 基础
+### 入门
 
 #### 快速入门
 
@@ -3371,8 +3361,8 @@ btn.onclick = function(){
 - 指令语法
   - 功能：用于解析标签
   - 分类：
-    - v-bind：放在属性前，可将属性的属性值变为js表达式，可简写为”**:**“，（单向绑定）
-    - v-model：value属性前，双向绑定，只能应用在表单类元素上，可简写为“ v-model="js表达式" ”
+    - v-bind：放在属性前，可将属性的属性值变为js表达式，可简写为**:**，（单向绑定）
+    - v-model：value属性前，双向绑定，只能应用在表单类元素上，可简写为 `v-model="js表达式"` 
     - v-show="boolean表达式"：用于显示或隐藏，用display:none进行隐藏，节点存在
     - v-if/v-else-if="boolean表达式"/v-else：条件渲染，节点不存在
     - v-for：遍历
@@ -3387,6 +3377,8 @@ btn.onclick = function(){
 
 
 #### 代理
+
+> 如何让对象中的属性值发生变化时，创建一个切入点，用于更新内容？
 
 - Object.defineProperty(对象，对象中的属性，{配置对象})
 
@@ -3415,26 +3407,42 @@ btn.onclick = function(){
   })
   ```
 
+- 错误写法
+
+  ```js
+  let data = { name: "张三" }
+  Object.defineProperty(data, 'name', {
+      get() { return data.name },
+      set(newName) {
+          data.name = newName
+          // 切入点，拓展点：在此处可调用更新 Dom 的操作
+      }
+  })
+  ```
+  
+  但当读取、修改 data.name 时，会触发 get、set 方法，而 get、set 方法又回去 读取、修改 data.name，从而再触发 get、set 方法 ... ，最终导致内存溢出
+  
 - 数据代理
 
   - 通过一个对象代理另一个对象中属性的操作（读/写）
 
     ```js
     let obj = {x:100}
-    let obj2 = {y:200}
+    let obj2 = {}
     Object.defineProperty(obj2, 'x', {
-        get(){
-            return obj.x;
-        },
+        get(){ return obj.x },
         set(value){
         	obj.x = value;
+            // 拓展点
     	}
     })
     ```
-
+  
   - Vue对象（vm）则代理data中的数据
-
+  
   - Vue对象（vm）中的_data就是data
+  
+- 上述数据代理的应用（如果按上面的写法，需要手动为每一个属性创建get、set方法，如何解耦合）：Observer（见后文）
 
 
 
@@ -3735,7 +3743,7 @@ new Vue({
 
 
 
-### 拓展
+### 基础
 
 #### 列表渲染
 
@@ -3756,60 +3764,91 @@ new Vue({
 
 
 
-#### 监测数据
+#### 监测数据原理
 
 - Vue实现监听数据的简单实现
 
-```js
-let data = {
-    name:'张三',
-    age:18
-}
-// 创建一个监视的实例对象，用于监视data中属性的变化
-const obs = new Observer(data)
-console.log(obs)
+  ```java
+  let data = {
+      name:'张三',
+      age:18
+  }
+  // 创建一个监视的实例对象，用于监视data中属性的变化
+  const obs = new Observer(data)
+  console.log(obs)
+  
+  // 准备一个vm实例对象
+  let vm = {}
+  vm._data = obs
+  data = obs
+  
+  // Observer 的构造函数
+  function Observer(obj){
+      // 汇总对象中所有的属性形成一个数组
+      const keys = Object.keys(obj)
+      keys.forEach(k => {
+          // this 是Observer的实例对象
+          Object.defineProperty(this , k, {
+              get(){
+                  return obj[k]
+              },
+              set(value){
+                  obj[k] = value
+                  // 切入点、拓展点：可在此处更新 DOM 树
+              }
+          })
+      })
+  }
+  ```
 
-// 准备一个vm实例对象
-let vm = {}
-vm._data = data = obs
-
-// Observer 的构造函数
-function Observer(obj){
-    // 汇总对象中所有的属性形成一个数组
-    const keys = Object.keys(obj)
-    keys.forEach((k)=>{
-        // this 是Observer的实例对象
-        Object.defineProperty(this,k,{
-            get(){
-                return obj[k]
-            },
-            set(value){
-                obj[k] = value
-            }
-        })
-    })
-}
-```
+  - 不完善点：
+    - vue对象 vm 除了有 vm.\_data 属性外；还存在 vm.name、vm.age 可直接修改 vm.\_data 中的值
+    - 上述案例只对第一层属性创建了代理，若 data 包含引用属性（引用属性中又可能包含引用属性），还需要对它们进行**深层代理**
+    - 无法监听数组的数据的变化
 
 - 后添加属性
-  - 问题：后添加的属性没有响应式的方法
+  - 问题：**后添加的属性没有响应式的方法**
   - vm.$set(target, key, value)：为后添加的属性提供响应式方法（getter和setter）
   - Vue.set(target, key, value)
-    - target：是添加的位置
+    - target：是添加的位置（往哪个对象身上加属性 或 修改哪个数组中的数据）
     - key：属性名 或 数组的索引
     - value：属性值
-  - 上述方法不能给 vm 和 vm._data 添加数据
-- Vue监测数组
-  - Vue数组的改变不能用索引值的方式，否则无法生成响应式方法（getter和setter）
-  - 可用上述的 后添加属性 的方法进行改变
-  - Vue对被侦听的数组的变更方法提供了包装，使其在实现原本效果的同时，生成响应式方法
-    - push(items[])：添加一个数组到末尾
-    - pop()：取出数组中的最后一项
-    - shift()
-    - unshift()
-    - splice()
-    - sort()
-    - reverse()
+  - **上述方法不能给 vm 和 vm._data 添加数据**（target不能是Vue实例，或Vue实例的根数据对象）
+  
+- 监测数组改变
+  - Vue数组的改变不能用索引值的方式（即：`arr[2] = "王五"`），因为无法生成响应式方法（getter和setter）
+  
+  - 方法一：可用上述的 **后添加属性** 的方法进行改变
+  
+  - 方法二：
+  
+    Vue对**被侦听的数组的变更方法进行了包裹**（增强了数组的部分原始方法），使其在实现原本效果的同时，更新DOM树
+  
+    - `push(item1, item2, ...)`：此方法用于将一个或多个元素添加到数组的末尾，并返回新的数组长度。
+  
+    - `pop()`：此方法用于删除并返回数组的最后一个元素。
+  
+    - `shift()`：此方法用于删除并返回数组的第一个元素。
+  
+    - `unshift(item1, item2, ...)`：此方法用于将一个或多个元素添加到数组的开头，并返回新的数组长度。
+  
+    - `splice()`：此方法用于通过删除、替换或添加元素来更改数组，并返回被删除的元素数组。
+  
+      - `start`：开始修改的位置。如果是负数，则从数组末尾开始计数。
+      - `deleteCount`（可选）：要删除的元素数量。如果省略或大于 `start` 之后的元素数量，则删除 `start` 之后的所有元素。
+      - `item1, item2, ...`（可选）：要添加到数组的元素。如果不指定，则 `splice()` 只删除元素。
+  
+      ```javascript
+      let arr = [1, 2, 3, 4, 5];
+      // 从索引 1 开始，删除 1 个元素，然后添加 'a' 和 'b'
+      removed = arr.splice(1, 1, 'a', 'b');
+      console.log(removed); // 输出：[2]
+      console.log(arr); // 输出：[1, 'a', 'b', 3, 4, 5]
+      ```
+  
+    - `sort()`：此方法用于对数组元素进行排序，并返回排序后的数组。
+  
+    - `reverse()`：此方法用于反转数组中元素的顺序，并返回反转后的数组。
 
 
 
@@ -3853,9 +3892,9 @@ new Vue({
 
 
 
-### 组件
+#### 组件定义
 
-#### 快速入门
+##### 快速入门
 
 - 组件定义
 
@@ -3864,7 +3903,7 @@ new Vue({
 const stu = Vue.extend({
     // 可以定义组件在vue开发者工具中的名字
     name: 's',
-    template:`姓名：{{name}}<br>年龄：{{age}}<br>学校：<School></>`,
+    template:`<div>姓名：{{name}}<br>年龄：{{age}}<br>学校：<School></School></div>`,
     // 组件中data要用方法的格式，因为对象是传递地址值
     data(){
         return {
@@ -3873,9 +3912,9 @@ const stu = Vue.extend({
         }
     },
     // 这里可以注册已定义的组件，实现组件嵌套
-    components: {
-        School: sch
-    }
+    //components: {
+    //    School: sch
+    //}
 })
 ```
 
@@ -3890,11 +3929,9 @@ new Vue({
     data(){return {}},
     components: {
         /* 命名风格：
-           1.单个单词：首字母大写；或首字母小写
-           2.多个单词：
-           		1.首字母小写，并用'-'连接（kebab-case）
-           		2.首字母大写（CamelCase），需要Vue脚手架支持）
-        	*/
+           1.单个单词：默认报错
+           2.多个单词：各字母小写，并用'-'连接（kebab-case）
+         */
         Student: stu
     }
 })
@@ -3909,20 +3946,40 @@ new Vue({
 
 
 
-#### Component
+##### VueComponent
 
-- student组件本质是一个名为VueComponent的构造函数，且不是程序员定义的，是Vue.extend生成的
+- student 组件本质是一个名为 VueComponent 的**构造函数**，且不是程序员定义的，是 `Vue.extend()` 生成的
 
-- 我们只需要写\<student/>,Vue解析时会帮我们创建student的实例对象，即Vue帮我们执行了：`new VueComponent(options)`
+- 我们只需要写 `<student/>` ,Vue解析时会帮我们创建student的实例对象，即Vue帮我们执行了：`new VueComponent(options)`
 
-- 特别注意：每次调用Vue.extend，返回的都是一个全新的VueComponent
+- 特别注意：每次调用 `Vue.extend()`，返回的都是一个全新的 VueComponent
 
-- 关于this的指向
+- **关于 `this` 的指向**
 
-  - 组件配置中，this的指向都是【VueComponent的实例对象】
+  - 组件配置中，this 的指向都是【VueComponent的实例对象】
+  - `new Vue(options)` 中，this 的指向都是 【Vue实例对象】
 
 - vc与vm类似，但vc没有el属性
 
+  ```js
+  function Demo() { // Demo 的构造函数
+      this.a = 1
+      this.b = 2
+  }
+  
+  Demo.prototype          // 显示原型属性
+  new Demo().__proto__    // 隐式原型属性
+  Demo.prototype === new Demo().__proto__  // 显示/隐式原型属性 指向同一个对象（原型对象）
+  ```
+  
+  ```java
+  class Children extends Parent {
+      public Children() {
+          super(); // 创建子类对象时，会先创建父类对象。 js原型对象 <=> 父类对象
+      }
+  }
+  ```
+  
   ![vc与vm的关系](D:\picture\typora\java\vc与vm的关系.jpeg)
 
 
@@ -3935,12 +3992,15 @@ http://cli.vuejs.org/zh
 
 #### 快速入门
 
+- 安装npm（安装 node.js 即可安装npm）
+
 - 全局安装VueCLI 
 
   ```shell
+  # 切换 npm 下载地址为国内地址
+  npm config set registry https://registry.npmmirror.com
+  
   npm install -g @vue/cli
-  # 切换为淘宝镜像
-  npm config set registry https://registry.npm.taobao.org
   ```
 
 - 切换到要创建项目的目录
@@ -3950,18 +4010,18 @@ http://cli.vuejs.org/zh
   vue create xxxx -n
   ```
 
-- 启动项目
+- 启动项目（需先进入 vue 项目根目录）
 
   ```shell
-  cd xxxx
+  # 运行 vue 服务
   npm run serve
-  # 生成
+  # 生成 html
   npm run build
   ```
 
 - 结构
 
-  ```
+  ```cmd
   ├── node_modules
   ├── public
   │   ├── favicon.ico: 页签图标
@@ -3972,13 +4032,13 @@ http://cli.vuejs.org/zh
   │   │── component: 存放组件
   │   │   └── HelloWorld.vue
   │   │── App.vue: 汇总所有组件
-  │   │── main.js: 入口文件
+  │   └── main.js: 入口文件
   ├── .gitignore: git 版本管制忽略的配置
   ├── babel.config.js: babel 的配置文件
   ├── package.json: 应用包配置文件
   ├── README.md: 应用描述文件
   ├── package-lock.json：包版本控制文件
-  ├── vue.config.js：修改vue核心配置的文件
+  └── vue.config.js：修改vue核心配置的文件
   ```
 
 - render函数
@@ -3988,10 +4048,13 @@ http://cli.vuejs.org/zh
   // 此处引入的vue是一个精简的vue，没有模板解析器. vue/dist/vue.runtime.esm.js
   import Vue form 'vue' 
   import App from './App.vue'
+  // 关闭 Vue 的生产提示
+  vue.config.productionTip = false
   
   new Vue({
       el: '#root',
-      // 因为vue.runtime.xxx.js没有解析器，所以不能使用template配置项，需要使用render函数接收到		// createElement函数去指定具体内容
+      // 因为vue.runtime.xxx.js没有解析器，所以不能使用template配置项，
+      // 需要使用render函数接收到 createElement 函数去指定具体内容
       // render: h => h(App),
       render(createElement){
           return createElement(App)
@@ -4001,14 +4064,14 @@ http://cli.vuejs.org/zh
 
 - 修改vue的配置
 
-  - 使用 vue inspect > output.js 可以 **查看** vue脚手架的默认配置
+  - 使用命令 `vue inspect > output.js` 可以且只能 **查看** vue脚手架的默认配置
 
-  - 在与src的同级目录中创建 vue.config.js 文件，在其中添加配置
+  - 如何修改配置：在与src的同级目录中创建 vue.config.js 文件，在其中添加配置
 
     ```js
     // vue.config.js
     module.exports = {
-        //关闭语法检查
+        //关闭语法检查（检查内容包括，定义一个变量，未使用，报错）
         lintOnSave: false
     }
     ```
@@ -4027,8 +4090,8 @@ http://cli.vuejs.org/zh
   ```vue
   <template>
   <div>
-      <h1 src="test">测试src</h1>
-      <TimeTable src="timetable"></TimeTable>
+      <h1 ref="test">测试src</h1>
+      <time-table id="timetable" ref="timetable"></time-table>
       <button @click="showDom">点我输出上方元素</button>
   </div>
   </template>
@@ -4045,15 +4108,18 @@ http://cli.vuejs.org/zh
               showDom() {
                   console.log(this.$refs.test) // 输出的是Dom元素
                   console.log(this.$refs.timetable) // 输出的是vc
+                  console.log(document.querySelector("#timetable")) // 该组件的根元素
               }
           }
       }
   </script>
   ```
-
+  
   
 
 #### props
+
+> 如何让组件接收外部传入的数据
 
 - 设置参数
 
@@ -4062,57 +4128,83 @@ http://cli.vuejs.org/zh
   <div>
       学生姓名：{{name}} <br/>
       学生年龄：{{age}}
-      </div>
+  </div>
   </template>
   
   <script>
       export default{
-          name: 'Student',
-          //props: ['name', 'age', 'getName'] //简单声明接收
-  
-          // 限制类型
-          /*props: {
-              name: String,
-              age: Number,
-              getName: Function
-          }*/
-  
-          props: {
-              name: {
-                  type: String,
-                  required: true // name是必要的
-              },
-              age: {
-                  type: Number,
-                  default: 99 // 默认值
-              },
-              getName: {
-        			default: function () {
-          			console.log("App未获得姓名")
-        			}
-      		}
-      	}
+          name: 'StudentComponent',
+          props: ... // 设置需要的参数
       }
   </script>
   ```
+
+  - 简单声明接收
+
+    ```json
+    props: ['name', 'age', 'getName']
+    ```
+
+  - 对传入该组件的参数进行**类型限制**
+
+    ```json
+    props: {
+        name: String,
+        age: Number,
+        getName: Function
+    }
+    ```
+
+  - 必要参数、默认值的设定
+
+    ```json
+    props: {
+        name: {
+            type: String,
+            required: true // name是必要的
+        },
+        age: {
+            type: Number,
+            default: 99 // 默认值
+        },
+        getName: {
+            default: () => console.log("App未获得姓名")
+        }
+    }
+    ```
+
+  - 集合数组类型需要利用方法返回
+
+    ```json
+    data() { return {...} }
+    props: {
+        items: {
+            type: Array,
+            // 需要利用方法返回的原因，和 data 数据用方法返回原因一样：防止传输地址值
+            default: () => ['a', 'b']
+        }
+    }
+    ```
 
 - 传入参数
 
   ```vue
   <template>
   <div>
-      <!-- 通过v-bind引号中为表达式的特性解决传递Number或其他对象的问题 -->
-  <Student name="zhangsan" :age="18" :getName="getName"></Student>
+  <!-- 只需要在组件上添加同名属性，即可完成赋值 -->
+  <!-- 通过v-bind引号中为js表达式这个特性，
+       解决传递Number或其他对象变成字符串的问题 -->
+  <student-component name="zhangsan" :age="18" :getName="getName"></student-component>
   </div>
   </template>
   
   <script>
-      import Student from '@/components/student';
+      import StudentComponent from '@/components/student';
   
       export default {
           name: 'App',
           components: {
-              Student
+              StudentComponent
           },
           method: {
               getName(name) {
@@ -4123,16 +4215,33 @@ http://cli.vuejs.org/zh
   </script>
   ```
 
-- props中的属性优先被放到vm上，所以可以在data中通过 this.属性 获得
+- props中的属性 **优先** 被放到vm、vc上（优先级比data中定义的属性高），所以可以在data中通过 `this.属性` 获得
+
+- 一般不会去修改 props 中传入到该组件的值，虽然可能会修改成功，但vue会警告，可通过以上特性：
+
+  ```js
+  export default {
+      data() {
+          return () {
+              myAge: this.age // 一般不修改 this.age，可以修改 this.myAge
+          }
+      },
+      props: ['age']
+  }
+  ```
+
+  
 
 
 
 #### mixin
 
-- 定义
+> 多个组件共享一个配置
+
+- 定义共享配置
 
   ```js
-  // 定义文件 mixin.js
+  // 定义文件如 mixin.js
   export const mixin =  {
       data() {
         return {
@@ -4163,9 +4272,9 @@ http://cli.vuejs.org/zh
   }
   ```
 
-- data中的数据、methods中的方法，与vc中的发生冲突时，以vc为主。而生命周期钩子函数都会执行
+- data中的数据、methods中的方法，与vc中的发生冲突时，**以vc为主**。而**生命周期钩子函数都会执行**
 
-- 全局混入：Vue.mixin({})
+- 全局混入：`Vue.mixin({...})`
 
 
 
@@ -4174,18 +4283,18 @@ http://cli.vuejs.org/zh
 - 定义插件
 
   ```js
-  // 定义文件plugin.js
+  // 定义文件如 plugin.js
   export default {
       // 可以带其他参数
       install(Vue, [args...]) {
+          // 给Vue原型上添加方法，vue实例可以使用方法
+          Vue.prototype.oneMethod = () => {}
           // 定义全局过滤器
           Vue.filter()
           // 定义全局指令
           Vue.directive()
           // 定义全局混入
           Vue.mixin({})
-          // 给Vue原型上添加方法，vue实例可以使用方法
-          Vue.prototype.oneMethod = () => {}
       }
   }
   ```
@@ -4194,7 +4303,7 @@ http://cli.vuejs.org/zh
 
   ```js
   import Vue from 'vue'
-  import plugin form './plugin'
+  import plugin from './plugin'
   
   Vue.use(plugin)
   ```
@@ -4203,11 +4312,155 @@ http://cli.vuejs.org/zh
 
 #### 样式
 
+```vue
+<template></template>
+<script></script>
+<style scoped lang="less"></style>
+```
+
 - scoped：解决不同组件样式层叠问题
+
 - lang：样式语言
-  - 查看脚手架中webpack的版本：node_modules/webpack/package.json
-  - 查看框架的所有版本：npm view xxx versions
-  - 安装脚手架中webpack版本对应的less-loader版本：npm i less-loader@10
+
+  - css：默认值
+  - less：默认不支持，需要下载 less-loader
+
+- less-loader 下载（less-loader 与 vue中使用的webpack有版本对应关系）
+
+  - 查看vue中使用的 webpack 版本
+
+    - 查看脚手架中webpack的版本：node_modules/webpack/package.json 文件中配置了webpack版本信息
+    - 查看某个框架的所有版本：`npm view xxx versions`
+
+  - 查找 webpack 与 less-loader 的对应关系
+
+  - 安装脚手架中webpack版本对应的less-loader版本：
+
+    - 下载最新版本：`npm i less-loader`
+
+    - 下载指定版本：`npm i less-loader@10`
+      - `@10` 表示安装大版本10下的最新小版本
+
+
+
+
+
+### 拓展
+
+#### 自定义事件
+
+> 父组件向子组件传输数据可以用 props
+>
+> **子组件如何向父组件传输数据呢？**
+
+- 父组件向子组件传输回调函数，子组件将数据放到回调函数的参数中，实现数据传输
+
+  - 父组件
+
+    ```js
+    export default = {
+        name: 'ParentComponent',
+        methods: {
+            // 父组件定义回调函数
+            getMsg(msg) {
+                console.log("收到消息："+msg)
+            }
+        },
+        components: {
+            ChildComponent: child
+        }
+    }
+    ```
+
+    ```html
+    <!-- 父组件将回调函数传给子组件 -->
+    <child-component  :sendToParent="getMsg" />
+    ```
+
+  - 子组件
+
+    ```js
+    export default = {
+        name: 'ChildComponent',
+        porps: {
+            // 子组件声明接收一个回调函数
+            sendToParent: {
+                type: Function,
+                required: true
+            }
+        },
+        methods: {
+            send() {
+                this.sendToParent("Hello") // 发送消息给父组件
+            }
+        }
+    }
+    ```
+
+- 自定义事件
+
+  - 在父组件中，为子组件绑定事件（在元素身上绑定）
+
+    ```html
+    <!-- 在子组件对象（vc）身上绑定事件 myEvent，还可以使用 .once 指定只触发一次 -->
+    <child-component  v-on:myEvent='getMsg'/>
+    ```
+
+    ```js
+    export default {
+        name: 'ParentComponent',
+        methods: {
+            // 父元素定义事件触发后的回调函数
+            getMsg(msg) {
+                console.log("收到数据："+msg)
+            }
+        },
+        components: {
+            ChildComponent: child
+        }
+    }
+    ```
+
+  - 子组件触发事件
+
+    ```js
+    export default = {
+        name: 'ChildComponent',
+        methods: {
+            send() {
+                // 触发 Student 组件实例身上的 myEvent 事件，携带数据 msg
+                this.$(emit('myEvent', msg))
+            }
+        }
+    }
+    ```
+
+  - 另一种绑定方式（编程式绑定，更加灵活）
+
+    ```js
+    export default {
+        name: 'ParentComponent',
+        methods: {
+            // 父元素定义事件触发后的回调函数
+            getMsg(msg) {
+                console.log("收到数据："+msg)
+            }
+        },
+        mounted() {
+            // 先获取 子元素实例（vc），在通过 $on 方法绑定事件
+            this.$ref.student.$on('myEvent', this.getMsg)
+        }
+    }
+    ```
+
+    
+
+
+
+
+
+
+
 
 
 

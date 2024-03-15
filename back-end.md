@@ -571,6 +571,8 @@ User selectById(int id);
 
 ## Servlet
 
+> Servlet 就是一个接口，定义了 Java 类被 tomcat 识别的规则
+
 ### 快速入门
 
 - 使用Tomcat

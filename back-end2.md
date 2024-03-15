@@ -2970,14 +2970,11 @@ public class MyWebFilter implements WebFilter {
 - DispatchHandler 中的三个成员变量，存储了处理请求的处理器
 
   ```java
-  @Nullable
-  private List<HandlerMapping> handlerMappings;
-  @Nullable
-  private List<HandlerAdapter> handlerAdapters;
-  @Nullable
-  private List<HandlerResultHandler> resultHandlers;
+  @Nullable private List<HandlerMapping> handlerMappings;
+  @Nullable private List<HandlerAdapter> handlerAdapters;
+  @Nullable private List<HandlerResultHandler> resultHandlers;
   ```
-
+  
 - 请求处理流程
 
   - HandllerMapping：请求映射处理器，保存了每个请求由那个方法进行处理
@@ -3766,7 +3763,18 @@ public class GlobalExecptionHandler {
     - 不会主动调用 BeanPostProcessor
     - 不会主动初始化单例（懒加载）
     - 不会解析 beanFactory，也不会解析 ${}、#{}
+    
   - bean 后处理器会有排序的逻辑
+  
+  - 解析字符串还需要添加 resolve
+  
+    - 解析 @Value
+  
+      beanFactory.setAutowiredCandidateResolve(new ContextAnnotationAutowireCandidateResolver());
+  
+    - 解析@Value中的 ${} 、#{}
+  
+      beanFacotry.addEmbeddedValueResolver(new StandardEnvironment()::resolvePlaceholders);
 
 
 
@@ -4095,19 +4103,6 @@ context.refresh(); // 执行处理器
   - 通过 `ApplicationContext` 获取多例对象
 
 
-
-
-
-
-## UnMastered
-
-- 解析 @Value
-
-  beanFactory.setAutowiredCandidateResolve(new ContextAnnotationAutowireCandidateResolver());
-
-- 解析${} 
-
-  beanFacotry.addEmbeddedValueResolver(new StandardEnvironment()::resolvePlaceholders);
 
 
 
@@ -4483,10 +4478,10 @@ context.refresh(); // 执行处理器
 - 其他注解 与 Advice 对应关系
 
   - @Before -> AspectJBeforeAdvice
-  - @After -> AspectJAfterAdvice
-  - @Around -> AspectJAroundAdvice
+  - @After -> AspectJAfterAdvice（实现了MethodInterceptor接口）
+  - @Around -> AspectJAroundAdvice（实现了MethodInterceptor接口）
   - @AfterReturning -> AspectJAfterReturningAdvice
-  - @AfterThrowing -> AspectJAfterThrowingAdvice
+  - @AfterThrowing -> AspectJAfterThrowingAdvice（实现了MethodInterceptor接口）
 
 
 
@@ -4494,11 +4489,209 @@ context.refresh(); // 执行处理器
 
 ### 通知的调用
 
-- 
+#### 转换
+
+- 上述案例中，@Before 前置通知会被转换为下面原始的 AspectJMethodBeforeAdvice 形式，该对象包含了如下信息
+
+  - advice：通知
+  - pointcut：切点
+  - factory：是AspectInstanceFactory的实例，作用就是在运行时创建切面实例，并将这个实例与目标对象进行绑定。这样，当目标对象的方法被调用时，就可以触发切面中的增强逻辑。
+
+- 通知最终统一被转换成 MethodInterceptor（**最低级的环绕通知**，非cglib中的MethodInterceptor）
+
+  ```java
+  @FunctionalInterface
+  public interface MethodInterceptor extends Interceptor {
+      @Nullable
+      Object invoke(@Nonnull MethodInvocation invocation) throws Throwable;
+  }
+  ```
+
+  - 其实无论 ProxyFactory 基于哪种方式创建代理，最后调用advice的是一个 MethodInvocation 对象
+    - AspectJBeforeAdvice、AspectJAfterReturningAdvice 并没有实现 MethodInterceptor 接口，但最终，依旧会被转化成 MethodInterceptor
+      - 一方面：实现统一
+      - 另一方面：方法下面调用链调用
+    - MethodInvocation 是一个调用链对象，因为 advisor 有多个，且"一个套一个"，因此需要一个调用链
+    - "一个套一个"：类似于Web中的Filter组件，通过某个 Filter进入下一个Filter，最终进入Servlet，最终还要反向通过这些Filter
+    - 统一转换成环绕通知，体现了是设计模式中的 **适配器模式**（由一套接口，通过Adapter，转换成另一套接口）
+
+  ```java
+  List<Advisor> list = new ArrayList<>();
+  // ... 解析并存储低级切面（详细过程见上一步）
+  
+  // 通知统一转换为低级环绕通知 MethodInterceptor
+  ProxyFactory proxyFactory = new ProxyFactory();
+  proxyFactory.setTarget(new Target());
+  proxyFactory.addAdvisors(list);
+  List<Object> list = proxyFactory
+      .getInterceptorsAndDynamicInterceptionAdvice(Target.class.getMethod("oneMethod"), Target.class);
+  ```
+
+- 适配器：此处的适配器，并非自己充当 MethodInterceptor ，而是将 Advice 转化成 MethodInterceptor
+
+  - MethodBeforeAdviceAdapter 将 AspectJMethodBeforeAdvice(@Before) 转化成 MethodBeforeAdviceInterceptor
+
+    ```java
+    // 从源码角度来看，这个像一个适配器工厂
+    class MethodBeforeAdviceAdapter implements AdvisorAdapter, Serializable {
+        public boolean supportsAdvice(Advice advice) {
+            return advice instanceof MethodBeforeAdvice;
+        }
+    
+        public MethodInterceptor getInterceptor(Advisor advisor) {
+            MethodBeforeAdvice advice = (MethodBeforeAdvice)advisor.getAdvice();
+            return new MethodBeforeAdviceInterceptor(advice);
+        }
+    }
+    ```
+
+    ```java
+    // 这才是真正的适配器
+    public class MethodBeforeAdviceInterceptor implements MethodInterceptor, BeforeAdvice, Serializable {
+        private final MethodBeforeAdvice advice;
+    
+        public MethodBeforeAdviceInterceptor(MethodBeforeAdvice advice) {
+            Assert.notNull(advice, "Advice must not be null");
+            this.advice = advice;
+        }
+    
+        @Nullable
+        public Object invoke(MethodInvocation mi) throws Throwable {
+            this.advice.before(mi.getMethod(), mi.getArguments(), mi.getThis());
+            return mi.proceed();
+        }
+    }
+    ```
+
+  - AfterReturningAdviceAdapter 将 AspectJAfterReturningAdvice 转化成 AfterReturningAdviceInterceptor
 
 
 
+#### 调用
 
+- MethodInvocation 调用链是使用
+
+  ```java
+  Target target = new Target();
+  ProxyFactory proxyFactory = new ProxyFactory();
+  proxyFactory.setTarget(target);
+  // 在所有低级切面配置前，增加一个通知，该通知的作用：把 MethodInvocation 放入当前线程
+  proxyFactory.addAdvice(ExposeInvocationInterceptor.INSTANCE);
+  proxyFactory.addAdvisors(advisors);
+  List<Object> methodInterceptorList = proxyFactory
+      .getInterceptorsAndDynamicInterceptionAdvice(Target.class.getMethod("oneMethod"), Target.class);
+  methodInterceptorList.forEach(System.out::println);
+  
+  System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+  // ReflectiveMethodInvocation 构造方法受保护，通过 MyMethodInvocation 继承间接调用
+  MethodInvocation invocation = new MyMethodInvocation(
+      null, target, Target.class.getMethod("oneMethod"),
+      new Object[0], Target.class, methodInterceptorList
+  );
+  invocation.proceed();
+  ```
+  
+  ```cmd
+  # 第一个高级切片
+  org.springframework.aop.support.DefaultPointcutAdvisor: pointcut [AspectJExpressionPointcut: () execution(* oneMethod())]; advice [org.springframework.aop.aspectj.AspectJMethodBeforeAdvice: advice method [public void basic.aop.AspectToAdvisorTest$MyAspect.before2()]; aspect name '']
+  # 第二个高级切面
+  org.springframework.aop.support.DefaultPointcutAdvisor: pointcut [AspectJExpressionPointcut: () execution(* oneMethod())]; advice [org.springframework.aop.aspectj.AspectJMethodBeforeAdvice: advice method [public void basic.aop.AspectToAdvisorTest$MyAspect.before1()]; aspect name '']
+  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  org.springframework.aop.interceptor.ExposeInvocationInterceptor@b9afc07
+  org.springframework.aop.framework.adapter.MethodBeforeAdviceInterceptor@382db087
+  org.springframework.aop.framework.adapter.MethodBeforeAdviceInterceptor@73d4cc9e
+  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  before2....
+  before1....
+  oneMethod
+  ```
+  
+- 自定义 Invocation
+
+  ```java
+  static class Advice2 implements MethodInterceptor { ... }
+  static class Advice1 implements MethodInterceptor {
+      @Override
+      public Object invoke(MethodInvocation invocation) throws Throwable {
+          System.out.println("before1...");
+          Object result = invocation.proceed();
+          System.out.println("after1...");
+          return result;
+      }
+  }
+  
+  static class MyInvocation implements MethodInvocation {
+      @Getter // 该getter方法，也是重写的方法
+      private final Method method;
+      @Getter // 重写的方法
+      private final Object[] arguments;
+      private Object target;
+      private final List<MethodInterceptor> methodInterceptors;
+      private int current = 0;
+  
+      public MyInvocation(Method method, Object[] arguments, Object target, List<MethodInterceptor> methodInterceptors) {
+          this.method = method;
+          this.arguments = arguments;
+          this.target = target;
+          this.methodInterceptors = methodInterceptors;
+      }
+  
+      @Override // ※ 具体执行流程
+      public Object proceed() throws Throwable {
+          if (current < methodInterceptors.size())
+              return methodInterceptors.get(current++).invoke(this);
+          else return method.invoke(target, arguments);
+      }
+  
+      @Override
+      public Object getThis() {
+          return target;
+      }
+  
+      @Override
+      public AccessibleObject getStaticPart() {
+          return method;
+      }
+  }
+  ```
+
+
+
+#### 动态通知
+
+- 动态通知
+
+  ```java
+  @Aspect
+  static class DynamicAspect {
+      // 静态通知调用，没有参数绑定，执行时不需要切点
+      @Before("execution(* oneMethod(..))")
+      public void before() {
+          System.out.println("before");
+      }
+  
+      // 动态通知调用，需要参数绑定，执行时仍需要切点
+      @Before("execution(* oneMethod(..)) && args(x)")
+      public void dynamicBefore(int x) {
+          System.out.println("dynamic before: "+ x);
+      }
+  }
+  ```
+
+- 转化
+
+  ```java
+  // AnnotationAwareAspectJAutoProxyCreator 构造方法受保护，通过 MyProxyCreator 继承间接调用
+  var creator = context.getBean(MyProxyCreator.class);
+  List<Advisor> advisorList = creator.findEligibleAdvisors(Target.class, "target");
+  
+  ProxyFactory factory = new ProxyFactory();
+  // 见名之意，实际上获得的并不都是 interceptor（最低级环绕通知）
+  // 还包括 DynamicInterceptionAdvice（聚合了通知和切点），因为需要参数绑定，还需要切点
+  List<Object> interceptorsAndDynamicInterceptionAdvice = factory.getInterceptorsAndDynamicInterceptionAdvice(Target.class.getMethod("oneMethod", int.class), Target.class);
+  ```
+
+- 因为最终传入 MethodInvocation 中的并不都是 interceptor，还有 DynamicInterceptionAdvice，因此MethodInvocation 还会对该类对象进行处理
 
 
 
