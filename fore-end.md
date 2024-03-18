@@ -4818,7 +4818,7 @@ http://cli.vuejs.org/zh
   const getters = {} // 也是一个组件，可以理解为是对 state 里的数据的映射（可以不使用）
   
   // 创建并保留 store
-  const store = new Vuex.Store({
+  export default new Vuex.Store({
       actions,
       mutations,
       state,
@@ -4959,6 +4959,90 @@ http://cli.vuejs.org/zh
       ```
 
   - mapActions：简化 **dispatch** 方法的调用（**该方法一般在组件中使用**），使用方法与 mapMutations 类似
+
+
+
+
+
+#### 模块化
+
+- 独立出配置
+
+  src/store/oneOptions.js
+
+  ```js
+  export default {
+      actions: {},
+      mutations: {},
+      state: {
+          x: 1 // 若 oneOption 的 state 中有一个数据 x=1
+      },
+      getters: {}
+  }
+  ```
+
+- 加载配置
+
+  ```js
+  import oneOptions from ./oneOptions
+  import anotherOptions from ./anotherOptions
+  
+  export default new Vuex.store({
+      modules: {
+          oneAbout: oneOptions,
+          anotherAbout: anotherOptions
+      }
+  })
+  ```
+
+- 使用：模块化后，store 身上将不会直接携带数据，而是携带上面定义的两个模块对象，模块对象中封装着各模块的数据
+
+  **可以在控制台打印 this.$store 来观察store中数据的存放位置**
+
+  - 普通使用：
+
+    - state: `this.$store.state.oneAbout.x`
+    - dispatch: `this.$store.dispatch('anotherAbout/increment',  1)`（用 **/** 分隔模块与方法）
+    - commit: `this.$store.commit('anotherAbout/INCREMENT',  1)`（用 **/** 分隔模块与方法）
+    - getters
+      - 错误写法：`this.$store.getters.oneAbout/bigX`（`oneAbout/bigX` 虽然是属性，但存在 `/` ，不能使用 `变量.属性`）
+      - 正确写法：`this.$store.getters['oneAbout/bigX']`（读取属性的另一种方式 `变量['属性名']`）
+
+  - 使用 mapXxx 简化书写
+
+    ```js
+    ... mapState['oneAbout', 'anotherAbout']
+    ```
+
+    - 使用时，仍需要通过 `oneAbout.x` 才能访问到对应数据
+
+- namespace简化 `oneAbout.x` 中的 `oneAbout.`
+
+  - 开启命名空间
+
+    ```js
+    const oneOption = {
+        namespaced: true, // 开启命名空间
+        actions: {},
+        ...
+    }
+    ```
+
+  - 使用 mapXxx
+
+    ```js
+    // mapState(模块名, 从该模块中取的数据)
+    ...mapState('oneAbout', ['x'])
+    ...mapMutations('anotherAbout', {increment: 'INCREMENT'})
+    ```
+
+    
+
+
+
+### 路由
+
+
 
 
 
