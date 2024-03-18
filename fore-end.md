@@ -3864,7 +3864,7 @@ new Vue({
       - 初始值是数组，那么收集的就是value组成的数组
 - v-model的三个修饰符
   - lazy：失去焦点时再收集数据
-  - number：只能输入数字
+  - number：只能输入数字（字符串会强转为数值）
   - trim：过滤首位空格
 
 
@@ -3952,7 +3952,9 @@ new Vue({
 
 - 我们只需要写 `<student/>` ,Vue解析时会帮我们创建student的实例对象，即Vue帮我们执行了：`new VueComponent(options)`
 
-- 特别注意：每次调用 `Vue.extend()`，返回的都是一个全新的 VueComponent
+- **特别注意**：每次调用 `Vue.extend()`，返回的都是一个全新的 VueComponent
+
+  以java类比，每次写 `<student/>`，都会执行 `new VueComponent`，但是这个 `VueComponent` 不是却同一个类
 
 - **关于 `this` 的指向**
 
@@ -4072,10 +4074,20 @@ http://cli.vuejs.org/zh
     // vue.config.js
     module.exports = {
         //关闭语法检查（检查内容包括，定义一个变量，未使用，报错）
-        lintOnSave: false
+        lintOnSave: false,
+        
+        /*
+         * 该值用于配置，webpack打包后，资源访问的路径
+         *   它也会影响到打包后生成的文件内资源的访问，如配置 "/assets/" ，
+         *       css 就会变成 "background: url('/asserts/icon.png')"
+         *   默认值是 ""，表示所有资源都放在根目录 / 下，
+         *       这种方式适用于生产环境（生产环境静态资源会放在根目录），本地则一般无法正常显示
+         *   因此，测试下，若想要打包后的 html 在本地运行，须配置成相对路径 "./"
+         */
+        publicPath: './'
     }
     ```
-
+  
   - 具体配置见：https://cli.vuejs.org/zh/config/
 
 
@@ -4345,7 +4357,7 @@ http://cli.vuejs.org/zh
 
 
 
-### 拓展
+### 组件间通信
 
 #### 自定义事件
 
@@ -4410,7 +4422,7 @@ http://cli.vuejs.org/zh
     export default {
         name: 'ParentComponent',
         methods: {
-            // 父元素定义事件触发后的回调函数
+            // 父组件定义事件触发后的回调函数，可以接受子组件触发事件是携带的参数
             getMsg(msg) {
                 console.log("收到数据："+msg)
             }
@@ -4429,7 +4441,7 @@ http://cli.vuejs.org/zh
         methods: {
             send() {
                 // 触发 Student 组件实例身上的 myEvent 事件，携带数据 msg
-                this.$(emit('myEvent', msg))
+                this.$emit('myEvent', msg)
             }
         }
     }
@@ -4453,9 +4465,500 @@ http://cli.vuejs.org/zh
     }
     ```
 
+    - 注意事项：通过 `$on("事件名", 回调函数)` 绑定自定义事件时，为保证**回调函数**中的 `this` 指向的是当前 vc，要么使用 `methods` 中定义的函数（如上），要么使用 **箭头函数**
+    
+  - 解绑事件
+  
+    ```js
+    // ChildComponent
+    this.$off('myEvent')
+    this.$off(['myEvent', 'myEvent2'])
+    this.$off() // 解绑所有自定义事件
+    
+    // 调用生命周期函数，销毁当前组件的实例
+    // 销毁后，所有当前组件实例的自定义事件和子组件全部销毁
+    this.$destory()
+    ```
+  
+- 原生事件
+
+  - 错误写法
+
+    ```html
+    <!-- 虽然原生事件中有 click，但是vue依旧会认为这是自定义事件，需要用 $emit 触发 -->
+    <child-component @click="show"></child-component>
+    ```
+
+  - 原生事件
+
+    ```html
+    <child-component @click.native="show"></child-component>
+    ```
+
+
+
+
+
+
+#### 全局事件总线
+
+> 现在，可以实现下面两个功能：
+>
+> - 父组件给子组件传输数据：子组件设置 props
+> - 子组件给父组件传输数据：
+>   - 子组件 props 中要求一个父组件的回调函数
+>   - 自定义事件
+>
+> 那是否可以利用 自定义事件 实现全局组件通信呢
+
+- 原理
+  - 找一个 <font color=blue>可以绑定自定义事件^[条件1]^</font> 且 <font color=blue>所有 VueComponent 实例都能访问到^[条件2]^</font> 的对象X
+  
+    - [条件1]
+  
+      可以绑定自定义事件，说明该对象 X 是 Vue 的实例（java类比：VueComponent 继承自 Vue）
+  
+      ```js
+      let VueComponent = Vue.extend({})
+      let x = new VueComponent()
+      ```
+  
+    - [条件2]
+  
+      - 可以将对象绑定到 window 身上（即成为该对象的属性）
+  
+      - 可以将对象绑定到 `VueComponent.prototype`、`vc.__proto__` 身上么？
+  
+        **不行**，每一个 VueComponent 都是 `Vue.extend()` 生成的，并不是同一个对象
+  
+      - 可以将对象绑定到 `Vue.prototype` 身上
+  
+        `Vue.prototype == VueComponent.prototype.__proto__`
+  
+        ```js
+        Vue.prototype.x = x
+        ```
+  
+  - 若 A 需要 B 的信息
+  
+    - A 就可以为 X 绑定事件，并在 A 中指定回调函数
+    - B 触发 X 的对应事件，并携带数据
+  
+- 实现
+
+  - 创建对象 X（可在 main.js 中创建）
+
+    ```js
+    // 方法一：可以在这里按上面写法
+    
+    new Vue({
+        el: "#app",
+        render: h => h(App),
+        beforeCreate() {
+            Vue.prototype.$bus = this // 方法二：规范写法，vm 充当 X ，X 命名为 $bus
+        }
+    })
+    ```
+
+  - A 绑定事件
+
+    ```js
+    export default {
+        name: "A",
+        mounted() { // 挂载时绑定事件
+            this.$bus.$on('myEvent', (data) => {
+                console.log('我是 A，收到数据：', data)
+            })
+        },
+        beforeDestory() { // 最好在销毁时，解绑事件
+            this.$bus.$off('myEvent')
+        }
+    }
+    ```
+
+  - B 触发事件
+
+    ```js
+    export default {
+        name: "B",
+        methods: {
+            sendMsgToA() {
+                this.$bus.$emit("myEvent", "Hello, It is B.")
+            }
+        }
+    }
+    ```
+
     
 
 
+
+
+#### pubsub-js
+
+> 一个第三方消息发布订阅库
+
+- 安装
+
+  ```shell
+  npm -i pubsub-js
+  ```
+
+- 引入
+
+  ```js
+  import pubsub from 'pubsub-js'
+  ```
+
+- 发布消息
+
+  ```js
+  export default {
+      name: "A",
+      mounted() {
+          this.pubId = pubsub.subscribe('hello', (msgName, data) => {
+              console.log("第一个参数是消息名：", msgName)
+              console.log("第二个参数才是数据：", data)
+          })
+      },
+      beforeDestory() {
+          pubsub.unsubscribe(this.pubId) // 通过 id 取消订阅
+      }
+  }
+  ```
+
+- 订阅消息
+
+  ```js
+  methods: {
+      sendMsg() {
+          pubsub.publish('hello', '这是数据')
+      }
+  }
+  ```
+
+
+
+#### 插槽
+
+> 也算一种特殊的父给子传输数据（结构）的通信
+
+- 默认插槽
+
+  - 子组件定义插槽
+
+    ```vue
+    <template>
+    <div>
+        <h3>{{title}}分类</h3>
+        <!-- 使用者（父组件）可以将一些具体结构传入到 slot 插槽标签中 -->
+        <slot>可以在这里设置默认值，当使用者没有传递具体结构时，会出现</slot>
+    </div>
+    </template>
+    ```
+
+  - 父组件 往子组件中传入具体结构
+
+    ```vue
+    <template>
+    <child-component title="美食">
+        <ul>
+            <li v-for='(item, index) in foods' :key="index">{{item}}</li>
+        </ul>
+    </child-component>
+    </template>
+    
+    <script>
+        import child from './Child'
+        export default {
+            name: 'ParentComponent',
+            data() {
+                return {
+                    foods: ['火锅', '烧烤', '牛排']
+                }
+            },
+            components: { ChildComponent: child }
+        }
+    </script>
+    ```
+
+  - 对插槽内具体结构的css样式，既可以放在父组件中，也可以放在子组件中
+
+- 具名插槽：用于区分多个插槽
+
+  - 子组件定义具名插槽
+
+    ```vue
+    <template>
+    <div>
+        <h3>{{title}}分类</h3>
+        <!-- 通过 name 属性，为插槽命名 -->
+        <slot name="content">可以在这里设置默认值，当使用者没有传递具体结构时，会出现</slot>
+        <slot name="footer"></slot>
+    </div>
+    </template>
+    ```
+
+  - 父组件传入结构
+
+    ```vue
+    <child-component title="美食">
+        <!-- 通过 slot 指定往哪个插槽中传入结构 -->
+        <ul slot="content">
+            <li v-for='(item, index) in foods' :key="index">{{item}}</li>
+        </ul>
+        
+        <!-- 为少些几遍slot，且不生成真实 DOM 元素，可使用 template 标签 -->
+        <template slot="footer"> <!-- template+slot 可简写为 <template v-slot:footer> -->
+            <a href="https://passport.meituan.com">去美团</a>
+            <a href="https://www.ele.me">去饿了么</a>
+        </template>
+    </child-component>
+    ```
+
+- 作用域插槽：适用于父组件想要往子组件中插入结构，但数据在子组件中
+
+  - 子组件将数据传给使用者
+
+    ```vue
+    <template>
+    <div>
+        <h3>{{title}}分类</h3>
+        <!-- 在插槽身上加入属性，即可将数据传给使用者 -->
+        <slot :foodList="foods" msg="可以传输多个数据" ></slot>
+    </div>
+    </template>
+    
+    <script>
+        export default {
+            name: 'ChildComponent',
+            props: ['title'],
+            data() {
+                return {
+                    foods: ['火锅', '烧烤', '牛排']
+                }
+            }
+        }
+    </script>
+    ```
+
+  - 父组件获取数据并应用
+
+    ```vue
+    <child-component title="美食">
+        <!-- 接收数据时，必须使用 template 标签，通过 scope/slot-scope 属性接取数据对象 -->
+        <!-- <template scope="{foodList, msg}">  解构赋值 -->
+        <template scope="data">
+            <ul slot="content">
+                <!-- 数据是对象，使用时需要 对象.属性 -->
+                <li v-for='(item, index) in data.foodList' :key="index">{{item}}</li>
+            </ul>
+        </template>
+    </child-component>
+    ```
+
+    
+
+
+
+### 补充
+
+#### 动画与过渡
+
+[略](https://www.bilibili.com/video/BV1Zy4y1K7SH/?p=91)
+
+
+
+#### 零散
+
+- $nextTick
+
+  ```js
+  vm.$nextTick(() => {
+      // 在 DOM 更新结束后，再执行回调
+  })
+  ```
+
+
+
+
+
+
+### Vuex
+
+> Vue2 使用的是Vuex3
+>
+> Vue3 使用的是Vuex4
+>
+> > 安装指定版本 vuex：`npm i vuex@3`
+
+#### 使用Vuex
+
+- 安装 Vuex
+
+- Vuex 三大组件
+
+  ![vuex](D:\picture\typora\前端\vuex.png)
+
+  - 理解：
+    - Actions：对应后端的服务层（service）
+    - Mutations：对应后端的持久层（Dao），直接操作数据库中的数据
+    - State：对应后端的数据库，区别在于存在 State 中的数据，也会被进行数据代理（类似于data中的数据），变动时，页面后重新渲染
+
+- 创建 store 对象，规范：在src目录下创建文件 src/store/index.js
+
+  ```js
+  import Vue from 'vue'
+  import Vuex from 'vuex'
+  Vue.use(Vuex) // 应用 Vuex 插件必须在创建 store 对象前
+  
+  const actions = {}
+  const mutations = {}
+  const state = {}
+  const getters = {} // 也是一个组件，可以理解为是对 state 里的数据的映射（可以不使用）
+  
+  // 创建并保留 store
+  const store = new Vuex.Store({
+      actions,
+      mutations,
+      state,
+      getters
+  })
+  ```
+
+- 应用 Vuex 插件，并添加 store（main.js中）
+
+  ```js
+  import Vue from 'vue'
+  import App from './App.vue'
+  import store from './store'
+  
+  Vue.config.productionTip = false
+  // 应用 Vuex 插件必须在创建 store 对象前
+  // 也不能将 'import store ....' 放到use后面，因为 import 会被提前
+  //Vue.use(Vuex)
+  
+  new Vue({
+      render: h => h(App),
+      store
+  }).$mount('#app')
+  ```
+
+
+
+#### 快速使用
+
+- 定义各Vuex组件内容
+
+  ```js
+  const actions = {
+      increase(miniStore, value) {
+          // miniStore 是"简化版"的store，里面有 dispatch、commit 方法 和 getters，规范命名为：context
+          miniStore.commit('INCREASE', value)
+      }
+  }
+  
+  const mutations = {
+      INCREASE(state, value) { // mutations 中的方法一般大写
+          state.sum += value
+      }
+  }
+  
+  const state = {
+      sum: 0
+  }
+  
+  // 也是一个组件，可以理解为是对 state 里的数据的映射（可以不使用）
+  // 获取时： this.$store.getters.isOdd
+  const getters = {
+      isOdd(state) {
+          return !!(state.sum % 2)
+      }
+  }
+  ```
+
+- 各组件中使用 Vuex
+
+  ```js
+  export default {
+      name: "OneComponent",
+      methods: {
+          increment() {
+              // 分发到 "业务层"，让 "业务层" 调 "持久层"
+              this.$store.dispatch('increment', 1)
+              // 也可以直接提交到 "持久层"
+              this.$store.commit('INCREMENT', 1)
+          }
+      }
+  }
+  ```
+
+- mapXxx
+
+  - mapState：可直接读取 State 中的数据，可借助它简化开发
+
+    ```js
+    import {mapState} from 'vuex' // 导入 mapState
+    export default {
+        name: "OneComponent",
+        computed: {
+            // 如果想在使用 state 中数据，又不想每次都写 this.$store.state.xxx，
+            // 可以将其放在计算属性中，但是放在计算属性中，也需要写一次 这个长串
+            sum(){ return this.$store.state.sum },
+            其他,
+            
+            // mapState 可以直接从 state 中读取值，借助 es6 语法，可以简化书写（对象写法）
+            ...mapState({sum: 'sum', 其他}),
+            
+            // 若计算属性和 state 中的数据同名，可用 数组写法 进一步简化代码
+            ...mapState(['sum', 其他])
+        }
+    }
+    ```
+
+  - mapGetters：可直接读取 Getters 中的数据，使用方法和 mapState 类似
+
+  - mapMutations：简化 **commit** 方法的调用（**该方法一般在 actions 中使用，此处是在组件中使用**）
+
+    ```js
+    export default {
+        name: "OneComponent",
+        methods: {
+            ...mapMutations({increment: 'INCREMENT', 其他}),
+            ...mapMutations(['INCREMENT']) // 调用 methods 中的方法时，也需要使用大写
+        }
+    }
+    ```
+
+    - `...mapMutations({increment: 'increment', 其他})` 这种写法生成的方法是这样的：
+
+      ```js
+      increment(value) {
+          this.$store.commit('INCREMENT', value)
+      }
+      ```
+
+    - 但在上述案例中，我们需要的方法是这样的
+
+      ```js
+      increment() {
+          this.$store.commit('INCREMENT', 1)
+      }
+      ```
+
+    - 所以，如果使用 mapMutations 简化代码，可能需要改动部分逻辑，如
+
+      ```html
+      <button @click="increment">点我加1</button>
+      ```
+
+      改写为
+
+      ```html
+      <button @click="increment(1)">点我加1</button>
+      ```
+
+  - mapActions：简化 **dispatch** 方法的调用（**该方法一般在组件中使用**），使用方法与 mapMutations 类似
 
 
 
