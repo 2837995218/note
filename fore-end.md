@@ -2764,9 +2764,23 @@ https://pxlab.cn/color/index.html
 
 # Ajax
 
+| 功能点                    | XHR   | Fetch   |
+| ------------------------- | ----- | ------- |
+| 基本的请求能力            | √     | √       |
+| 基本的获取响应能力        | √     | √       |
+| 监控请求进度              | √     | ×       |
+| 监控响应进度              | √     | √       |
+| Service Worker 中是否可用 | ×     | √       |
+| 控制cookie的携带          | ×     | √       |
+| 控制重定向                | ×     | √       |
+| 请求取消                  | √     | √       |
+| 自定义referrer            | ×     | √       |
+| 流                        | ×     | √       |
+| API风格                   | Event | Promise |
+
+
+
 ## XHR
-
-
 
 ### 基础
 
@@ -5042,9 +5056,78 @@ http://cli.vuejs.org/zh
 
 ### 路由
 
+> 路由
+>
+> - 后端路由：服务器接收到一个请求时，会根据请求路径找到匹配的方法来处理请求，返回响应数据
+>
+> - 前端路由：当浏览器路径改变时，对应的组件就会显示
+>
+> vue 路由插件（vue-router）
+>
+> - vue2 => vue-router3；vue3 => vue-router4
+> - 安装指定版本 vue-router：`npm i vue-router@3`
 
+#### 快速使用
 
+- 编写路由配置，编写规范与Vuex类似（创建文件 src/router/index.js）
 
+  ```js
+  import VueRouter from 'vue-router'
+  import Home from '../components/Home' // 引入组件
+  
+  // 创建路由器对象
+  const router = new VueRouter({
+      routes: [
+          {
+              path: '/home',
+              component: Home
+          },
+          { ... }
+      ]
+  })
+  export default router
+  ```
+
+- 注册路由器（main.js）
+
+  ```js
+  import Vue from 'vue'
+  import App from './App.vue'
+  import VueRouter from 'vue-router'
+  import router from './router'
+  
+  Vue.config.productionTip = false
+  Vue.use(VueRouter)
+  
+  new Vue({
+      el: '#app',
+      render: h => h(App),
+      router: router // 注册路由器
+  })
+  ```
+
+- 变动浏览器路径
+
+  ```html
+  <div class="nav">
+      <!-- 原始html中，使用 a标签 实现真实页面的跳转 -->
+      <a class="active" href="./home.html">Home</a>
+      
+      <!-- vue-router 中需使用 router-link 标签，但最终依旧会被转成 a标签 -->
+      <router-link class='active' to='/home'>Home</router-link>
+      <!-- 其身上还有个 active-class ，使用该属性后不需要用js控制 激活class 的增加和移除 -->
+      <router-link active-class='active' to='/home'>Home</router-link>
+  </div>
+  <div class='main-board'>
+      <!-- 指定组件的呈现位置 -->
+      <router-view></router-view>
+  </div>
+  ```
+
+- 现在可将组件分为 普通组件、路由组件，路由组件（vc）身上多出两个属性
+
+  - `$route`：存储了该路由组件所对应的路由路径
+  - `$router`：指向路由器对象
 
 
 
